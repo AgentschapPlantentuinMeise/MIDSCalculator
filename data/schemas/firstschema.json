@@ -1,0 +1,229 @@
+{
+    "schemaName": "MIDS Calculator default",
+    "schemaVersion": "0.1",
+    "Date": "2021-05-21T11:44:43",
+    "schemaType": "MIDScalculator",
+    "informationWithheld": {
+        "property" : "informationWithheld",
+        "values" : {
+            "locality, locationRemarks" : "locality",
+            "locality" : "locality",
+            "decimalLongitude, locality" : [
+                "locality",
+                "decimalLongitude"
+            ],
+            "decimalLongitude, locality, locationRemarks" : [
+                "locality",
+                "decimalLongitude"
+            ],
+            "decimalLatitude, locality, locationRemarks" : "locality",
+            "decimalLatitude, locality" : "locality",
+            "decimalLatitude, decimalLongitude, locationRemarks" : "decimalLatitude",
+            "decimalLatitude, decimalLongitude, locality, locationRemarks" : "locality",
+            "decimalLatitude, decimalLongitude, locality" : "locality",
+            "decimalLatitude, decimalLongitude" : "decimalLatitude"
+        }
+    },
+    "unknownOrMissing" : [
+        {
+            "value" : "unknown:undigitized",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "unknown",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "unknown:missing",
+            "midsAchieved" : true
+        },
+        {
+            "value" : "unknown:indecipherable",
+            "midsAchieved" : true
+        },
+        {
+            "value" : "known:withheld",
+            "midsAchieved" : true
+        },
+        {
+            "value" : "ZZ",
+            "property" : "countryCode",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "Incertae sedis",
+            "property" : "scientificName",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "Unknown",
+            "property" : "preparations",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "World",
+            "property" : "higherGeography",
+            "midsAchieved" : false
+        }
+    ],
+    "mids0" : {
+        "Modified" : [
+            {
+                "property" : "modified",
+                "midsAchieved" : true
+            },
+            {
+                "xpath" : "additionalMetadata/metadata/gbif/dateStamp",
+                "midsAchieved" : true
+            }
+        ],
+        "PhysicalSpecimenID" : [
+            {
+                "property" : "catalogNumber",
+                "midsAchieved" : true
+            }
+        ],
+        "Institution" : [
+            {
+                "property" : "institutionCode",
+                "midsAchieved" : true
+            }
+        ]
+    },
+    "mids1" : {
+        "Name" : [
+            {
+                "property" : [
+                    "scientificName",
+                    "vernacularName"
+                ],
+                "operator" : "OR",
+                "midsAchieved" : true
+            }
+        ],
+        "MaterialType" : [
+            {
+                "property" : "preparations",
+                "midsAchieved" : true
+            }
+        ]
+    },
+    "mids2" : {
+        "Location" : [
+            {
+                "property" : [
+                    "decimalLatitude",
+                    "decimalLongitude"
+                ],
+                "operator" : "AND",
+                "midsAchieved" : true
+            },
+            {
+                "property" : [
+                    "locality",
+                    "county",
+                    "verbatimLocality",
+                    "verbatimCoordinates"
+                ],
+                "operator" : "OR",
+                "midsAchieved" : true
+            },
+            {
+                "property" : "higherGeography",
+                "restriction" : [
+                    "Extra-terrestrial:Extra-terrestrial",
+                    "Terrestrial:Europe",
+                    "Terrestrial:Africa",
+                    "Terrestrial:Asia Temperate",
+                    "Terrestrial:Asia Tropical",
+                    "Terrestrial:Australasia",
+                    "Terrestrial:Pacific",
+                    "Terrestrial:North America",
+                    "Terrestrial:South America",
+                    "Terrestrial:Antarctic",
+                    "Marine:North Pacific",
+                    "Marine:South Pacific",
+                    "Marine:North Atlantic",
+                    "Marine:South Atlantic",
+                    "Marine:Indian",
+                    "Marine:Southern",
+                    "Marine:Arctic Marine"
+                ],
+                "midsAchieved" : false
+            },
+            {
+                "property" : [
+                    "continent",
+                    "country",
+                    "stateProvince"
+                ],
+                "operator" : "OR",
+                "midsAchieved" : false
+            }
+        ],
+        "CollectorName" : [
+            {
+                "property" : "recordedBy",
+                "midsAchieved" : true
+            }
+        ],
+        "CollectorNumber" : [
+            {
+                "property" : [
+                    "fieldNumber",
+                    "recordNumber"
+                ],
+                "operator" : "OR",
+                "midsAchieved" : false
+            }
+        ],
+        "CollectionDate" : [
+            {
+                "property" : [
+                    "eventDate",
+                    "year",
+                    "verbatimEventDate"
+                ],
+                "operator" : "OR",
+                "midsAchieved" : true
+            }
+        ],
+        "CollectionName" : [
+            {
+                "property" : "collectionCode",
+                "midsAchieved" : false
+            }
+        ],
+        "TypeStatus" : [
+            {
+                "property" : "typeStatus",
+                "midsAchieved" : false
+            }
+        ],
+        "Deposited" : [
+            {
+                "property" : "",
+                "midsAchieved" : false
+            }
+        ],
+        "NameIdentifier" : [
+            {
+                "property" : [
+                    "scientificNameID",
+                    "taxonID"
+                ],
+                "operator" : "OR",
+                "midsAchieved" : true
+            }
+        ]
+    },
+    "mids3" : {
+        "Quality Assertions" : [
+            {
+                "property" : "issue",
+                "operator" : "NOT",
+                "midsAchieved" : true
+            }
+        ]
+    }
+}
