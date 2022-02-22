@@ -6,42 +6,50 @@ library(jsonlite)
 schema <- read_json("data/schemas/firstschema.json")
 
 
-# works on one level at a time for now
+# works on one mids level at a time for now
+
 crits_mids_one <- ""
-c <- 0
-for (condition_name in names(schema$mids1))
-  {eval_tidy(condition_name)  
-  c <- c + 1
-  # get the contents of a single condition
-  condition <- schema$mids1[[condition_name]][[1]]
-  c2 <- 0
-  if(condition$midsAchieved){
-    # if midsAchieved == TRUE, then we should take these properties into account
-    n <- length(condition$property)
-    for (prop in condition$property){
-      c2 <- c2+1
-      print(c(prop, condition$midsAchieved)) #placeholder
-      #do something with the properties (write to criteria?)
-      if (c2 == 1){crits_mids_one <- paste0(crits_mids_one, "(")}
-      crits_mids_one <- paste0(crits_mids_one, "!is.null(", prop, ")")
-      #and check operator
-      if ("operator" %in% names(condition) & c2 != n){
-        if (condition$operator == "OR"){crits_mids_one <- paste0(crits_mids_one, " | ")}
-        if (condition$operator == "AND"){crits_mids_one <- paste0(crits_mids_one, " & ")}
-      }
-      if (c2 == n){crits_mids_one <- paste0(crits_mids_one, ")")}
-    }
-  }
-  else {
-    # if midsAchieved == FALSE, then we check that these properties are not true
-    for (prop in condition$property){
-      print(c(prop, condition$midsAchieved)) #placeholder
-      #check restriction
-      #do something with the properties (write to criteria?)
+#Loop through conditions, these should be all be true (&)
+n_cond <- length(names(schema$mids2))
+for (i in 1:n_cond) 
+  {condition_name = names(schema$mids2)[i]
+  #open brackets before the condition
+  if (i == 1){crits_mids_one <- paste0(crits_mids_one, "(")}
+  # Loop trough subconditions, one of these should be true (|)
+  n_subcond = length(schema$mids2[[condition_name]]) 
+  for (k in 1:n_subcond){
+    #open brackets before the subcondition
+    if (k == 1){crits_mids_one <- paste0(crits_mids_one, "(")}
+    # get the contents (properties etc) of a single subcondition
+    subcondition <- schema$mids2[[condition_name]][[k]] 
+    # Loop trough properties
+    n_prop <- length(subcondition$property)
+    for (j in 1 : n_prop){
+      prop <- subcondition$property[[j]]
+      print(c(prop, subcondition$midsAchieved)) #placeholder
+      #open the brackets before the first property
+      if (j == 1){crits_mids_one <- paste0(crits_mids_one, "(")}
+      #if there's isn't a NOT operator, add "!" so the property is not null/na
+      if ("operator" %in% names(subcondition) && subcondition$operator != "NOT" | !("operator" %in% names(subcondition))){
+        crits_mids_one <- paste0(crits_mids_one, "!")}
+      #add the property (must be not null, or not na, check later how to formulate exactly)
       crits_mids_one <- paste0(crits_mids_one, "is.null(", prop, ")")
+      #if there is a operator and it is not the last property, then add the matching operator to the string
+      if ("operator" %in% names(subcondition) & j != n_prop){
+        if (subcondition$operator == "OR"){crits_mids_one <- paste0(crits_mids_one, " | ")}
+        if (subcondition$operator == "AND"){crits_mids_one <- paste0(crits_mids_one, " & ")}
+      }
+      #close the brackets for the last property
+      if (j == n_prop){crits_mids_one <- paste0(crits_mids_one, ")")}
     }
+    #Add | between subconditions
+    if (k != n_subcond){crits_mids_one <- paste0(crits_mids_one, " | ")}
+    #close brackets after subcondition
+    else {crits_mids_one <- paste0(crits_mids_one, ")")}
   }
-  n <- length(names(schema$mids1))
-  if (c != n){crits_mids_one <- paste0(crits_mids_one, " & ")}
+  #Add & between conditions
+  if (i != n_cond){crits_mids_one <- paste0(crits_mids_one, " & ")}
+  #close brackets after condition
+  else {crits_mids_one <- paste0(crits_mids_one, ")")}
 }
 
