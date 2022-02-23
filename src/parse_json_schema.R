@@ -5,23 +5,40 @@ library(jsonlite)
 
 schema <- read_json("data/schemas/firstschema.json")
 
+#unknown or missing
+list_UoM <- list()
+#Loop trough the values
+n_values <- length(schema$unknownOrMissing)
+for (l in 1:n_values) {
+  value = schema$unknownOrMissing[[l]]$value
+  #only take into account values which do not count for mids
+  if (schema$unknownOrMissing[[l]]$midsAchieved == FALSE) {
+    #check if there is a property, otherwise it relates to all properties
+    if ("property" %in% names(schema$unknownOrMissing[[l]])){
+      prop <- schema$unknownOrMissing[[l]]$property
+    }
+    else {prop <- "all"}
+    if (prop %in% names(list_UoM)){list_UoM[[prop]] <- append(list_UoM[[prop]], value)}
+    else {list_UoM[prop] <- as.list(value)}
+  }
+}
 
 # works on one mids level at a time for now
 
 crits_mids_one <- ""
 #Loop through conditions, these should be all be true (&)
-n_cond <- length(names(schema$mids2))
+n_cond <- length(names(schema$mids1))
 for (i in 1:n_cond) 
-  {condition_name = names(schema$mids2)[i]
+  {condition_name = names(schema$mids1)[i]
   #open brackets before the condition
   if (i == 1){crits_mids_one <- paste0(crits_mids_one, "(")}
   # Loop trough subconditions, one of these should be true (|)
-  n_subcond = length(schema$mids2[[condition_name]]) 
+  n_subcond = length(schema$mids1[[condition_name]]) 
   for (k in 1:n_subcond){
     #open brackets before the subcondition
     if (k == 1){crits_mids_one <- paste0(crits_mids_one, "(")}
     # get the contents (properties etc) of a single subcondition
-    subcondition <- schema$mids2[[condition_name]][[k]] 
+    subcondition <- schema$mids1[[condition_name]][[k]] 
     # Loop trough properties
     n_prop <- length(subcondition$property)
     for (j in 1 : n_prop){
@@ -29,11 +46,24 @@ for (i in 1:n_cond)
       print(c(prop, subcondition$midsAchieved)) #placeholder
       #open the brackets before the first property
       if (j == 1){crits_mids_one <- paste0(crits_mids_one, "(")}
+      #open the brackets before each property
+      crits_mids_one <- paste0(crits_mids_one, "(")
       #if there's isn't a NOT operator, add "!" so the property is not null/na
       if ("operator" %in% names(subcondition) && subcondition$operator != "NOT" | !("operator" %in% names(subcondition))){
         crits_mids_one <- paste0(crits_mids_one, "!")}
       #add the property (must be not null, or not na, check later how to formulate exactly)
       crits_mids_one <- paste0(crits_mids_one, "is.null(", prop, ")")
+      #add restrictions from unknown or missing list
+      for (group in names(list_UoM)){
+          if (group == "all") {
+            for (value in list_UoM[[group]]) {crits_mids_one <- paste0(crits_mids_one, " & ", prop, " != '", value, "'")}
+          }
+          else if (group == prop) {
+            for (value in list_UoM[[group]]) {crits_mids_one <- paste0(crits_mids_one, " & ", prop, " != '", value, "'")}
+          }
+      }
+      #close the brackets after each property
+      crits_mids_one <- paste0(crits_mids_one, ")")
       #if there is a operator and it is not the last property, then add the matching operator to the string
       if ("operator" %in% names(subcondition) & j != n_prop){
         if (subcondition$operator == "OR"){crits_mids_one <- paste0(crits_mids_one, " | ")}
