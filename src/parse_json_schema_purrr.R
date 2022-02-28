@@ -112,8 +112,47 @@ collapse_with_operator(
 
 # iterate over the mids level statements ----------------------------------
 
+# we need the number of mids levels
+seq_along(mids_statements)
+# we need the number of conditions per mids level
+seq_along(mids_statements) %>% 
+  map(~seq_along(pluck(mids_statements,.x)))
+# we need the number of subconditions per condition
+# seq_along(mids_statements) %>% 
+#   map(~seq_along(pluck(mids_statements,.x))) %>% 
+#   pluck(2) %>% 
+#   map(~seq_along(pluck(mids_statements,2,.x))) 
 
+map(seq_along(mids_statements),function(n){
+map(pluck(map(
+  seq_along(mids_statements),  ~ seq_along(pluck(mids_statements, .x))
+), n),  ~ seq_along(pluck(mids_statements, n, .x)))})
+# then we finally need the number of properties per subcondition
+pluck(mids_statements,mids_index,cond_index,subcond_index)
+
+seq_along(pluck(mids_statements,3,1,1,"property"))
+
+# run trough all combinations and drop null values
+cross(
+  list(
+  mids_level_index = c(1:4),
+  condition_index = c(1:5),
+  group_index = c(1:2))
+  ) %>% 
+  map(~invoke(extract_group_of_operators,.,schema = schema_new)) %>% 
+  compact %>% 
+  imap(~paste(.y,":",.x))
 
 # return just the indexes -------------------------------------------------
+
+mids_statements <- keep(schema_new,stringr::str_starts(names(schema_new),"mids"))
+
+# imap(mids_statements,~.y) %>% 
+#   map(~pluck(mids_statements,.x,1))
+  
+seq_along(mids_statements) %>% 
+  map(~seq_along(pluck(mids_statements,.x)))
+  
+
 
 
