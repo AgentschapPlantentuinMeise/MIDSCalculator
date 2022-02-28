@@ -1,8 +1,8 @@
-read_json_criteria <- function(file = "data/schemas/firstschema.json") {
+library(jsonlite)
 
-  library(jsonlite)
-  
-  
+read_json_criteria <- function(file = "data/schemas/secondschema_conditions_same_level.json") {
+
+
   # Read schema -------------------------------------------------------------
   
   schema <- read_json(file)
@@ -42,13 +42,11 @@ read_json_criteria <- function(file = "data/schemas/firstschema.json") {
     if (!grepl("mids", names(schema[m]), fixed = TRUE)){next} #only continue for "mids" sections
     #Get the contents of a section
     section <- schema[[m]] 
-    crits <- ""
-    #Loop through conditions, these should be all be true (&)
+    #Loop through conditions
     n_cond <- length(names(section))
     for (i in 1:n_cond){ 
+      crits <- ""
       condition_name = names(section)[i]
-      #open brackets before the condition
-      if (i == 1){crits <- paste0(crits, "(")}
       # Loop trough subconditions, one of these should be true (|)
       n_subcond = length(section[[condition_name]]) 
       for (k in 1:n_subcond){
@@ -95,12 +93,9 @@ read_json_criteria <- function(file = "data/schemas/firstschema.json") {
         #close brackets after subcondition
         else {crits <- paste0(crits, ")")}
       }
-      #Add & between conditions
-      if (i != n_cond){crits <- paste0(crits, " & ")}
-      #close brackets after condition
-      else {crits <- paste0(crits, ")")}
+      #create nested list with criteria for each condition of each mids level
+      list_criteria[[names(schema[m])]][[condition_name]] <- crits
     }
-    list_criteria[names(schema[m])] <- crits
   }
 
   return(list_criteria)
