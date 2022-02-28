@@ -10,27 +10,31 @@ read_json_criteria <- function(file = "data/schemas/firstschema.json") {
   
   # Create list of unknownOrMissing values ----------------------------------
   
-  list_UoM <- list()
-  #Loop trough the values
-  n_values <- length(schema$unknownOrMissing)
-  for (l in 1:n_values) {
-    value = schema$unknownOrMissing[[l]]$value
-    #only take into account values which do not count for mids
-    if (schema$unknownOrMissing[[l]]$midsAchieved == FALSE) {
-      #check if there is a property, otherwise it relates to all properties
-      if ("property" %in% names(schema$unknownOrMissing[[l]])){
-        prop <- schema$unknownOrMissing[[l]]$property
-      } else {
-        prop <- "all"
-      }
-      #add to list
-      if (prop %in% names(list_UoM)){
-        list_UoM[[prop]] <- append(list_UoM[[prop]], value)
-      } else {
-        list_UoM[prop] <- as.list(value)
-        }
-    }
-  }
+  # NOT THE SAME MAPPING AS LYNN
+  
+  purrr::keep(pluck(schema,"unknownOrMissing"),~.x$midsAchieved == FALSE)   
+  
+  # list_UoM <- list()
+  # #Loop trough the values
+  # n_values <- length(schema$unknownOrMissing)
+  # for (l in 1:n_values) {
+  #   value = schema$unknownOrMissing[[l]]$value
+  #   #only take into account values which do not count for mids
+  #   if (schema$unknownOrMissing[[l]]$midsAchieved == FALSE) {
+  #     #check if there is a property, otherwise it relates to all properties
+  #     if ("property" %in% names(schema$unknownOrMissing[[l]])){
+  #       prop <- schema$unknownOrMissing[[l]]$property
+  #     } else {
+  #       prop <- "all"
+  #     }
+  #     #add to list
+  #     if (prop %in% names(list_UoM)){
+  #       list_UoM[[prop]] <- append(list_UoM[[prop]], value)
+  #     } else {
+  #       list_UoM[prop] <- as.list(value)
+  #       }
+  #   }
+  # }
   
   
   # Construct criteria for mids levels --------------------------------------
