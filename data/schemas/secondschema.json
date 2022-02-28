@@ -1,0 +1,125 @@
+{
+    "schemaName" : "MIDS Calculator default",
+    "schemaVersion" : "0.2",
+    "Date" : "2022-02-23T14:32:43",
+    "schemaType" : "MIDScalculator",
+    "informationWithheld" : "",
+    "unknownOrMissing" : [
+        {
+            "value" : "unknown:undigitized",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "unknown",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "ZZ",
+            "property" : "countryCode",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "Incertae sedis",
+            "property" : "scientificName",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "Unknown",
+            "property" : "preparations",
+            "midsAchieved" : false
+        }
+    ],
+    "mids0" : {
+        "Modified" : {
+            "property" : "modified",
+            "metadata" : "additionalMetadata/metadata/gbif/dateStamp",
+            "operator" : "OR"
+        },
+        "PhysicalSpecimenID" : {
+            "property" : [
+                "catalogNumber",
+                "materialSampleID",
+                "otherCatalogNumbers"
+            ],
+            "operator" : "OR"
+        },
+        "Institution" : {
+            "property" : [
+                "institutionCode",
+                "institutionID"
+            ],
+            "operator" : "OR"
+        }
+    },
+    "mids1" : {
+        "Name" : {
+            "property" : [
+                "scientificName",
+                "vernacularName"
+            ],
+            "operator" : "OR"
+        },
+        "MaterialType" : {
+            "property" : [ 
+                "preparations",
+                "basisOfRecord",
+                "type"
+            ],
+            "operator" : "AND"
+        }
+    },
+    "mids2" : {
+        "Location" : [
+            {
+                "property" : [
+                    "decimalLatitude",
+                    "decimalLongitude"
+                ],
+                "operator" : "AND"
+            },
+            {
+                "property" : [
+                    "locality",
+                    "county",
+                    "verbatimLocality",
+                    "verbatimCoordinates"
+                ],
+                "operator" : "OR"
+            }
+        ],
+        "CollectorName" : {
+            "property" : [
+                "recordedBy",
+                "recordedByID"
+            ],
+            "operator" : "OR"
+        },
+        "CollectorNumber" : {
+            "property" : [
+                "fieldNumber",
+                "recordNumber"
+            ],
+            "operator" : "OR"
+        },
+        "CollectionDate" : {
+            "property" : [
+                "eventDate",
+                "year",
+                "verbatimEventDate"
+            ],
+            "operator" : "OR"
+        },
+        "TypeStatus" : {
+            "property" : "typeStatus"
+        }
+    },
+    "mids3" : {
+        "Quality Assertions" : {
+            "property" : "issue",
+            "operator" : "NOT"
+        },
+        "AvailableImage" : {
+            "property" : "mediaType"
+        }
+    }
+}
