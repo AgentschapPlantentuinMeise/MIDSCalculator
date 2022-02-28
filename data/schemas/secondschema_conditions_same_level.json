@@ -81,8 +81,7 @@
                 "property" : [
                     "locality",
                     "county",
-                    "verbatimLocality",
-                    "verbatimCoordinates"
+                    "verbatimLocality"
                 ],
                 "operator" : "OR"
             }
