@@ -1,6 +1,8 @@
 library(dplyr)
 library(data.table)
 
+# Load functions ----------------------------------------------------------
+source(file = "src/parse_json_schema.R")
 
 # Get data ----------------------------------------------------------------
 
@@ -14,7 +16,7 @@ list_criteria <- read_json_criteria()
 
 #level zero
 crits_mids_zero <- "!is.null(catalogNumber) & !is.null(institutionCode) & !is.null(modified)"
-#crits_mids_zero <- list_criteria$mids0 doesn't work yet because of subcond with xpath instead op property
+#crits_mids_zero <- list_criteria$mids0 # doesn't work yet because error "x character string is not in a standard unambiguous format"
 
 #level one
 crits_mids_one <- list_criteria$mids1 #works
@@ -24,7 +26,7 @@ crits_mids_two <- "(is.na(countryCode) & !is.na(locality)|
                   (!is.na(decimalLatitude)&!is.na(decimalLongitude)))&
                   (!is.na(recordedBy)|!is.na(recordedByID))&
                   !is.na(eventDate)|!is.na(year)|!is.na(verbatimEventDate)"
-#crits_mids_two <- list_criteria$mids2 doesn't work yet because of the empty property under deposited + verbatimCoordinates and country are not columns of the gbif dataset + error "x character string is not in a standard unambiguous format"
+#crits_mids_two <- list_criteria$mids2 # doesn't work yet because error "x character string is not in a standard unambiguous format"
 
 #level three
 crits_mids_three <- list_criteria$mids3 #works
