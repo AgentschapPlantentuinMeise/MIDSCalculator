@@ -91,17 +91,26 @@ keep(schema_new,stringr::str_starts(names(schema_new),"mids")) %>%
 
 # function to collapse a number of strings with a certain logical operator that
 # is recoded to dplyr syntax
-collapse_with_operator <- function(string_to_collapse,operator) {
+collapse_with_operator <- function(string_to_collapse, operator) {
   #capture a missing operator
-  operator <- ifelse(is_null(operator),"no_operator",operator)
-  paste(string_to_collapse,
-        collapse = dplyr::recode(
-          operator,
-          AND = "&",
-          OR = "|",
-          NOT = "!",
-          no_operator = ""
-        ))
+  operator <- ifelse(is_null(operator), "no_operator", operator)
+  ifelse(
+    operator == "NOT",
+    paste0("!", string_to_collapse),
+    paste(
+      string_to_collapse,
+      collapse = dplyr::recode(
+        operator,
+        AND = "&",
+        OR = "|",
+        NOT = "!",
+        no_operator = ""
+      )
+    )
+  )
+  
+  
+  
 }
 
 # function to collapse properties and return the operator in a single object.
@@ -185,7 +194,9 @@ extract_mids_statements <-
         })
   }
 
+# above function in action
 extract_mids_statements(3)
+
 # return just the indexes -------------------------------------------------
 
 # example of just returning indexes of conditions of all mids statements.
