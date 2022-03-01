@@ -6,7 +6,7 @@ source(file = "src/parse_json_schema.R")
 
 # Get data ----------------------------------------------------------------
 
-gbif_dataset <- fread("data/occurrence.txt", encoding = "UTF-8")
+gbif_dataset <- fread("data/occurrence.txt", encoding = "UTF-8", colClasses = "character")
 
 
 # Define criteria ---------------------------------------------------------
@@ -14,32 +14,29 @@ gbif_dataset <- fread("data/occurrence.txt", encoding = "UTF-8")
 # Get list of criteria
 list_criteria <- read_json_criteria()
 
-#level zero
-crits_mids_zero <- "!is.null(catalogNumber) & !is.null(institutionCode) & !is.null(modified)"
-#crits_mids_zero <- list_criteria$mids0 # doesn't work yet because error "x character string is not in a standard unambiguous format"
 
-#level one
-crits_mids_one <- list_criteria$mids1 #works
-  
-#level two
-crits_mids_two <- "(is.na(countryCode) & !is.na(locality)|
-                  (!is.na(decimalLatitude)&!is.na(decimalLongitude)))&
-                  (!is.na(recordedBy)|!is.na(recordedByID))&
-                  !is.na(eventDate)|!is.na(year)|!is.na(verbatimEventDate)"
-#crits_mids_two <- list_criteria$mids2 # doesn't work yet because error "x character string is not in a standard unambiguous format"
+# Check if separate MIDS conditions are met -------------------------------
 
-#level three
-crits_mids_three <- list_criteria$mids3 #works
+gbif_dataset_conditions <- gbif_dataset
 
+for (j in 1:length(list_criteria)){
+  midsname <- names(list_criteria[j])
+  midscrit <- list_criteria[[j]]
+  for (i in 1:length(midscrit)){
+    columnname = paste0(midsname,  names(midscrit[i]))
+    gbif_dataset_conditions <- mutate(gbif_dataset_conditions, 
+                                      "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
+  }
+}
 
 # Calculate MIDS level ----------------------------------------------------
 
-gbif_dataset_mids <- gbif_dataset %>%
+gbif_dataset_mids <- gbif_dataset_conditions %>%
   mutate(mids_level = case_when(
-        !!rlang::parse_expr(crits_mids_three) & !!rlang::parse_expr(crits_mids_two) & !!rlang::parse_expr(crits_mids_one) & !!rlang::parse_expr(crits_mids_zero) ~ 3,
-        !!rlang::parse_expr(crits_mids_two) & !!rlang::parse_expr(crits_mids_one) & !!rlang::parse_expr(crits_mids_zero) ~ 2,
-        !!rlang::parse_expr(crits_mids_one) & !!rlang::parse_expr(crits_mids_zero) ~ 1,
-        !!rlang::parse_expr(crits_mids_zero) ~ 0
+    apply(gbif_dataset_conditions[ , grep("mids3|mids2|mids1|mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
+    apply(gbif_dataset_conditions[ , grep("mids2|mids1|mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 2,
+    apply(gbif_dataset_conditions[ , grep("mids1|mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 1,
+    apply(gbif_dataset_conditions[ , grep("mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 0
   ))
 
 # Summary -----------------------------------------------------------------
