@@ -77,12 +77,15 @@ keep(schema_new,stringr::str_starts(names(schema_new),"mids")) %>%
 # function to collapse a number of strings with a certain logical operator that
 # is recoded to dplyr syntax
 collapse_with_operator <- function(string_to_collapse,operator) {
+  #capture a missing operator
+  operator <- ifelse(is_null(operator),"no_operator",operator)
   paste(string_to_collapse,
         collapse = dplyr::recode(
           operator,
           AND = "&",
           OR = "|",
-          NOT = "!"
+          NOT = "!",
+          no_operator = ""
         ))
 }
 
@@ -133,15 +136,43 @@ pluck(mids_statements,mids_index,cond_index,subcond_index)
 seq_along(pluck(mids_statements,3,1,1,"property"))
 
 # run trough all combinations and drop null values
-cross(
+crossed <- cross(
   list(
   mids_level_index = c(1:4),
   condition_index = c(1:5),
   group_index = c(1:2))
   ) %>% 
   map(~invoke(extract_group_of_operators,.,schema = schema_new)) %>% 
-  compact %>% 
-  imap(~paste(.y,":",.x))
+  compact # drop empty elements
+
+
+crossed <- cross(
+  list(
+    mids_level_index = c(3),
+    condition_index = c(1:5),
+    group_index = c(1:2))
+) %>% 
+  map(~invoke(extract_group_of_operators,.,schema = schema_new)) %>% 
+  compact # drop empty elements
+
+
+
+# generate all property statements
+for(i in seq_along(crossed)){
+  print(i)
+  collapse_with_operator(
+    imap(crossed,~pluck(crossed,.y,"property"))[[i]],
+    imap(crossed,~pluck(crossed,.y,"operator"))[[i]])
+}
+
+
+map(seq_along(crossed),
+    function(i) {
+      collapse_with_operator(imap(crossed,  ~ pluck(crossed, .y, "property"))[[i]],
+                             imap(crossed,  ~
+                                    pluck(crossed, .y, "operator"))[[i]])
+    })
+
 
 # return just the indexes -------------------------------------------------
 
