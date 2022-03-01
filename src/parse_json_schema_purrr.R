@@ -75,7 +75,8 @@ purrr::keep(pluck(schema, "unknownOrMissing"), ~ .x$midsAchieved == FALSE) %>%
 # seperate out mids elements only -----------------------------------------
 
 # get just the mids statements part of the schema
-mids_statements <- keep(schema_new, stringr::str_starts(names(schema_new), "mids"))
+mids_statements <-
+  keep(schema_new, stringr::str_starts(names(schema_new), "mids"))
 
 
 # For every condition, read all properties, conditions should be collapsed with
@@ -87,7 +88,8 @@ mids_statements <- keep(schema_new, stringr::str_starts(names(schema_new), "mids
 
 ## get all properties for a single condition -------------------------------
 
-# second mids level, second condition, first group of properties, get the values for properties
+# second mids level, second condition, first group of properties, get the values
+# for properties
 keep(schema_new, stringr::str_starts(names(schema_new), "mids")) %>%
   pluck(2, 2, 1, "property")
 
@@ -167,7 +169,8 @@ extract_mids_statements <-
       group_index = c(1:2)
     )) %>%
       map(~ invoke(extract_group_of_operators, ., schema = schema)) %>%
-      # drop empty elements, so if number of conditions and groups is too high, we drop empty conditions here.
+      # drop empty elements, so if number of conditions and groups is too high,
+      # we drop empty conditions here.
       compact()
     # generate all property statements
 
