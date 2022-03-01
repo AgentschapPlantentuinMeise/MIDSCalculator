@@ -35,32 +35,29 @@ read_json_criteria <- function(file = "data/schemas/secondschema_conditions_same
   
   # Construct criteria for mids levels --------------------------------------
   
+  #only use mids sections
+  midsschema <- schema[grep("mids", names(schema))]
   list_criteria <- list()
   #Loop trough sections
-  n_sect <- length(names(schema))
-  for (m in 1:n_sect){
-    if (!grepl("mids", names(schema[m]), fixed = TRUE)){next} #only continue for "mids" sections
+  for (sect_index in seq_along(names(midsschema))){
     #Get the contents of a section
-    section <- schema[[m]] 
+    section <- midsschema[[sect_index]] 
     #Loop through conditions
-    n_cond <- length(names(section))
-    for (i in 1:n_cond){ 
+    for (cond_index in seq_along(names(section))){ 
       crits <- ""
-      condition_name = names(section)[i]
+      condition_name = names(section)[cond_index]
       # Loop trough subconditions, one of these should be true (|)
-      n_subcond = length(section[[condition_name]]) 
-      for (k in 1:n_subcond){
+      for (subcond_index in seq_along(section[[condition_name]])){
         #open brackets before the subcondition
-        if (k == 1){crits <- paste0(crits, "(")}
+        if (subcond_index == 1){crits <- paste0(crits, "(")}
         # get the contents (properties etc) of a single subcondition
-        subcondition <- section[[condition_name]][[k]] 
+        subcondition <- section[[condition_name]][[subcond_index]] 
         # Loop trough properties
-        n_prop <- length(subcondition$property)
-        for (j in 1 : n_prop){
-          prop <- subcondition$property[[j]]
+        for (prop_index in seq_along(subcondition$property)){
+          prop <- subcondition$property[[prop_index]]
           if (is.null(prop)){break} #if there is no property, exit this loop iterating over props, still need to check later what to do when there is no property
           #open the brackets before the first property
-          if (j == 1){crits <- paste0(crits, "(")}
+          if (prop_index == 1){crits <- paste0(crits, "(")}
           #open the brackets before each property
           crits <- paste0(crits, "(")
           #if there's isn't a NOT operator, add "!" so the property is not null/na
@@ -79,22 +76,22 @@ read_json_criteria <- function(file = "data/schemas/secondschema_conditions_same
           }
           #close the brackets after each property
           crits <- paste0(crits, ")")
+          #close the brackets for the last property
+          if (prop_index == length(subcondition$property)){crits <- paste0(crits, ")")}
           #if there is a operator and it is not the last property, then add the matching operator to the string
           #currently does not work if there are subconditions without property! needs to be fixed 
-          if ("operator" %in% names(subcondition) & j != n_prop){
+          else if ("operator" %in% names(subcondition)){
             if (subcondition$operator == "OR"){crits <- paste0(crits, " | ")}
             if (subcondition$operator == "AND"){crits <- paste0(crits, " & ")}
           }
-          #close the brackets for the last property
-          if (j == n_prop){crits <- paste0(crits, ")")}
         }
         #Add | between subconditions
-        if (k != n_subcond){crits <- paste0(crits, " | ")}
+        if (subcond_index != length(section[[condition_name]])){crits <- paste0(crits, " | ")}
         #close brackets after subcondition
         else {crits <- paste0(crits, ")")}
       }
       #create nested list with criteria for each condition of each mids level
-      list_criteria[[names(schema[m])]][[condition_name]] <- crits
+      list_criteria[[names(midsschema[sect_index])]][[condition_name]] <- crits
     }
   }
 
