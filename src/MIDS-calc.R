@@ -19,6 +19,8 @@ list_criteria <- read_json_criteria()
 
 gbif_dataset_conditions <- gbif_dataset
 
+#For each MIDS condition in the list, check if the criteria for that condition 
+#are TRUE or FALSE and add the results in a new column
 for (j in 1:length(list_criteria)){
   midsname <- names(list_criteria[j])
   midscrit <- list_criteria[[j]]
@@ -31,6 +33,7 @@ for (j in 1:length(list_criteria)){
 
 # Calculate MIDS level ----------------------------------------------------
 
+#For each MIDS level, the conditions of that level and of lower levels all need to be true
 gbif_dataset_mids <- gbif_dataset_conditions %>%
   mutate(mids_level = case_when(
     apply(gbif_dataset_conditions[ , grep("mids3|mids2|mids1|mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
