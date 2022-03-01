@@ -41,7 +41,13 @@ gbif_dataset_mids <- gbif_dataset_conditions %>%
 
 # Summary -----------------------------------------------------------------
 
+#MIDS levels
 gbif_dataset_mids %>%
   group_by(mids_level) %>%
   tally()  %>%
   mutate(perc = n / sum(n) *100)
+
+#MIDS achieved per condition
+n_rows <- nrow(gbif_dataset_conditions)
+gbif_dataset_conditions[ , grep("mids", names(gbif_dataset_conditions)), with = FALSE] %>% 
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100})
