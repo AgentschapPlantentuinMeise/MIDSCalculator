@@ -7,7 +7,16 @@ source(file = "src/parse_json_schema.R")
 
 # Get data ----------------------------------------------------------------
 
+#from occurence.txt file
 gbif_dataset <- fread("data/occurrence.txt", encoding = "UTF-8", colClasses = "character")
+
+
+#from zipped DWC archive
+gbif_dataset <- fread(unzip("data/0121350-210914110416597.zip", "occurrence.txt"), encoding = "UTF-8", colClasses = "character")
+#get metadata
+gbif_metadata <- XML::xmlRoot(XML::xmlParse(xml2::read_xml(unzip("data/0121350-210914110416597.zip", "metadata.xml"), encoding = "UTF-8")))
+#get datestamp from metadata
+gbif_datestamp <- XML::xmlElementsByTagName(gbif_metadata, "dateStamp", recursive = TRUE) %>% .[[1]]
 
 
 # Define criteria ---------------------------------------------------------
