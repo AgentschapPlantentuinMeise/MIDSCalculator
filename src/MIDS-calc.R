@@ -1,5 +1,6 @@
 library(dplyr)
 library(data.table)
+library(purrr)
 
 # Load functions ----------------------------------------------------------
 source(file = "src/parse_json_schema.R")
@@ -54,3 +55,8 @@ gbif_dataset_mids %>%
 n_rows <- nrow(gbif_dataset_conditions)
 gbif_dataset_conditions[ , grep("mids", names(gbif_dataset_conditions)), with = FALSE] %>% 
   map(~{(sum(.x, na.rm = TRUE) / n_rows)*100})
+
+
+# Export ------------------------------------------------------------------
+
+write.csv(gbif_dataset_mids, file="data/processed/mids_output.csv")
