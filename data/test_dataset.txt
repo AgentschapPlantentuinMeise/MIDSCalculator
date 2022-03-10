@@ -1,0 +1,12 @@
+modified	catalogNumber	materialSampleID	otherCatalogNumbers	institutionCode	institutionID	scientificName	vernacularName	preparations	basisOfRecord	type	decimalLatitude	decimalLongitude	locality	county	verbatimLocality	recordedBy	recordedByID	fieldNumber	recordNumber	eventDate	year	verbatimEventDate	typeStatus	issue	mediaType	test_0Modified	test_0PhysicalSpecimenID	test_0Institution	test_1Name	test_1MaterialType	test_2Location	test_2CollectorName	test_2CollectorNumber	test_2CollectionDate	test_2TypeStatus	test_3Quality Assertions	test_3AvailableImage	test__level
+yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	3
+yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes			TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	FALSE	2
+yes	yes			yes		yes		yes	yes	yes	yes	yes				yes		yes		yes			yes		yes	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	3
+yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes			yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	3
+yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes					yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	TRUE	TRUE	FALSE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	1
+yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	TRUE	FALSE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	0
+yes	yes	yes	yes	yes	yes	Incertae sedis	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	3
+yes	yes	yes	yes	yes	yes	Incertae sedis		yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	FALSE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	0
+yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	unknown	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	3
+yes	yes	yes	yes	yes	yes	unknown	unknown	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	FALSE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	0
+yes	yes	yes	yes	yes	yes	yes	yes	unknown:undigitized	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes	yes		yes	TRUE	TRUE	TRUE	TRUE	FALSE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	TRUE	0
