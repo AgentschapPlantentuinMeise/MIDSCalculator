@@ -48,10 +48,13 @@ read_json_criteria <- function(file = "data/schemas/secondschema_conditions_same
       condition_name = names(section)[cond_index]
       # Loop trough subconditions, one of these should be true (|)
       for (subcond_index in seq_along(section[[condition_name]])){
-        #open brackets before the subcondition
-        if (subcond_index == 1){crits <- paste0(crits, "(")}
         # get the contents (properties etc) of a single subcondition
         subcondition <- section[[condition_name]][[subcond_index]] 
+        #if operator is NOT, inverse all the criteria
+        if ("operator" %in% names(subcondition) && subcondition$operator == "NOT"){
+          crits <- paste0(crits, "!")}
+        #open brackets before the subcondition
+        if (subcond_index == 1){crits <- paste0(crits, "(")}
         # Loop trough properties
         for (prop_index in seq_along(subcondition$property)){
           prop <- subcondition$property[[prop_index]]
@@ -60,11 +63,8 @@ read_json_criteria <- function(file = "data/schemas/secondschema_conditions_same
           if (prop_index == 1){crits <- paste0(crits, "(")}
           #open the brackets before each property
           crits <- paste0(crits, "(")
-          #if there's isn't a NOT operator, add "!" so the property is not null/na
-          if ("operator" %in% names(subcondition) && subcondition$operator != "NOT" || !("operator" %in% names(subcondition))){
-            crits <- paste0(crits, "!")}
           #add the property (must be not null, or not na, check later how to formulate exactly)
-          crits <- paste0(crits, "is.null(", prop, ")")
+          crits <- paste0(crits, "!is.null(", prop, ")")
           #add restrictions from unknown or missing list
           for (group in names(list_UoM)){
               if (group == "all") {
