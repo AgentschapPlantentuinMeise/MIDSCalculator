@@ -5,19 +5,47 @@ library(purrr)
 # Load functions ----------------------------------------------------------
 source(file = "src/parse_json_schema.R")
 
+
+# Parameters --------------------------------------------------------------
+
+zippath <- "data/0176996-210914110416597.zip"
+occpath <- "data/occurrence.txt"
+
 # Get data ----------------------------------------------------------------
 
 #from occurence.txt file
-gbif_dataset <- fread("data/occurrence.txt", encoding = "UTF-8", colClasses = "character")
+gbif_dataset <- fread(occpath, encoding = "UTF-8", colClasses = "character")
 
 
 #from zipped DWC archive
-gbif_dataset <- fread(unzip("data/0121350-210914110416597.zip", "occurrence.txt"), encoding = "UTF-8", colClasses = "character")
-#get metadata
-gbif_metadata <- XML::xmlRoot(XML::xmlParse(xml2::read_xml(unzip("data/0121350-210914110416597.zip", "dataset/b740eaa0-0679-41dc-acb7-990d562dfa37.xml"), encoding = "UTF-8")))
-#get pubdate from metadata
-gbif_pubdate <- XML::xmlElementsByTagName(gbif_metadata, "pubDate", recursive = TRUE) %>% .[[1]]
+gbif_dataset <- fread(unzip(zippath, "occurrence.txt"), 
+                      encoding = "UTF-8", colClasses = "character")
 
+
+# Get metadata (from zipped DWC archive) ------------------------------------------------------------
+
+#Get filenames of metadata files
+filenames <- unzip(zippath, list = TRUE)$Name %>% 
+                  grep("dataset/", ., value = TRUE)
+
+#read xml files to get publication date out of metadata
+pubdate <- list()
+for (file in filenames){
+  filename <- tools::file_path_sans_ext(basename(file))
+  #extract pubdate, if it is not found it returns an emtpy list
+  trydate <- XML::xmlRoot(XML::xmlParse(
+              xml2::read_xml(unzip(zippath, file), 
+              encoding = "UTF-8", exdir = tempfile()))) %>%
+              XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
+  #if there is a date, add it to the list
+  if(length(trydate) != 0){
+    pubdate[[filename]] <- 
+        trydate %>%
+        .[[1]] %>% 
+        XML::xmlValue() %>% 
+        trimws()
+  } else {pubdate[[filename]] <- ""}
+}
 
 # Define criteria ---------------------------------------------------------
 
@@ -37,7 +65,20 @@ for (j in 1:length(list_criteria)){
   for (i in 1:length(midscrit)){
     columnname = paste0(midsname,  names(midscrit[i]))
     gbif_dataset_conditions <- mutate(gbif_dataset_conditions, 
-                                      "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
+                          "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
+    #If modified is false, we look if there is a date in the metadata
+    if (names(midscrit[i]) == "Modified") {
+      for (nrec in 1:nrow(gbif_dataset_conditions)){
+        if (gbif_dataset_conditions[[columnname]][nrec] == FALSE) {
+          #assign the date from the metadata to the modified column
+          gbif_dataset_conditions$modified[nrec] <- pubdate[[gbif_dataset_conditions$datasetKey[nrec]]]
+          #test again if the criteria are met
+          gbif_dataset_conditions <- mutate(gbif_dataset_conditions, 
+                                            "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
+        }
+      }
+     
+    }
   }
 }
 
