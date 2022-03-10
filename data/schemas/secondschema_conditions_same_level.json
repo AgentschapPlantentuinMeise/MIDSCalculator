@@ -29,7 +29,10 @@
         },
         {
             "value" : "Unknown",
-            "property" : "preparations",
+            "midsAchieved" : false
+        },
+        {
+            "value" : "NA",
             "midsAchieved" : false
         }
     ],
