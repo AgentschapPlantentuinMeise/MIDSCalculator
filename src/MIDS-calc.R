@@ -34,8 +34,8 @@ for (file in filenames){
   filename <- tools::file_path_sans_ext(basename(file))
   #extract pubdate, if it is not found it returns an emtpy list
   trydate <- XML::xmlRoot(XML::xmlParse(
-              xml2::read_xml(unzip(zippath, file), 
-              encoding = "UTF-8", exdir = tempfile()))) %>%
+              xml2::read_xml(unzip(zippath, file, exdir = tempfile()), 
+              encoding = "UTF-8"))) %>%
               XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
   #if there is a date, add it to the list
   if(length(trydate) != 0){
