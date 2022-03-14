@@ -5,21 +5,32 @@ library(purrr)
 # Load functions ----------------------------------------------------------
 source(file = "src/parse_json_schema.R")
 
-
 # Parameters --------------------------------------------------------------
 
 zippath <- "data/0176996-210914110416597.zip"
-occpath <- "data/occurrence.txt"
+# occpath <- "data/occurrence.txt"
 
 # Get data ----------------------------------------------------------------
 
 #from occurence.txt file
-gbif_dataset <- fread(occpath, encoding = "UTF-8", colClasses = "character")
+# gbif_dataset <- fread(occpath, encoding = "UTF-8", colClasses = "character")
 
+#get unknown or missing values
+list_UoM <- read_json_unknownOrMissing()
 
-#from zipped DWC archive
+# import from zipped DWC archive
+# and set unknown or missing values that apply to all to NA
 gbif_dataset <- fread(unzip(zippath, "occurrence.txt"), 
-                      encoding = "UTF-8", colClasses = "character")
+                      encoding = "UTF-8", na.strings = list_UoM$all)
+
+# change unknown or missing values for specific columns to NA
+for (i in 1:length(list_UoM)){
+  colname <- names(list_UoM[i])
+  if (colname %in% names(gbif_dataset)){
+    select(gbif_dataset, colname) %>%
+    transmute(colname = na_if(colname, list_UoM[[i]]))
+  }
+}
 
 
 # Get metadata (from zipped DWC archive) ------------------------------------------------------------
@@ -50,7 +61,7 @@ for (file in filenames){
 # Define criteria ---------------------------------------------------------
 
 # Get list of criteria
-list_criteria <- read_json_criteria()
+list_criteria <- read_json_mids_criteria()
 
 
 # Check if separate MIDS conditions are met -------------------------------
@@ -71,13 +82,15 @@ for (j in 1:length(list_criteria)){
       for (nrec in 1:nrow(gbif_dataset_conditions)){
         if (gbif_dataset_conditions[[columnname]][nrec] == FALSE) {
           #assign the date from the metadata to the modified column
-          gbif_dataset_conditions$modified[nrec] <- pubdate[[gbif_dataset_conditions$datasetKey[nrec]]]
+          if (pubdate[[gbif_dataset_conditions$datasetKey[nrec]]] != ""){
+            gbif_dataset_conditions$modified[nrec] <- pubdate[[gbif_dataset_conditions$datasetKey[nrec]]]
+          }
           #test again if the criteria are met
-          gbif_dataset_conditions <- mutate(gbif_dataset_conditions, 
+          gbif_dataset_conditions <- mutate(gbif_dataset_conditions,
                                             "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
         }
       }
-     
+
     }
   }
 }
@@ -109,4 +122,4 @@ gbif_dataset_conditions[ , grep("mids", names(gbif_dataset_conditions)), with = 
 
 # Export ------------------------------------------------------------------
 
-write.csv(gbif_dataset_mids, file="data/processed/mids_output.csv")
+fwrite(gbif_dataset_mids, file="data/processed/mids_output.csv")
