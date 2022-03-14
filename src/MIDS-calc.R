@@ -1,12 +1,12 @@
 library(dplyr)
 library(data.table)
 library(purrr)
+library(magrittr)
 
 # Load functions ----------------------------------------------------------
 source(file = "src/parse_json_schema.R")
 
 # Parameters --------------------------------------------------------------
-
 zippath <- "data/0176996-210914110416597.zip"
 # occpath <- "data/occurrence.txt"
 
@@ -17,7 +17,6 @@ zippath <- "data/0176996-210914110416597.zip"
 
 #get unknown or missing values
 list_UoM <- read_json_unknownOrMissing()
-
 # import from zipped DWC archive
 # and set unknown or missing values that apply to all to NA
 gbif_dataset <- fread(unzip(zippath, "occurrence.txt"), 
@@ -28,7 +27,7 @@ for (i in 1:length(list_UoM)){
   colname <- names(list_UoM[i])
   if (colname %in% names(gbif_dataset)){
     select(gbif_dataset, colname) %>%
-    transmute(colname = na_if(colname, list_UoM[[i]]))
+      transmute(colname = na_if(colname, list_UoM[[i]]))
   }
 }
 
@@ -37,26 +36,39 @@ for (i in 1:length(list_UoM)){
 
 #Get filenames of metadata files
 filenames <- unzip(zippath, list = TRUE)$Name %>% 
-                  grep("dataset/", ., value = TRUE)
+  grep("dataset/", ., value = TRUE)
 
 #read xml files to get publication date out of metadata
-pubdate <- list()
+pubdate <- data.table(datasetKey=character(), pubdate=character())
 for (file in filenames){
   filename <- tools::file_path_sans_ext(basename(file))
   #extract pubdate, if it is not found it returns an emtpy list
   trydate <- XML::xmlRoot(XML::xmlParse(
-              xml2::read_xml(unzip(zippath, file, exdir = tempfile()), 
-              encoding = "UTF-8"))) %>%
-              XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
+    xml2::read_xml(unzip(zippath, file, exdir = tempfile()), 
+                   encoding = "UTF-8"))) %>%
+    XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
   #if there is a date, add it to the list
   if(length(trydate) != 0){
-    pubdate[[filename]] <- 
-        trydate %>%
-        .[[1]] %>% 
-        XML::xmlValue() %>% 
-        trimws()
-  } else {pubdate[[filename]] <- ""}
+    date <- 
+      trydate %>%
+      .[[1]] %>% 
+      XML::xmlValue() %>% 
+      trimws()
+  
+  } else {date <- ""}
+  pubdate <- rbind(pubdate, list(filename, date))
 }
+
+
+# Add modified metadata to the dataset ------------------------------------
+
+gbif_dataset_w_metadata <- left_join(gbif_dataset, pubdate, by = "datasetKey")
+
+gbif_dataset_w_metadata %<>%
+  mutate(modified = case_when( 
+    is.na(modified) ~ pubdate,
+    TRUE ~ as.character(modified)))
+
 
 # Define criteria ---------------------------------------------------------
 
@@ -66,7 +78,7 @@ list_criteria <- read_json_mids_criteria()
 
 # Check if separate MIDS conditions are met -------------------------------
 
-gbif_dataset_conditions <- gbif_dataset
+gbif_dataset_conditions <- gbif_dataset_w_metadata
 
 #For each MIDS condition in the list, check if the criteria for that condition 
 #are TRUE or FALSE and add the results in a new column
@@ -76,22 +88,7 @@ for (j in 1:length(list_criteria)){
   for (i in 1:length(midscrit)){
     columnname = paste0(midsname,  names(midscrit[i]))
     gbif_dataset_conditions <- mutate(gbif_dataset_conditions, 
-                          "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
-    #If modified is false, we look if there is a date in the metadata
-    if (names(midscrit[i]) == "Modified") {
-      for (nrec in 1:nrow(gbif_dataset_conditions)){
-        if (gbif_dataset_conditions[[columnname]][nrec] == FALSE) {
-          #assign the date from the metadata to the modified column
-          if (pubdate[[gbif_dataset_conditions$datasetKey[nrec]]] != ""){
-            gbif_dataset_conditions$modified[nrec] <- pubdate[[gbif_dataset_conditions$datasetKey[nrec]]]
-          }
-          #test again if the criteria are met
-          gbif_dataset_conditions <- mutate(gbif_dataset_conditions,
-                                            "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
-        }
-      }
-
-    }
+                                      "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
   }
 }
 
