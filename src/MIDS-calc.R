@@ -88,8 +88,8 @@ for (j in 1:length(list_criteria)){
   midscrit <- list_criteria[[j]]
   for (i in 1:length(midscrit)){
     columnname = paste0(midsname,  names(midscrit[i]))
-    transmute(gbif_dataset_conditions, 
-                         "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
+    gbif_dataset_conditions %<>%
+      mutate("{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
   }
 }
 
