@@ -39,5 +39,4 @@ secondschema_conditions_same_level.json
 * Second draft (02/22) with some small changes:
   * Placed all conditions on the same nesting level
   * Removed verbatimCoordinates
-  * Added empty string to unknownOrMissing
   * Apply "Unknown" in unknownOrMissing to all
