@@ -14,6 +14,10 @@
             "midsAchieved" : false
         },
         {
+            "value" : "",
+            "midsAchieved" : false
+        },
+        {
             "value" : "ZZ",
             "property" : "countryCode",
             "midsAchieved" : false
