@@ -17,6 +17,7 @@ zippath <- "data/0176996-210914110416597.zip"
 
 #get unknown or missing values
 list_UoM <- read_json_unknownOrMissing()
+
 # import from zipped DWC archive
 # and set unknown or missing values that apply to all to NA
 gbif_dataset <- fread(unzip(zippath, "occurrence.txt"), 
@@ -26,8 +27,8 @@ gbif_dataset <- fread(unzip(zippath, "occurrence.txt"),
 for (i in 1:length(list_UoM)){
   colname <- names(list_UoM[i])
   if (colname %in% names(gbif_dataset)){
-    select(gbif_dataset, colname) %>%
-      transmute(colname = na_if(colname, list_UoM[[i]]))
+    gbif_dataset %<>%
+      mutate("{colname}" := na_if(gbif_dataset[[colname]], list_UoM[[i]]))
   }
 }
 
@@ -55,7 +56,7 @@ for (file in filenames){
       XML::xmlValue() %>% 
       trimws()
   
-  } else {date <- ""}
+  } else {date <- NA}
   pubdate <- rbind(pubdate, list(filename, date))
 }
 
@@ -87,8 +88,8 @@ for (j in 1:length(list_criteria)){
   midscrit <- list_criteria[[j]]
   for (i in 1:length(midscrit)){
     columnname = paste0(midsname,  names(midscrit[i]))
-    gbif_dataset_conditions <- mutate(gbif_dataset_conditions, 
-                                      "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
+    transmute(gbif_dataset_conditions, 
+                         "{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
   }
 }
 
