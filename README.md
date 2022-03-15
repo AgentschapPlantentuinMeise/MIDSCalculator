@@ -10,7 +10,9 @@ In this internship, we plan to construct an app that allows users to calculate M
 
 ## Scripts
 parse_json_schema.R    
-* takes a JSON schema and parses it into criteria
+* 2 functions:
+  * read_json_mids_criteria(file): uses the MIDS sections of the JSON schema and returns criteria per MIDS level
+  * read_json_unknownOrMissing(file): uses the unknownOrMissing section of the JSON schema and returns a list of these values
 * no need to run this separately, is loaded in MIDS-calc.R
 
 MIDS-calc.R
@@ -37,5 +39,5 @@ secondschema_conditions_same_level.json
 * Second draft (02/22) with some small changes:
   * Placed all conditions on the same nesting level
   * Removed verbatimCoordinates
-  * Added empty string + "NA" to unknownOrMissing
+  * Added empty string to unknownOrMissing
   * Apply "Unknown" in unknownOrMissing to all
