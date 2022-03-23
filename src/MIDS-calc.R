@@ -4,31 +4,32 @@ library(purrr)
 library(magrittr)
 
 # Parameters --------------------------------------------------------------
-zippath <- "data/0176996-210914110416597.zip"
+# zippath <- "data/0176996-210914110416597.zip"
+# jsonpath <- "data/schemas/secondschema_conditions_same_level.json"
 # occpath <- "data/occurrence.txt"
 
-calculate_mids <- function(gbiffile = zippath) {
+# Load functions ----------------------------------------------------------
+# source(file = "src/parse_json_schema.R")
 
-  # Load functions ----------------------------------------------------------
-  source(file = "src/parse_json_schema.R")
-  
+calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
+
   # Get data ----------------------------------------------------------------
   
   #from occurence.txt file
   # gbif_dataset <- fread(occpath, encoding = "UTF-8", colClasses = "character")
   
   #get unknown or missing values
-  list_UoM <- read_json_unknownOrMissing()
+  list_UoM <- read_json_unknownOrMissing(jsonfile)
   
   #get list of used properties
-  list_props <- read_json_mids_criteria(out = "properties")
+  list_props <- read_json_mids_criteria(jsonfile, out = "properties")
   
   #add other needed/interesting properties
   list_props <- c(list_props, "datasetKey", "countryCode")
   
   # import from zipped DWC archive
   # and set unknown or missing values that apply to all to NA
-  gbif_dataset <- fread(unzip(zippath, "occurrence.txt"), 
+  gbif_dataset <- fread(unzip(gbiffile, "occurrence.txt"), 
                         encoding = "UTF-8", na.strings = list_UoM$all, 
                         select = list_props)
   
@@ -45,7 +46,7 @@ calculate_mids <- function(gbiffile = zippath) {
   # Get metadata (from zipped DWC archive) ------------------------------------------------------------
   
   #Get filenames of metadata files
-  filenames <- unzip(zippath, list = TRUE)$Name %>% 
+  filenames <- unzip(gbiffile, list = TRUE)$Name %>% 
     grep("dataset/", ., value = TRUE)
   
   #read xml files to get publication date out of metadata
@@ -54,7 +55,7 @@ calculate_mids <- function(gbiffile = zippath) {
     filename <- tools::file_path_sans_ext(basename(file))
     #extract pubdate, if it is not found it returns an emtpy list
     trydate <- XML::xmlRoot(XML::xmlParse(
-      xml2::read_xml(unzip(zippath, file, exdir = tempfile()), 
+      xml2::read_xml(unzip(gbiffile, file, exdir = tempfile()), 
                      encoding = "UTF-8"))) %>%
       XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
     #if there is a date, add it to the list
@@ -84,7 +85,7 @@ calculate_mids <- function(gbiffile = zippath) {
   # Define criteria ---------------------------------------------------------
   
   # Get list of criteria
-  list_criteria <- read_json_mids_criteria()
+  list_criteria <- read_json_mids_criteria(jsonfile)
   
   
   # Check if separate MIDS conditions are met -------------------------------
@@ -109,7 +110,8 @@ calculate_mids <- function(gbiffile = zippath) {
       apply(gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
       apply(gbif_dataset_mids[ , grep("mids[0-2]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 2,
       apply(gbif_dataset_mids[ , grep("mids[0-1]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 1,
-      apply(gbif_dataset_mids[ , grep("mids0", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 0
+      apply(gbif_dataset_mids[ , grep("mids0", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 0,
+      TRUE ~ -1
     ))
   return(gbif_dataset_mids)
 }
