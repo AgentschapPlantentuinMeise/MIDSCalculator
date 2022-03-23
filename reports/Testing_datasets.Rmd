@@ -1,0 +1,185 @@
+---
+title: "Dataset testing"
+author: "Lynn"
+date: "3/15/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+```{r, include=FALSE}
+#Load libraries and functions
+library(dplyr)
+library(data.table)
+library(purrr)
+library(magrittr)
+source(file = "src/parse_json_schema.R")
+source(file = "src/MIDS-calc.R")
+```
+
+## Zenodo dataset
+
+```{r, echo = TRUE}
+zippath <- "data/0176996-210914110416597.zip"
+```
+```{r}
+tictoc::tic()
+gbif_dataset_mids <- calculate_mids()
+
+#MIDS levels
+gbif_dataset_mids %>%
+  group_by(mids_level) %>%
+  tally()  %>%
+  mutate(perc = n / sum(n) *100)
+
+#MIDS achieved per condition
+n_rows <- nrow(gbif_dataset_mids)
+gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+  as.data.table()
+
+cat("Number of records:", n_rows)
+tictoc::toc(log = TRUE, quiet = TRUE)
+print(tictoc::tic.log(format = TRUE))
+tictoc::tic.clearlog()
+```
+
+## BGM dataset
+
+```{r, echo = TRUE}
+zippath <- "data/0165952-210914110416597.zip"
+```
+```{r}
+tictoc::tic()
+gbif_dataset_mids <- calculate_mids()
+
+#MIDS levels
+gbif_dataset_mids %>%
+  group_by(mids_level) %>%
+  tally()  %>%
+  mutate(perc = n / sum(n) *100)
+
+#MIDS achieved per condition
+n_rows <- nrow(gbif_dataset_mids)
+gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+  as.data.table()
+
+cat("Number of records:", n_rows)
+tictoc::toc(log = TRUE, quiet = TRUE)
+print(tictoc::tic.log(format = TRUE))
+tictoc::tic.clearlog()
+```
+
+## University of Vienna, Institute for Botany - Herbarium WU
+
+```{r, echo = TRUE}
+zippath <- "data/0191699-210914110416597.zip"
+print("https://doi.org/10.15468/dl.pesgcz")
+```
+```{r}
+tictoc::tic()
+gbif_dataset_mids <- calculate_mids()
+
+#MIDS levels
+gbif_dataset_mids %>%
+  group_by(mids_level) %>%
+  tally()  %>%
+  mutate(perc = n / sum(n) *100)
+
+#MIDS achieved per condition
+n_rows <- nrow(gbif_dataset_mids)
+gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+  as.data.table()
+
+cat("Number of records:", n_rows)
+tictoc::toc(log = TRUE, quiet = TRUE)
+print(tictoc::tic.log(format = TRUE))
+tictoc::tic.clearlog()
+```
+## Royal Belgian Institute of Natural Sciences Bird collection + Fish collection + Mammal collection
+
+```{r, echo = TRUE}
+zippath <- "data/0191702-210914110416597.zip"
+print("https://doi.org/10.15468/dl.uja7fq")
+```
+```{r}
+tictoc::tic()
+gbif_dataset_mids <- calculate_mids()
+
+#MIDS levels
+gbif_dataset_mids %>%
+  group_by(mids_level) %>%
+  tally()  %>%
+  mutate(perc = n / sum(n) *100)
+
+#MIDS achieved per condition
+n_rows <- nrow(gbif_dataset_mids)
+gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+  as.data.table()
+
+cat("Number of records:", n_rows)
+tictoc::toc(log = TRUE, quiet = TRUE)
+print(tictoc::tic.log(format = TRUE))
+tictoc::tic.clearlog()
+```
+## Naturalis Biodiversity Center (NL) - Paleontology
+
+```{r, echo = TRUE}
+zippath <- "data/0191708-210914110416597.zip"
+print("https://doi.org/10.15468/dl.n36rpw")
+```
+```{r}
+tictoc::tic()
+gbif_dataset_mids <- calculate_mids()
+
+#MIDS levels
+gbif_dataset_mids %>%
+  group_by(mids_level) %>%
+  tally()  %>%
+  mutate(perc = n / sum(n) *100)
+
+#MIDS achieved per condition
+n_rows <- nrow(gbif_dataset_mids)
+gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+  as.data.table()
+
+cat("Number of records:", n_rows)
+tictoc::toc(log = TRUE, quiet = TRUE)
+print(tictoc::tic.log(format = TRUE))
+tictoc::tic.clearlog()
+```
+
+##  Natural History Museum (London) Collection Specimens
+
+```{r, echo = TRUE}
+#zippath <- "data/0184293-210914110416597.zip"
+```
+```{r}
+# tictoc::tic()
+# gbif_dataset_mids <- calculate_mids()
+# 
+# #MIDS levels
+# gbif_dataset_mids %>%
+#   group_by(mids_level) %>%
+#   tally()  %>%
+#   mutate(perc = n / sum(n) *100)
+# 
+# #MIDS achieved per condition
+# n_rows <- nrow(gbif_dataset_mids)
+# gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
+#   map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+#   as.data.table()
+# 
+# cat("Number of records:", n_rows)
+# tictoc::toc(log = TRUE, quiet = TRUE)
+# print(tictoc::tic.log(format = TRUE))
+# tictoc::tic.clearlog()
+```
+
+
+
