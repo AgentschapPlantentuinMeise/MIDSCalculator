@@ -191,13 +191,13 @@ pre code {
 ## 1:            92.89773</code></pre>
 <pre><code>## Number of records: 1760</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;1.05 sec elapsed&quot;</code></pre>
+## [1] &quot;1.17 sec elapsed&quot;</code></pre>
 </div>
 <div id="bgm-dataset" class="section level2">
 <h2>BGM dataset</h2>
 <pre class="r"><code>zippath &lt;- &quot;data/0165952-210914110416597.zip&quot;</code></pre>
 <pre><code>## Warning in fread(unzip(zippath, &quot;occurrence.txt&quot;), encoding = &quot;UTF-8&quot;,
-## na.strings = list_UoM$all): Found and resolved improper quoting out-of-sample.
+## na.strings = list_UoM$all, : Found and resolved improper quoting out-of-sample.
 ## First healed line 51825: &lt;&lt;1840540026 http://www.botanicalcollections.be/
 ## specimen/BR0000025790719V CC_BY_4_0 2021-11-09T00:00:00Z Meise Botanic
 ## Garden http://www.botanicalcollections.be/specimen/BR0000025790719V Meise
@@ -223,7 +223,7 @@ pre code {
 ## 1:            77.42874</code></pre>
 <pre><code>## Number of records: 1827944</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;76.35 sec elapsed&quot;</code></pre>
+## [1] &quot;51.08 sec elapsed&quot;</code></pre>
 </div>
 <div id="university-of-vienna-institute-for-botany---herbarium-wu" class="section level2">
 <h2>University of Vienna, Institute for Botany - Herbarium WU</h2>
@@ -244,7 +244,7 @@ print(&quot;https://doi.org/10.15468/dl.pesgcz&quot;)</code></pre>
 ## 1:            70.24516</code></pre>
 <pre><code>## Number of records: 85576</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;2.62 sec elapsed&quot;</code></pre>
+## [1] &quot;2.25 sec elapsed&quot;</code></pre>
 </div>
 <div id="royal-belgian-institute-of-natural-sciences-bird-collection-fish-collection-mammal-collection" class="section level2">
 <h2>Royal Belgian Institute of Natural Sciences Bird collection + Fish collection + Mammal collection</h2>
@@ -266,7 +266,7 @@ print(&quot;https://doi.org/10.15468/dl.uja7fq&quot;)</code></pre>
 ## 1:                   0</code></pre>
 <pre><code>## Number of records: 185859</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;6.55 sec elapsed&quot;</code></pre>
+## [1] &quot;4.91 sec elapsed&quot;</code></pre>
 </div>
 <div id="naturalis-biodiversity-center-nl---paleontology" class="section level2">
 <h2>Naturalis Biodiversity Center (NL) - Paleontology</h2>
@@ -274,7 +274,7 @@ print(&quot;https://doi.org/10.15468/dl.uja7fq&quot;)</code></pre>
 print(&quot;https://doi.org/10.15468/dl.n36rpw&quot;)</code></pre>
 <pre><code>## [1] &quot;https://doi.org/10.15468/dl.n36rpw&quot;</code></pre>
 <pre><code>## Warning in fread(unzip(zippath, &quot;occurrence.txt&quot;), encoding = &quot;UTF-8&quot;,
-## na.strings = list_UoM$all): Found and resolved improper quoting out-of-sample.
+## na.strings = list_UoM$all, : Found and resolved improper quoting out-of-sample.
 ## First healed line 3271: &lt;&lt;3322066570 RGM.177280@CRS CC0_1_0 2017-06-29T00:00:00Z
 ## Naturalis Biodiversity Center Naturalis Biodiversity Center Naturalis
 ## Biodiversity Center Micro Vertebrates Naturalis Biodiversity Center (NL)
@@ -296,11 +296,36 @@ print(&quot;https://doi.org/10.15468/dl.n36rpw&quot;)</code></pre>
 ## 1:          0.05079861</code></pre>
 <pre><code>## Number of records: 511825</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;15.4 sec elapsed&quot;</code></pre>
+## [1] &quot;10.47 sec elapsed&quot;</code></pre>
 </div>
 <div id="natural-history-museum-london-collection-specimens" class="section level2">
 <h2>Natural History Museum (London) Collection Specimens</h2>
-<pre class="r"><code>#zippath &lt;- &quot;data/0184293-210914110416597.zip&quot;</code></pre>
+<pre class="r"><code>zippath &lt;- &quot;data/0184293-210914110416597.zip&quot;</code></pre>
+<pre><code>## Warning in fread(unzip(zippath, &quot;occurrence.txt&quot;), encoding = &quot;UTF-8&quot;,
+## na.strings = list_UoM$all, : Found and resolved improper quoting out-of-sample.
+## First healed line 17542: &lt;&lt;1055601588 2053101 CC0_1_0 Natural History Museum
+## NHMUK PAL Natural History Museum (London) Collection Specimens FOSSIL_SPECIMEN
+## {&quot;chronostratigraphy&quot;: &quot;Cretaceous, Late Cretaceous, Turonian&quot;, &quot;gbifissue&quot;:
+## [&quot;TAXON_MATCH_HIGHERRANK&quot;], &quot;created&quot;: 813279600000, &quot;gbifid&quot;: 1055601588,
+## &quot;determinationnames&quot;: [&quot;Meliceritites foricula d&#39;Orbigny, 1853&quot;, &quot;Meliceritites
+## foricula d&#39;Orbigny, 1853&quot;, &quot;Meliceritites sp. Taylor MS&quot;], &quot;subdepartment&quot;: &quot;ES
+## B&gt;&gt;. If the fields are not quoted (e.g. field separator does not appear within
+## any field), try quote=&quot;&quot; to avoid this warning.</code></pre>
+<pre><code>## # A tibble: 1 x 3
+##   mids_level       n  perc
+##        &lt;dbl&gt;   &lt;int&gt; &lt;dbl&gt;
+## 1          0 4698830   100</code></pre>
+<pre><code>##    mids0Modified mids0PhysicalSpecimenID mids0Institution mids1Name
+## 1:           100                     100              100       100
+##    mids1MaterialType mids2Location mids2CollectorName mids2CollectorNumber
+## 1:                 0      53.83915           41.27255             21.32954
+##    mids2CollectionDate mids2TypeStatus mids3Quality Assertions
+## 1:            34.44272        7.899115                       0
+##    mids3AvailableImage
+## 1:            58.30645</code></pre>
+<pre><code>## Number of records: 4698830</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;142.35 sec elapsed&quot;</code></pre>
 </div>
 
 
