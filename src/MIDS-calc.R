@@ -4,7 +4,7 @@ library(purrr)
 library(magrittr)
 
 # Parameters --------------------------------------------------------------
-zippath <- "data/0184293-210914110416597.zip"
+zippath <- "data/0176996-210914110416597.zip"
 # occpath <- "data/occurrence.txt"
 
 calculate_mids <- function(gbiffile = zippath) {
@@ -20,10 +20,17 @@ calculate_mids <- function(gbiffile = zippath) {
   #get unknown or missing values
   list_UoM <- read_json_unknownOrMissing()
   
+  #get list of used properties
+  list_props <- read_json_mids_criteria(out = "properties")
+  
+  #add other needed/interesting properties
+  list_props <- c(list_props, "datasetKey", "countryCode")
+  
   # import from zipped DWC archive
   # and set unknown or missing values that apply to all to NA
   gbif_dataset <- fread(unzip(zippath, "occurrence.txt"), 
-                        encoding = "UTF-8", na.strings = list_UoM$all)
+                        encoding = "UTF-8", na.strings = list_UoM$all, 
+                        select = list_props)
   
   # change unknown or missing values for specific columns to NA
   for (i in 1:length(list_UoM)){
