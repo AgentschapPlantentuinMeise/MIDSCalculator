@@ -63,9 +63,9 @@ for (file in filenames){
 
 # Add modified metadata to the dataset ------------------------------------
 
-gbif_dataset_w_metadata <- left_join(gbif_dataset, pubdate, by = "datasetKey")
+gbif_dataset_mids <- left_join(gbif_dataset, pubdate, by = "datasetKey")
 
-gbif_dataset_w_metadata %<>%
+gbif_dataset_mids %<>%
   mutate(modified = case_when( 
     is.na(modified) ~ pubdate,
     TRUE ~ as.character(modified)))
@@ -79,8 +79,6 @@ list_criteria <- read_json_mids_criteria()
 
 # Check if separate MIDS conditions are met -------------------------------
 
-gbif_dataset_conditions <- gbif_dataset_w_metadata
-
 #For each MIDS condition in the list, check if the criteria for that condition 
 #are TRUE or FALSE and add the results in a new column
 for (j in 1:length(list_criteria)){
@@ -88,7 +86,7 @@ for (j in 1:length(list_criteria)){
   midscrit <- list_criteria[[j]]
   for (i in 1:length(midscrit)){
     columnname = paste0(midsname,  names(midscrit[i]))
-    gbif_dataset_conditions %<>%
+    gbif_dataset_mids %<>%
       mutate("{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
   }
 }
@@ -96,12 +94,12 @@ for (j in 1:length(list_criteria)){
 # Calculate MIDS level ----------------------------------------------------
 
 #For each MIDS level, the conditions of that level and of lower levels all need to be true
-gbif_dataset_mids <- gbif_dataset_conditions %>%
+gbif_dataset_mids %<>%
   mutate(mids_level = case_when(
-    apply(gbif_dataset_conditions[ , grep("mids3|mids2|mids1|mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
-    apply(gbif_dataset_conditions[ , grep("mids2|mids1|mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 2,
-    apply(gbif_dataset_conditions[ , grep("mids1|mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 1,
-    apply(gbif_dataset_conditions[ , grep("mids0", names(gbif_dataset_conditions)), with = FALSE], MARGIN = 1, FUN = all) ~ 0
+    apply(gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
+    apply(gbif_dataset_mids[ , grep("mids[0-2]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 2,
+    apply(gbif_dataset_mids[ , grep("mids[0-1]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 1,
+    apply(gbif_dataset_mids[ , grep("mids0", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 0
   ))
 
 # Summary -----------------------------------------------------------------
@@ -113,9 +111,10 @@ gbif_dataset_mids %>%
   mutate(perc = n / sum(n) *100)
 
 #MIDS achieved per condition
-n_rows <- nrow(gbif_dataset_conditions)
-gbif_dataset_conditions[ , grep("mids", names(gbif_dataset_conditions)), with = FALSE] %>% 
-  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100})
+n_rows <- nrow(gbif_dataset_mids)
+gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+  as.data.table()
 
 
 # Export ------------------------------------------------------------------
