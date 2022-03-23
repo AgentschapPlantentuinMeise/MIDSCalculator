@@ -34,7 +34,8 @@ read_json_unknownOrMissing <- function(file = "data/schemas/secondschema_conditi
   return(list_UoM)
 }
   
-read_json_mids_criteria <- function(file = "data/schemas/secondschema_conditions_same_level.json") {
+read_json_mids_criteria <- function(file = "data/schemas/secondschema_conditions_same_level.json",
+                                    outtype = "criteria") {
   
   
   # Read schema -------------------------------------------------------------
@@ -46,6 +47,7 @@ read_json_mids_criteria <- function(file = "data/schemas/secondschema_conditions
   #only use mids sections
   midsschema <- schema[grep("mids", names(schema))]
   list_criteria <- list()
+  list_props <- character()
   #Loop trough sections
   for (sect_index in seq_along(names(midsschema))){
     #Get the contents of a section
@@ -67,6 +69,8 @@ read_json_mids_criteria <- function(file = "data/schemas/secondschema_conditions
         for (prop_index in seq_along(subcondition$property)){
           prop <- subcondition$property[[prop_index]]
           if (is.null(prop)){break} #if there is no property, exit this loop iterating over props, still need to check later what to do when there is no property
+          #make a list of properties
+          list_props <- append(list_props, prop)
           #add the property is not na
           crits <- paste0(crits, "!is.na(", prop, ")")
           #if there is a operator and it is not the last property, then add the matching operator to the string
@@ -85,6 +89,10 @@ read_json_mids_criteria <- function(file = "data/schemas/secondschema_conditions
       list_criteria[[names(midsschema[sect_index])]][[condition_name]] <- crits
     }
   }
-
-  return(list_criteria)
+  if (outtype == "criteria"){
+    return(list_criteria)
+  }
+  else if (outtype == "properties"){
+    return(list_props)
+  }
 }
