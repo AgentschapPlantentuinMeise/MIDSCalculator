@@ -81,6 +81,8 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
       is.na(modified) ~ pubdate,
       TRUE ~ as.character(modified)))
   
+  #don't need pubdate column anymore
+  gbif_dataset_mids$pubdate <- NULL
   
   # Define criteria ---------------------------------------------------------
   
