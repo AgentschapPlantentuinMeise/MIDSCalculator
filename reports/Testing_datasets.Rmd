@@ -157,28 +157,28 @@ tictoc::tic.clearlog()
 ##  Natural History Museum (London) Collection Specimens
 
 ```{r, echo = TRUE}
-#zippath <- "data/0184293-210914110416597.zip"
+zippath <- "data/0184293-210914110416597.zip"
 ```
 ```{r}
-# tictoc::tic()
-# gbif_dataset_mids <- calculate_mids()
-# 
-# #MIDS levels
-# gbif_dataset_mids %>%
-#   group_by(mids_level) %>%
-#   tally()  %>%
-#   mutate(perc = n / sum(n) *100)
-# 
-# #MIDS achieved per condition
-# n_rows <- nrow(gbif_dataset_mids)
-# gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
-#   map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
-#   as.data.table()
-# 
-# cat("Number of records:", n_rows)
-# tictoc::toc(log = TRUE, quiet = TRUE)
-# print(tictoc::tic.log(format = TRUE))
-# tictoc::tic.clearlog()
+tictoc::tic()
+gbif_dataset_mids <- calculate_mids()
+
+#MIDS levels
+gbif_dataset_mids %>%
+  group_by(mids_level) %>%
+  tally()  %>%
+  mutate(perc = n / sum(n) *100)
+
+#MIDS achieved per condition
+n_rows <- nrow(gbif_dataset_mids)
+gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>%
+  map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
+  as.data.table()
+
+cat("Number of records:", n_rows)
+tictoc::toc(log = TRUE, quiet = TRUE)
+print(tictoc::tic.log(format = TRUE))
+tictoc::tic.clearlog()
 ```
 
 
