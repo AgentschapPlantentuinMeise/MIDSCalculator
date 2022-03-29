@@ -11,9 +11,9 @@ options(shiny.maxRequestSize = 5000*1024^2)
 jsonpath <- "../../data/schemas/secondschema_conditions_same_level.json"
 
 # Define UI ----
-ui <- navbarPage("Calculate MIDS scores",
+ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
                  tabPanel("Submit dataset",
-                          fileInput("gbiffile", "Upload GBIF annotated archive",
+                          fileInput("gbiffile", "Upload zipped GBIF annotated archive (max 5 GB)",
                                     accept = ".zip"),
                           ),
                  tabPanel("Results",
@@ -37,6 +37,7 @@ ui <- navbarPage("Calculate MIDS scores",
                                           tabPanel("Plot", plotOutput("midsplot"),
                                                    plotOutput("midscritsplot")),
                                           tabPanel("Summary", DT::dataTableOutput("summary"), 
+                                                   br(),
                                                    DT::dataTableOutput("summarycrit")),
                                           tabPanel("Table", 
                                                    DT::dataTableOutput("table"))
@@ -51,7 +52,7 @@ ui <- navbarPage("Calculate MIDS scores",
 # Define server logic ----
 server <- function(input, output) {
   
-  #calculate mids levels
+  #calculate mids levels and criteria
   gbif_dataset_mids <- reactive({
     withProgress(message = 'Calculating MIDS scores', value = 0, {
       calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath)
@@ -59,41 +60,53 @@ server <- function(input, output) {
   })
   #create summary of MIDS levels
   midssum <- reactive({
-    gbif_dataset_mids() %>% group_by(mids_level) %>% summarise(n = n(), percentage = round(n()/nrow(.)*100))
+    gbif_dataset_mids() %>% group_by(MIDS_level) %>% summarise(Number_of_records = n(), Percentage = round(n()/nrow(.)*100))
   })
   #create summary of MIDS criteria
   midscrit <- reactive({
-    gbif_dataset_mids()[ , grep("mids[0-3]", names(gbif_dataset_mids())), with = FALSE] %>% 
+    cbind.data.frame(
+    names(gbif_dataset_mids()[ , grep("mids[0-3]", names(gbif_dataset_mids())), with = FALSE]),
+    gbif_dataset_mids()[ , grep("mids[0-3]", names(gbif_dataset_mids())), with = FALSE] %>%
+      map(~{sum(.x, na.rm = TRUE)}) %>% 
+      as.numeric() , 
+    gbif_dataset_mids()[ , grep("mids[0-3]", names(gbif_dataset_mids())), with = FALSE] %>%  
       map(~{round((sum(.x, na.rm = TRUE) / nrow(gbif_dataset_mids()))*100)}) %>%
-      as.data.table() %>%
-      t()
+      as.numeric())  %>% 
+    set_colnames(c("MIDS_criteria", "Number_of_records","Percentage")) 
   })
   
   #plot mids levels
   output$midsplot<-renderPlot({
-    ggplot(midssum(), aes(x=mids_level, y=n)) + 
+    ggplot(midssum(), aes(x=MIDS_level, y=Number_of_records)) + 
     geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) +
     coord_cartesian(xlim = c(-1.5, 3.5)) +
     geom_text(data = midssum(), 
-              aes(y = n + sum(n)*0.02, label = paste0(n, " (", round((n/sum(n))*100),"%)")))
+              aes(y = Number_of_records , label = paste0(Number_of_records, " (", Percentage,"%)")),
+                  vjust = 1.25, colour = "white") +
+    labs(x = "MIDS level", y = "Number of records") +
+    ggtitle("MIDS levels") +
+    theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
   #plot mids criteria
   output$midscritsplot<-renderPlot({
-    ggplot(as.data.frame(midscrit()), aes(x= rownames(midscrit()), y=V1)) + 
+    ggplot(midscrit(), aes(x= MIDS_criteria, y=Percentage)) + 
       geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) + 
       coord_flip() + 
-      geom_text(data = as.data.frame(midscrit()), 
-                aes(y = V1, label = V1), hjust = 1.25, colour = "white")
+      geom_text(data = midscrit(), 
+                aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
+      labs(x = "MIDS criteria", y = "% of records that meet the criterium") +
+      ggtitle("MIDS criteria") +
+      theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
   
   #summary of mids levels
-  output$summary <- DT::renderDataTable({
-    midssum()
-  })
+  output$summary <- DT::renderDataTable(
+    midssum(), rownames = FALSE, options = list(dom = 't')
+  )
   #summary of mids criteria
-  output$summarycrit <- DT::renderDataTable({
-    midscrit()
-  })
+  output$summarycrit <- DT::renderDataTable(
+    midscrit(), rownames = FALSE, options = list(dom = 't')
+  )
   #records table with mids levels and criteria
   output$table <- DT::renderDataTable({
     gbif_dataset_mids()
