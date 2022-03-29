@@ -34,12 +34,12 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                             ),
                             mainPanel(
                               tabsetPanel(type = "tabs",
-                                          tabPanel("Plot", plotOutput("midsplot"),
+                                          tabPanel("Plots", plotOutput("midsplot"),
                                                    plotOutput("midscritsplot")),
-                                          tabPanel("Summary", DT::dataTableOutput("summary"), 
+                                          tabPanel("Summary tables", DT::dataTableOutput("summary"), 
                                                    br(),
                                                    DT::dataTableOutput("summarycrit")),
-                                          tabPanel("Table", 
+                                          tabPanel("Record table", 
                                                    DT::dataTableOutput("table"))
                               )
                             )
@@ -77,13 +77,16 @@ server <- function(input, output) {
   
   #plot mids levels
   output$midsplot<-renderPlot({
-    ggplot(midssum(), aes(x=MIDS_level, y=Number_of_records)) + 
+    ggplot(midssum(), aes(x=MIDS_level, y=Percentage)) + 
     geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) +
     coord_cartesian(xlim = c(-1.5, 3.5)) +
-    geom_text(data = midssum(), 
-              aes(y = Number_of_records , label = paste0(Number_of_records, " (", Percentage,"%)")),
-                  vjust = 1.25, colour = "white") +
-    labs(x = "MIDS level", y = "Number of records") +
+    geom_text(data = subset(midssum(), Percentage >= 5), 
+              aes(y = Percentage , label = Percentage),
+                vjust = 1.25, colour = "white") +
+    geom_text(data = subset(midssum(), Percentage < 5), 
+              aes(y = Percentage , label = Percentage),
+                vjust = -0.5, colour = "black") +
+    labs(x = "MIDS level", y = "Percentage of records at specified MIDS level") +
     ggtitle("MIDS levels") +
     theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
@@ -92,9 +95,11 @@ server <- function(input, output) {
     ggplot(midscrit(), aes(x= MIDS_criteria, y=Percentage)) + 
       geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) + 
       coord_flip() + 
-      geom_text(data = midscrit(), 
+      geom_text(data = subset(midscrit(), Percentage >= 5), 
                 aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
-      labs(x = "MIDS criteria", y = "% of records that meet the criterium") +
+      geom_text(data = subset(midscrit(), Percentage < 5), 
+                aes(y = Percentage, label = Percentage), hjust = -0.5, colour = "black") +
+      labs(x = "MIDS criteria", y = "Percentage of records that meet the criterium") +
       ggtitle("MIDS criteria") +
       theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
@@ -105,7 +110,7 @@ server <- function(input, output) {
   )
   #summary of mids criteria
   output$summarycrit <- DT::renderDataTable(
-    midscrit(), rownames = FALSE, options = list(dom = 't')
+    midscrit(), rownames = FALSE, options = list(dom = 't', pageLength = -1)
   )
   #records table with mids levels and criteria
   output$table <- DT::renderDataTable({
