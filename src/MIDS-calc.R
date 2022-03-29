@@ -108,7 +108,7 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
   
   #For each MIDS level, the conditions of that level and of lower levels all need to be true
   gbif_dataset_mids %<>%
-    mutate(mids_level = case_when(
+    mutate(MIDS_level = case_when(
       apply(gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
       apply(gbif_dataset_mids[ , grep("mids[0-2]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 2,
       apply(gbif_dataset_mids[ , grep("mids[0-1]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 1,
