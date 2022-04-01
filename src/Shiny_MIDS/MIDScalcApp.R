@@ -19,7 +19,6 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                  tabPanel("Results",
                           sidebarLayout(
                             sidebarPanel(
-                              #placeholders
                               helpText("Filter to view MIDS scores for part of the dataset"),
                               sliderInput("date", 
                                           label = "Filter on collection date:",
@@ -63,22 +62,23 @@ server <- function(input, output, session) {
     })
   })
   
-  #create country filter
+  #Setting filters when dataset is uploaded
   observeEvent(input$gbiffile, {
+    #reset rank filter when new dataset is provided 
+    updateSelectInput(session, "rank",
+                    selected = "None")
+    #update country filter with countries from the dataset
     updateSelectInput(session, "country", label = "Filter on countrycode", choices = c("All", sort(unique(gbif_dataset_mids()$countryCode))))
-  })
-  
-  #create date filter
-  observeEvent(input$gbiffile, {
+    #update date filter with dates from the dataset
     updateSliderInput(session, "date", label = "Filter on collection date", 
                       min = min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
                       max = max(gbif_dataset_mids()$eventDate, na.rm = TRUE),
                       value = c(min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
                                 max(gbif_dataset_mids()$eventDate, na.rm = TRUE)),
                       timeFormat = "%m/%d/%Y")
-    })
+  })
   
-  #create taxonomy filter
+  #update taxonomy filter when a taxonomic rank is chosen
   observeEvent(input$rank, {
     if (input$rank != "None"){
       updateSelectInput(session, "taxonomy", label = "Filter on taxonomy",
@@ -88,8 +88,7 @@ server <- function(input, output, session) {
                             choices = c("Select a rank first"))}
   })
 
-  
-  #apply filters
+  #apply filters if they are set
   gbif_dataset_mids_filtered <- reactive({
     gbif_dataset_mids() %>%
     {if (input$country != "All") {
