@@ -24,13 +24,9 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               sliderInput("range", 
                                           label = "Range of interest:",
                                           min = 0, max = 100, value = c(0, 100)),
-                              selectInput("var", 
-                                          label = "Choose a variable to display",
-                                          choices = list("Percent White", 
-                                                         "Percent Black",
-                                                         "Percent Hispanic", 
-                                                         "Percent Asian"),
-                                          selected = "Percent White")
+                              selectInput("country", 
+                                          label = "Filter on countrycode",
+                                          choices = "Nothing yet")
                             ),
                             mainPanel(
                               tabsetPanel(type = "tabs",
@@ -46,11 +42,13 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           )
                           ),
                  tabPanel("Export csv",
-                          downloadButton("downloadData", "Download"))
+                          downloadButton("downloadData", "Download all"),
+                          br(), br(),
+                          downloadButton("downloadDataFiltered", "Download filtered dataset"))
 )
 
 # Define server logic ----
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   #calculate mids levels and criteria
   gbif_dataset_mids <- reactive({
@@ -58,19 +56,31 @@ server <- function(input, output) {
       calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath)
     })
   })
+  
+  #create country filter
+  observeEvent(input$gbiffile, {
+    updateSelectInput(session, "country", label = "Filter on countrycode", choices = c("All", sort(unique(gbif_dataset_mids()$countryCode))))
+  })
+  
+  #apply filter
+  gbif_dataset_mids_filtered <- reactive({
+    if (input$country != "All"){filter(gbif_dataset_mids(), countryCode == input$country)}
+    else {gbif_dataset_mids()}
+  })
+  
   #create summary of MIDS levels
   midssum <- reactive({
-    gbif_dataset_mids() %>% group_by(MIDS_level) %>% summarise(Number_of_records = n(), Percentage = round(n()/nrow(.)*100))
+    gbif_dataset_mids_filtered() %>% group_by(MIDS_level) %>% summarise(Number_of_records = n(), Percentage = round(n()/nrow(.)*100))
   })
   #create summary of MIDS criteria
   midscrit <- reactive({
     cbind.data.frame(
-    names(gbif_dataset_mids()[ , grep("mids[0-3]", names(gbif_dataset_mids())), with = FALSE]),
-    gbif_dataset_mids()[ , grep("mids[0-3]", names(gbif_dataset_mids())), with = FALSE] %>%
+    names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE]),
+    gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%
       map(~{sum(.x, na.rm = TRUE)}) %>% 
       as.numeric() , 
-    gbif_dataset_mids()[ , grep("mids[0-3]", names(gbif_dataset_mids())), with = FALSE] %>%  
-      map(~{round((sum(.x, na.rm = TRUE) / nrow(gbif_dataset_mids()))*100)}) %>%
+    gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%  
+      map(~{round((sum(.x, na.rm = TRUE) / nrow(gbif_dataset_mids_filtered()))*100)}) %>%
       as.numeric())  %>% 
     set_colnames(c("MIDS_criteria", "Number_of_records","Percentage")) 
   })
@@ -114,17 +124,26 @@ server <- function(input, output) {
   )
   #records table with mids levels and criteria
   output$table <- DT::renderDataTable({
-    gbif_dataset_mids()
+    gbif_dataset_mids_filtered()
   })
   
   #download csv of record table with mids levels
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste(tools::file_path_sans_ext(input$gbiffile), ".csv", sep = "")
+      paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
     },
     content = function(file) {
       write.csv(gbif_dataset_mids(), file, row.names = FALSE)
   })
+  
+  #download csv of filtered record table with mids levels
+  output$downloadDataFiltered <- downloadHandler(
+    filename = function() {
+      paste0(tools::file_path_sans_ext(input$gbiffile), "_filtered.csv")
+    },
+    content = function(file) {
+      write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
+    })
   
 }
 
