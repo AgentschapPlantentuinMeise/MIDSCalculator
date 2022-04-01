@@ -42,12 +42,12 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
     }
   }
   
-  
   # Get metadata (from zipped DWC archive) ------------------------------------------------------------
   
-  #Get filenames of metadata files
-  filenames <- unzip(gbiffile, list = TRUE)$Name %>% 
-    grep("dataset/", ., value = TRUE)
+  #which datasets have records that don't have the modified property
+  keys <- filter(gbif_dataset, is.na(modified)) %>% .$datasetKey %>% unique()
+  #get paths for those datasets
+  filenames <- paste0("dataset/", keys, ".xml")
   
   #read xml files to get publication date out of metadata
   pubdate <- data.table(datasetKey=character(), pubdate=character())
@@ -70,7 +70,6 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
     pubdate <- rbind(pubdate, list(filename, date))
   }
   
-  
   # Add modified metadata to the dataset ------------------------------------
   
   gbif_dataset_mids <- left_join(gbif_dataset, pubdate, by = "datasetKey")
@@ -88,7 +87,6 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
   
   # Get list of criteria
   list_criteria <- read_json_mids_criteria(jsonfile)
-  
   
   # Check if separate MIDS conditions are met -------------------------------
   
@@ -117,24 +115,3 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
     ))
   return(gbif_dataset_mids)
 }
-
-# Summary -----------------------------------------------------------------
-
-# gbif_dataset_mids <- calculate_mids()
-# 
-# #MIDS levels
-# gbif_dataset_mids %>%
-#   group_by(mids_level) %>%
-#   tally()  %>%
-#   mutate(perc = n / sum(n) *100)
-# 
-# #MIDS achieved per condition
-# n_rows <- nrow(gbif_dataset_mids)
-# gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE] %>% 
-#   map(~{(sum(.x, na.rm = TRUE) / n_rows)*100}) %>%
-#   as.data.table()
-
-
-# Export ------------------------------------------------------------------
-
-# fwrite(gbif_dataset_mids, file="data/processed/mids_output.csv")
