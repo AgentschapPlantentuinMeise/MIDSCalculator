@@ -20,13 +20,19 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           sidebarLayout(
                             sidebarPanel(
                               #placeholders
-                              helpText("Filter to calculate MIDS scores for part of the dataset"),
+                              helpText("Filter to view MIDS scores for part of the dataset"),
                               sliderInput("date", 
                                           label = "Filter on collection date:",
                                           min = 0, max = 100, value = c(0, 100)),
                               selectInput("country", 
                                           label = "Filter on countrycode",
-                                          choices = "Nothing yet")
+                                          choices = "Nothing yet"),
+                              selectInput("rank", 
+                                          label = "Filter on the following taxonomic rank",
+                                          choices = c("None", "Class", "Order", "Family", "Subfamily", "Genus")),
+                              selectInput("taxonomy", 
+                                          label = "Filter on taxonomy",
+                                          choices = "Select a rank first")
                             ),
                             mainPanel(
                               tabsetPanel(type = "tabs",
@@ -72,15 +78,28 @@ server <- function(input, output, session) {
                       timeFormat = "%m/%d/%Y")
     })
   
+  #create taxonomy filter
+  observeEvent(input$rank, {
+    if (input$rank != "None"){
+      updateSelectInput(session, "taxonomy", label = "Filter on taxonomy",
+                        choices = c("All", sort(unique(gbif_dataset_mids()[[tolower(input$rank)]]))))
+    }
+    else {updateSelectInput(session, "taxonomy", label = "Filter on taxonomy",
+                            choices = c("Select a rank first"))}
+  })
+
+  
   #apply filters
   gbif_dataset_mids_filtered <- reactive({
     gbif_dataset_mids() %>%
-    {if (input$country != "All") {filter(., countryCode == input$country)}
-      else {.}} %>%
+    {if (input$country != "All") {
+        filter(., countryCode == input$country)} else {.}} %>%
     {if (input$date[1] != min(gbif_dataset_mids()$eventDate, na.rm = TRUE)){
         filter(., eventDate >= input$date[1])} else {.}} %>%
     {if (input$date[2] != max(gbif_dataset_mids()$eventDate, na.rm = TRUE)) {
-        filter(., eventDate <= input$date[2])} else {.}}
+        filter(., eventDate <= input$date[2])} else {.}} %>%
+    {if (input$rank != "None" & input$taxonomy != "All"){
+        filter(., .data[[tolower(input$rank)]] == input$taxonomy)} else {.}}
   })
   
   #create summary of MIDS levels
