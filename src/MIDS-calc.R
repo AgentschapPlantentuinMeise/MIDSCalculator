@@ -25,7 +25,7 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
   list_props <- read_json_mids_criteria(jsonfile, out = "properties")
   
   #add other needed/interesting properties
-  list_props <- c(list_props, "datasetKey", "countryCode")
+  list_props <- c(list_props, "datasetKey", "countryCode", "class", "order", "family", "subfamily", "genus")
   
   # import from zipped DWC archive
   # and set unknown or missing values that apply to all to NA
