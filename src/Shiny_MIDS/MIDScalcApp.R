@@ -21,8 +21,8 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                             sidebarPanel(
                               #placeholders
                               helpText("Filter to calculate MIDS scores for part of the dataset"),
-                              sliderInput("range", 
-                                          label = "Range of interest:",
+                              sliderInput("date", 
+                                          label = "Filter on collection date:",
                                           min = 0, max = 100, value = c(0, 100)),
                               selectInput("country", 
                                           label = "Filter on countrycode",
@@ -62,10 +62,25 @@ server <- function(input, output, session) {
     updateSelectInput(session, "country", label = "Filter on countrycode", choices = c("All", sort(unique(gbif_dataset_mids()$countryCode))))
   })
   
-  #apply filter
+  #create date filter
+  observeEvent(input$gbiffile, {
+    updateSliderInput(session, "date", label = "Filter on collection date", 
+                      min = min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
+                      max = max(gbif_dataset_mids()$eventDate, na.rm = TRUE),
+                      value = c(min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
+                                max(gbif_dataset_mids()$eventDate, na.rm = TRUE)),
+                      timeFormat = "%m/%d/%Y")
+    })
+  
+  #apply filters
   gbif_dataset_mids_filtered <- reactive({
-    if (input$country != "All"){filter(gbif_dataset_mids(), countryCode == input$country)}
-    else {gbif_dataset_mids()}
+    gbif_dataset_mids() %>%
+    {if (input$country != "All") {filter(., countryCode == input$country)}
+      else {.}} %>%
+    {if (input$date[1] != min(gbif_dataset_mids()$eventDate, na.rm = TRUE)){
+        filter(., eventDate >= input$date[1])} else {.}} %>%
+    {if (input$date[2] != max(gbif_dataset_mids()$eventDate, na.rm = TRUE)) {
+        filter(., eventDate <= input$date[2])} else {.}}
   })
   
   #create summary of MIDS levels
