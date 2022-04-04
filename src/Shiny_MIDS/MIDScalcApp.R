@@ -1,20 +1,26 @@
 library(shiny)
 library(ggplot2)
 library(DT)
+library(shinyjs)
 source(file = "../parse_json_schema.R")
 source(file = "../MIDS-calc.R")
 
 #Increase upload limit to 5GB
 options(shiny.maxRequestSize = 5000*1024^2)
 
-# Set path to schema
-jsonpath <- "../../data/schemas/secondschema_conditions_same_level.json"
-
 # Define UI ----
 ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
-                 tabPanel("Submit dataset",
+                 useShinyjs(),
+                 tabPanel("Submit data",
                           fileInput("gbiffile", "Upload zipped GBIF annotated archive (max 5 GB)",
                                     accept = ".zip"),
+                          br(), 
+                          radioButtons("jsonfile", label = NULL, 
+                                       choiceNames = list("Use default schema", 
+                                                          "Upload a custom JSON schema"),
+                                       choiceValues = list("default", "custom")),
+                          fileInput("customjsonfile", label = NULL,
+                                    accept = ".json")
                           ),
                  tabPanel("Results",
                           sidebarLayout(
@@ -54,11 +60,27 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
 
 # Define server logic ----
 server <- function(input, output, session) {
+
+  #show and hide json upload button
+  observe({
+    if (input$jsonfile == "default"){
+      shinyjs::hide("customjsonfile")}
+    if (input$jsonfile == "custom"){
+      shinyjs::show("customjsonfile")}
+  })
+  
+  #get path to json schema
+  jsonpath <- reactive({
+    if (input$jsonfile == "default"){
+      return("../../data/schemas/secondschema_conditions_same_level.json")}
+    if (input$jsonfile == "custom"){
+      return(input$customjsonfile$datapath)}
+  })
   
   #calculate mids levels and criteria
   gbif_dataset_mids <- reactive({
     withProgress(message = 'Calculating MIDS scores', value = 0, {
-      calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath)
+      calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())
     })
   })
   
