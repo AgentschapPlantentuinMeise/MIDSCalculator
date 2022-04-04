@@ -20,7 +20,9 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                                           "Upload a custom JSON schema"),
                                        choiceValues = list("default", "custom")),
                           fileInput("customjsonfile", label = NULL,
-                                    accept = ".json")
+                                    accept = ".json"),
+                          br(),
+                          actionButton("start", "Start MIDS score calculations")
                           ),
                  tabPanel("Results",
                           sidebarLayout(
@@ -61,12 +63,12 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
 # Define server logic ----
 server <- function(input, output, session) {
 
-  #show and hide json upload button
+  #show and hide json upload button and start button
   observe({
     if (input$jsonfile == "default"){
-      shinyjs::hide("customjsonfile")}
-    if (input$jsonfile == "custom"){
-      shinyjs::show("customjsonfile")}
+      shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
+    if (is.null(input$gbiffile)){
+      shinyjs::hide("start")} else {shinyjs::show("start")}
   })
   
   #get path to json schema
@@ -78,14 +80,14 @@ server <- function(input, output, session) {
   })
   
   #calculate mids levels and criteria
-  gbif_dataset_mids <- reactive({
+  gbif_dataset_mids <- eventReactive(input$start, {
     withProgress(message = 'Calculating MIDS scores', value = 0, {
       calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())
     })
   })
   
-  #Setting filters when dataset is uploaded
-  observeEvent(input$gbiffile, {
+  #Setting filters when new analysis is started
+  observeEvent(input$start, {
     #reset rank filter when new dataset is provided 
     updateSelectInput(session, "rank",
                     selected = "None")
