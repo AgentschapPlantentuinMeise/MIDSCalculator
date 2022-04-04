@@ -69,7 +69,7 @@ server <- function(input, output, session) {
   observe({
     if (input$jsonfile == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
-    if (is.null(input$gbiffile)){
+    if (is.null(input$gbiffile) | (input$jsonfile == "custom" & is.null(input$customjsonfile))){
       shinyjs::hide("start")} else {shinyjs::show("start")}
   })
   
