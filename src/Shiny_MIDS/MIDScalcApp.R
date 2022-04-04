@@ -31,15 +31,17 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               sliderInput("date", 
                                           label = "Filter on collection date:",
                                           min = 0, max = 100, value = c(0, 100)),
-                              selectInput("country", 
-                                          label = "Filter on countrycode",
-                                          choices = "Nothing yet"),
+                              selectizeInput("country", 
+                                          label = "Filter on countrycode",  
+                                          choices = "Nothing yet",
+                                          multiple = TRUE),
                               selectInput("rank", 
                                           label = "Filter on the following taxonomic rank",
                                           choices = c("None", "Class", "Order", "Family", "Subfamily", "Genus")),
-                              selectInput("taxonomy", 
-                                          label = "Filter on taxonomy",
-                                          choices = "Select a rank first")
+                              selectizeInput("taxonomy", 
+                                          label = "Filter on taxonomy", 
+                                          choices = "Select a rank first",
+                                          multiple = TRUE)
                             ),
                             mainPanel(
                               tabsetPanel(type = "tabs",
@@ -92,7 +94,8 @@ server <- function(input, output, session) {
     updateSelectInput(session, "rank",
                     selected = "None")
     #update country filter with countries from the dataset
-    updateSelectInput(session, "country", label = "Filter on countrycode", choices = c("All", sort(unique(gbif_dataset_mids()$countryCode))))
+    updateSelectInput(session, "country", label = "Filter on countrycode", 
+                      choices = sort(unique(gbif_dataset_mids()$countryCode)))
     #update date filter with dates from the dataset
     updateSliderInput(session, "date", label = "Filter on collection date", 
                       min = min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
@@ -106,23 +109,23 @@ server <- function(input, output, session) {
   observeEvent(input$rank, {
     if (input$rank != "None"){
       updateSelectInput(session, "taxonomy", label = "Filter on taxonomy",
-                        choices = c("All", sort(unique(gbif_dataset_mids()[[tolower(input$rank)]]))))
+                        choices = sort(unique(gbif_dataset_mids()[[tolower(input$rank)]])))
+      shinyjs::show("taxonomy")
     }
-    else {updateSelectInput(session, "taxonomy", label = "Filter on taxonomy",
-                            choices = c("Select a rank first"))}
+    else {shinyjs::hide("taxonomy")}
   })
 
   #apply filters if they are set
   gbif_dataset_mids_filtered <- reactive({
     gbif_dataset_mids() %>%
-    {if (input$country != "All") {
-        filter(., countryCode == input$country)} else {.}} %>%
+    {if (!is.null(input$country) && input$country != "All") {
+        filter(., countryCode %in% input$country)} else {.}} %>%
     {if (input$date[1] != min(gbif_dataset_mids()$eventDate, na.rm = TRUE)){
         filter(., eventDate >= input$date[1])} else {.}} %>%
     {if (input$date[2] != max(gbif_dataset_mids()$eventDate, na.rm = TRUE)) {
         filter(., eventDate <= input$date[2])} else {.}} %>%
-    {if (input$rank != "None" & input$taxonomy != "All"){
-        filter(., .data[[tolower(input$rank)]] == input$taxonomy)} else {.}}
+    {if (input$rank != "None" && !is.null(input$taxonomy) && input$taxonomy != "All"){
+        filter(., .data[[tolower(input$rank)]] %in% input$taxonomy)} else {.}}
   })
   
   #create summary of MIDS levels
