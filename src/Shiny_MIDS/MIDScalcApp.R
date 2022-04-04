@@ -24,6 +24,12 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           br(),
                           actionButton("start", "Start MIDS score calculations")
                           ),
+                 tabPanel("View JSON",
+                          tabsetPanel( type = "tabs",
+                                       tabPanel("MIDS criteria", verbatimTextOutput("json")),
+                                       tabPanel("Unknown or missing values", verbatimTextOutput("jsonUoM"))
+                          )
+                          ),
                  tabPanel("Results",
                           sidebarLayout(
                             sidebarPanel(
@@ -87,6 +93,22 @@ server <- function(input, output, session) {
       calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())
     })
   })
+  
+  #json schema
+  jsonschema <- reactive({ 
+    read_json_mids_criteria(file = jsonpath(), outtype = "criteria")
+  })
+  
+  #json UoM
+  jsonUoM <- reactive({ 
+    read_json_unknownOrMissing(file = jsonpath())
+  })
+  
+  #show json schema
+  output$json <- renderPrint(jsonschema())
+  
+  #show json UoM
+  output$jsonUoM <- renderPrint(jsonUoM())
   
   #Setting filters when new analysis is started
   observeEvent(input$start, {
