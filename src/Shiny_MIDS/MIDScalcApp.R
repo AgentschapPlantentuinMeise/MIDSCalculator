@@ -198,6 +198,9 @@ server <- function(input, output, session) {
       return(input$customjsonfile$datapath)}
   })
   
+
+# Calculations ------------------------------------------------------------
+
   #calculate mids levels and criteria
   gbif_dataset_mids <- eventReactive(input$start, {
     withProgress(message = 'Calculating MIDS scores', value = 0, {
@@ -215,13 +218,18 @@ server <- function(input, output, session) {
     read_json_unknownOrMissing(file = jsonpath())
   })
   
+
+# View JSON ---------------------------------------------------------------
+
   #show json schema
   output$json <- renderPrint(jsonschema())
   
   #show json UoM
   output$jsonUoM <- renderPrint(jsonUoM())
   
-  #edit json
+
+# Edit JSON ---------------------------------------------------------------
+
   #add UoM values from existing JSON schema
   output$UoMall <- renderUI({
     rank_list("All properties", jsonUoM()$all, "UoMall", options = sortable_options(group = "midsUoM"))
@@ -242,7 +250,9 @@ server <- function(input, output, session) {
            "prop2" = input$prop2,
            "prop3" = input$prop3)
     )
-  
+
+# Filters -----------------------------------------------------------------
+
   #Setting filters when new analysis is started
   observeEvent(input$start, {
     #reset rank filter when new dataset is provided 
@@ -283,6 +293,9 @@ server <- function(input, output, session) {
         filter(., .data[[tolower(input$rank)]] %in% input$taxonomy)} else {.}}
   })
   
+
+# MIDS calculation outputs ------------------------------------------------
+
   #create summary of MIDS levels
   midssum <- reactive({
     gbif_dataset_mids_filtered() %>% group_by(MIDS_level) %>% summarise(Number_of_records = n(), Percentage = round(n()/nrow(.)*100))
@@ -342,6 +355,8 @@ server <- function(input, output, session) {
     gbif_dataset_mids_filtered()
   })
   
+# Downloads ---------------------------------------------------------------
+
   #download csv of record table with mids levels
   output$downloadData <- downloadHandler(
     filename = function() {
