@@ -221,6 +221,15 @@ server <- function(input, output, session) {
   })
   output$UoMall <- renderUI(UoMranklists())
   
+  #combine UoM inputs
+  UoMinputs <- reactive({x <- list()
+  for (j in 1:length(jsonUoM())){
+    value <-  reactiveValuesToList(input)[paste0("UoM", names(jsonUoM()[j]))]
+    x[[names(jsonUoM()[j])]] <- value[[1]]
+    }
+  return(x)
+  })
+  
   #show output
   output$results_3 <-
     renderPrint(
@@ -229,13 +238,9 @@ server <- function(input, output, session) {
            "mids2" = input$mids2,
            "mids3" = input$mids3)
     )
+  
   output$results_UoM <-
-    renderPrint(
-      list("All" = input$UoMall,
-           "prop1" = input$prop1,
-           "prop2" = input$prop2,
-           "prop3" = input$prop3)
-    )
+    renderPrint(UoMinputs())
 
 # Filters -----------------------------------------------------------------
 
