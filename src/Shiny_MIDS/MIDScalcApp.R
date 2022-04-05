@@ -36,38 +36,45 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                             column(
                               tags$b("MIDS criteria"),
                               width = 12,
-                              bucket_list(
-                                header = "Drag the properties to the desired MIDS level",
-                                group_name = "midscriteria",
-                                orientation = "horizontal",
-                                add_rank_list(
-                                  text = "MIDS level 0",
-                                  labels = list(
-                                    "one",
-                                    "two",
-                                    "three"
+                              div(
+                                class = "bucket-list-container default-sortable",
+                                "Drag the properties to the desired MIDS level",
+                                div(
+                                  class = "default-sortable bucket-list bucket-list-horizontal",
+                                  rank_list(
+                                    text = "MIDS level 0",
+                                    labels = list(
+                                      "one",
+                                      "two",
+                                      "three"
+                                    ),
+                                    input_id = "mids0",
+                                    options = sortable_options(group = "midscriteria")
                                   ),
-                                  input_id = "mids0"
-                                ),
-                                add_rank_list(
-                                  text = "MIDS level 1",
-                                  labels = NULL,
-                                  input_id = "mids1"
-                                ),
-                                add_rank_list(
-                                  text = "MIDS level 2",
-                                  labels = NULL,
-                                  input_id = "mids2"
-                                ),
-                                add_rank_list(
-                                  text = "MIDS level 3",
-                                  labels = NULL,
-                                  input_id = "mids3"
-                                ),
-                                add_rank_list(
-                                  text = "Unused properties",
-                                  labels = NULL,
-                                  input_id = "unused"
+                                  rank_list(
+                                    text = "MIDS level 1",
+                                    labels = NULL,
+                                    input_id = "mids1",
+                                    options = sortable_options(group = "midscriteria")
+                                  ),
+                                  rank_list(
+                                    text = "MIDS level 2",
+                                    labels = NULL,
+                                    input_id = "mids2",
+                                    options = sortable_options(group = "midscriteria")
+                                  ),
+                                  rank_list(
+                                    text = "MIDS level 3",
+                                    labels = NULL,
+                                    input_id = "mids3",
+                                    options = sortable_options(group = "midscriteria")
+                                  ),
+                                  rank_list(
+                                    text = "Unused properties",
+                                    labels = NULL,
+                                    input_id = "unused",
+                                    options = sortable_options(group = "midscriteria")
+                                  )
                                 )
                               )
                             )
@@ -76,38 +83,36 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                             column(
                               tags$b("MIDS unknown or missing values"),
                               width = 12,
-                              bucket_list(
-                                header = "Drag the unknown or missing values to the desired properties",
-                                group_name = "midsUoM",
-                                orientation = "horizontal",
-                                add_rank_list(
-                                  text = "All properties",
-                                  labels = list(
-                                    "one",
-                                    "two",
-                                    "three"
+                              div(
+                                class = "bucket-list-container default-sortable",
+                                "Drag the unknown or missing values to the desired properties",
+                                div(
+                                  class = "bucket-list-container default-sortable",
+                                  uiOutput("UoMall"),
+                                  rank_list(
+                                    text = "Property1",
+                                    labels = NULL,
+                                    input_id = "prop1",
+                                    options = sortable_options(group = "midsUoM")
                                   ),
-                                  input_id = "all"
-                                ),
-                                add_rank_list(
-                                  text = "Property1",
-                                  labels = NULL,
-                                  input_id = "prop1"
-                                ),
-                                add_rank_list(
-                                  text = "Property2",
-                                  labels = NULL,
-                                  input_id = "prop2"
-                                ),
-                                add_rank_list(
-                                  text = "Property 3",
-                                  labels = NULL,
-                                  input_id = "prop3"
-                                ),
-                                add_rank_list(
-                                  text = "Unused values",
-                                  labels = NULL,
-                                  input_id = "unused"
+                                  rank_list(
+                                    text = "Property2",
+                                    labels = NULL,
+                                    input_id = "prop2",
+                                    options = sortable_options(group = "midsUoM")
+                                  ),
+                                  rank_list(
+                                    text = "Property 3",
+                                    labels = NULL,
+                                    input_id = "prop3",
+                                    options = sortable_options(group = "midsUoM")
+                                  ),
+                                  rank_list(
+                                    text = "Unused values",
+                                    labels = NULL,
+                                    input_id = "unused",
+                                    options = sortable_options(group = "midsUoM")
+                                  )
                                 )
                               )
                             )
@@ -217,13 +222,25 @@ server <- function(input, output, session) {
   output$jsonUoM <- renderPrint(jsonUoM())
   
   #edit json
+  #add UoM values from existing JSON schema
+  output$UoMall <- renderUI({
+    rank_list("All properties", jsonUoM()$all, "UoMall", options = sortable_options(group = "midsUoM"))
+  })
+  
+  #show output
   output$results_3 <-
     renderPrint(
-      input$midscriteria # Matches the group_name of the bucket list
+      list("mids0" = input$mids0,
+           "mids1" = input$mids1,
+           "mids2" = input$mids2,
+           "mids3" = input$mids3)
     )
   output$results_UoM <-
     renderPrint(
-      input$midsUoM # Matches the group_name of the bucket list
+      list("All" = input$UoMall,
+           "prop1" = input$prop1,
+           "prop2" = input$prop2,
+           "prop3" = input$prop3)
     )
   
   #Setting filters when new analysis is started
