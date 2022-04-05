@@ -34,7 +34,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                  tabPanel("Edit JSON",
                           fluidRow(
                             column(
-                              tags$b("MIDS criteria"),
+                              tags$h1("MIDS criteria"),
                               width = 12,
                               div(
                                 class = "bucket-list-container default-sortable",
@@ -81,20 +81,18 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           ),
                           fluidRow(
                             column(
-                              tags$b("MIDS unknown or missing values"),
+                              tags$h1("MIDS unknown or missing values"),
                               width = 12,
                               div(
                                 class = "bucket-list-container default-sortable",
                                 "Drag the unknown or missing values to the desired properties",
+                                textInput("UoMnewvalue", "Enter a new value you'd like to use here", 
+                                          value = "Enter text..."),
+                                actionButton("addUoM", "Add"),
                                 div(
                                   class = "bucket-list-container default-sortable",
                                   uiOutput("UoMall"),
-                                  rank_list(
-                                    text = "Unused values",
-                                    labels = NULL,
-                                    input_id = "unused",
-                                    options = sortable_options(group = "midsUoM")
-                                  )
+                                  uiOutput("UoMunused")
                                 )
                               )
                             )
@@ -220,6 +218,11 @@ server <- function(input, output, session) {
   return(v)
   })
   output$UoMall <- renderUI(UoMranklists())
+  
+  #add new UoM values from text input field (and keep existing values)
+  existing <- eventReactive(input$addUoM, {input$UoMunused})
+  new <- eventReactive(input$addUoM, {input$UoMnewvalue})
+  output$UoMunused <- renderUI(rank_list("Unused values", c(existing(), new()), "UoMunused", options = sortable_options(group = "midsUoM")))
   
   #combine UoM inputs
   UoMinputs <- reactive({x <- list()
