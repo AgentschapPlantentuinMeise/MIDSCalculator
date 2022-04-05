@@ -34,7 +34,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                  tabPanel("Edit JSON",
                           fluidRow(
                             column(
-                              tags$b("MIDS schema"),
+                              tags$b("MIDS criteria"),
                               width = 12,
                               bucket_list(
                                 header = "Drag the properties to the desired MIDS level",
@@ -74,6 +74,46 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           ),
                           fluidRow(
                             column(
+                              tags$b("MIDS unknown or missing values"),
+                              width = 12,
+                              bucket_list(
+                                header = "Drag the unknown or missing values to the desired properties",
+                                group_name = "midsUoM",
+                                orientation = "horizontal",
+                                add_rank_list(
+                                  text = "All properties",
+                                  labels = list(
+                                    "one",
+                                    "two",
+                                    "three"
+                                  ),
+                                  input_id = "all"
+                                ),
+                                add_rank_list(
+                                  text = "Property1",
+                                  labels = NULL,
+                                  input_id = "prop1"
+                                ),
+                                add_rank_list(
+                                  text = "Property2",
+                                  labels = NULL,
+                                  input_id = "prop2"
+                                ),
+                                add_rank_list(
+                                  text = "Property 3",
+                                  labels = NULL,
+                                  input_id = "prop3"
+                                ),
+                                add_rank_list(
+                                  text = "Unused values",
+                                  labels = NULL,
+                                  input_id = "unused"
+                                )
+                              )
+                            )
+                          ),
+                          fluidRow(
+                            column(
                               width = 12,
                               tags$b("Result"),
                               column(
@@ -82,8 +122,20 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                 verbatimTextOutput("results_3")
                               )
                             )
-                          )
+                          ),
+                            fluidRow(
+                              column(
+                                width = 12,
+                                tags$b("Result"),
+                                column(
+                                  width = 12,
+                                  tags$p("input$midsUoM"),
+                                  verbatimTextOutput("results_UoM")
+                                )
+                              )
+                            )
                         ),
+                 
                  tabPanel("Results",
                           sidebarLayout(
                             sidebarPanel(
@@ -168,6 +220,10 @@ server <- function(input, output, session) {
   output$results_3 <-
     renderPrint(
       input$midscriteria # Matches the group_name of the bucket list
+    )
+  output$results_UoM <-
+    renderPrint(
+      input$midsUoM # Matches the group_name of the bucket list
     )
   
   #Setting filters when new analysis is started
