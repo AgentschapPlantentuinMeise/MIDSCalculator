@@ -2,6 +2,7 @@ library(shiny)
 library(ggplot2)
 library(DT)
 library(shinyjs)
+library(sortable)
 source(file = "../parse_json_schema.R")
 source(file = "../MIDS-calc.R")
 
@@ -30,6 +31,59 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                        tabPanel("Unknown or missing values", verbatimTextOutput("jsonUoM"))
                           )
                           ),
+                 tabPanel("Edit JSON",
+                          fluidRow(
+                            column(
+                              tags$b("MIDS schema"),
+                              width = 12,
+                              bucket_list(
+                                header = "Drag the properties to the desired MIDS level",
+                                group_name = "midscriteria",
+                                orientation = "horizontal",
+                                add_rank_list(
+                                  text = "MIDS level 0",
+                                  labels = list(
+                                    "one",
+                                    "two",
+                                    "three"
+                                  ),
+                                  input_id = "mids0"
+                                ),
+                                add_rank_list(
+                                  text = "MIDS level 1",
+                                  labels = NULL,
+                                  input_id = "mids1"
+                                ),
+                                add_rank_list(
+                                  text = "MIDS level 2",
+                                  labels = NULL,
+                                  input_id = "mids2"
+                                ),
+                                add_rank_list(
+                                  text = "MIDS level 3",
+                                  labels = NULL,
+                                  input_id = "mids3"
+                                ),
+                                add_rank_list(
+                                  text = "Unused properties",
+                                  labels = NULL,
+                                  input_id = "unused"
+                                )
+                              )
+                            )
+                          ),
+                          fluidRow(
+                            column(
+                              width = 12,
+                              tags$b("Result"),
+                              column(
+                                width = 12,
+                                tags$p("input$midscriteria"),
+                                verbatimTextOutput("results_3")
+                              )
+                            )
+                          )
+                        ),
                  tabPanel("Results",
                           sidebarLayout(
                             sidebarPanel(
@@ -109,6 +163,12 @@ server <- function(input, output, session) {
   
   #show json UoM
   output$jsonUoM <- renderPrint(jsonUoM())
+  
+  #edit json
+  output$results_3 <-
+    renderPrint(
+      input$midscriteria # Matches the group_name of the bucket list
+    )
   
   #Setting filters when new analysis is started
   observeEvent(input$start, {
