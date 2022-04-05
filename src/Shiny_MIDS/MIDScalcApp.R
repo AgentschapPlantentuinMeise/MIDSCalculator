@@ -90,24 +90,6 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                   class = "bucket-list-container default-sortable",
                                   uiOutput("UoMall"),
                                   rank_list(
-                                    text = "Property1",
-                                    labels = NULL,
-                                    input_id = "prop1",
-                                    options = sortable_options(group = "midsUoM")
-                                  ),
-                                  rank_list(
-                                    text = "Property2",
-                                    labels = NULL,
-                                    input_id = "prop2",
-                                    options = sortable_options(group = "midsUoM")
-                                  ),
-                                  rank_list(
-                                    text = "Property 3",
-                                    labels = NULL,
-                                    input_id = "prop3",
-                                    options = sortable_options(group = "midsUoM")
-                                  ),
-                                  rank_list(
                                     text = "Unused values",
                                     labels = NULL,
                                     input_id = "unused",
@@ -230,10 +212,14 @@ server <- function(input, output, session) {
 
 # Edit JSON ---------------------------------------------------------------
 
-  #add UoM values from existing JSON schema
-  output$UoMall <- renderUI({
-    rank_list("All properties", jsonUoM()$all, "UoMall", options = sortable_options(group = "midsUoM"))
+  #add UoM values and properties from existing JSON schema
+  UoMranklists <- reactive({v <- list()
+  for (i in 1:length(jsonUoM())){
+    v[[i]] <- rank_list(names(jsonUoM()[i]), jsonUoM()[[i]], paste0("UoM", names(jsonUoM()[i])), options = sortable_options(group = "midsUoM"))
+  }
+  return(v)
   })
+  output$UoMall <- renderUI(UoMranklists())
   
   #show output
   output$results_3 <-
