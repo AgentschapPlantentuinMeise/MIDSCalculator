@@ -40,15 +40,15 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               div(
                                 class = "bucket-list-container default-sortable",
                                 "Drag the properties to the desired MIDS level",
+                                selectizeInput("critnewprop", 
+                                               label = "Enter a new property you'd like to use here \n Select multiple values at once if they must all be true (&)",  
+                                               choices = readLines("www/DWCAcolumnnames.txt"),
+                                               multiple = TRUE),
+                                actionButton("addcritprop", "Add"),
                                 div(
                                   class = "default-sortable bucket-list bucket-list-horizontal",
                                   uiOutput("crit"),
-                                  rank_list(
-                                    text = "Unused properties",
-                                    labels = NULL,
-                                    input_id = "unused",
-                                    options = sortable_options(group = "midscriteria")
-                                  )
+                                  uiOutput("unused"),
                                 )
                               )
                             )
@@ -168,6 +168,7 @@ server <- function(input, output, session) {
     })
   })
   
+
   #json schema
   jsonschema <- reactive({ 
     read_json_mids_criteria(file = jsonpath(), outtype = "criteria")
@@ -270,6 +271,14 @@ server <- function(input, output, session) {
   return(v)
   })
   output$crit <- renderUI(critranklists())
+  
+
+  ## add properties specified by user (and keep existing values)
+  existingcrit <- eventReactive(input$addcritprop, {input$unused}) 
+  newcrit <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = " & ")})
+  output$unused <- renderUI(rank_list("Unused values", c(existingcrit(), newcrit()), 
+                          "unused", options = sortable_options(group = "midscriteria")))
+  
   
   ## get inputs
   critinputs <- reactive({x <- list()
