@@ -42,34 +42,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                 "Drag the properties to the desired MIDS level",
                                 div(
                                   class = "default-sortable bucket-list bucket-list-horizontal",
-                                  rank_list(
-                                    text = "MIDS level 0",
-                                    labels = list(
-                                      "one",
-                                      "two",
-                                      "three"
-                                    ),
-                                    input_id = "mids0",
-                                    options = sortable_options(group = "midscriteria")
-                                  ),
-                                  rank_list(
-                                    text = "MIDS level 1",
-                                    labels = NULL,
-                                    input_id = "mids1",
-                                    options = sortable_options(group = "midscriteria")
-                                  ),
-                                  rank_list(
-                                    text = "MIDS level 2",
-                                    labels = NULL,
-                                    input_id = "mids2",
-                                    options = sortable_options(group = "midscriteria")
-                                  ),
-                                  rank_list(
-                                    text = "MIDS level 3",
-                                    labels = NULL,
-                                    input_id = "mids3",
-                                    options = sortable_options(group = "midscriteria")
-                                  ),
+                                  uiOutput("crit"),
                                   rank_list(
                                     text = "Unused properties",
                                     labels = NULL,
@@ -269,17 +242,50 @@ server <- function(input, output, session) {
   })
   
   #show output
-  output$results_3 <-
-    renderPrint(
-      list("mids0" = input$mids0,
-           "mids1" = input$mids1,
-           "mids2" = input$mids2,
-           "mids3" = input$mids3)
-    )
-  
   output$results_UoM <-
     renderPrint(UoMinputs()
       )
+  
+# Edit JSON ---------------------------------------------------------------
+  
+  
+# Edit criteria -----------------------------------------------------------
+  
+  ## add criteria from existing JSON schema
+  critranklists <- reactive({v <- list()
+  counter <- 1
+  for (i in 1:length(jsonschema())){
+    for (j in 1:length(jsonschema()[[i]])){
+      name <- paste0(names(jsonschema()[i]), ": ", names(jsonschema()[[i]][j]))
+      v[[counter]] <- rank_list(name, jsonschema()[[i]][[j]], 
+                                paste0("crit", names(jsonschema()[[i]][j])), 
+                                options = sortable_options(group = "midscriteria"))
+      counter <- counter + 1
+    }
+  }
+  return(v)
+  })
+  output$crit <- renderUI(critranklists())
+  
+  ## get inputs
+  critinputs <- reactive({x <- list()
+  #get values for each criterium
+  for (i in 1:length(jsonschema())){
+    for (j in 1:length(jsonschema()[[i]])){
+      value <-  reactiveValuesToList(input)[paste0("crit", names(jsonschema()[[i]][j]))]
+     #don't include empty properties
+      if (rlang::is_empty(value[[1]])){next}
+      x[[names(jsonschema()[[i]][j])]] <- value[[1]]
+    }
+  }
+  return(x)
+  })
+  
+  #show output
+  output$results_3 <-
+    renderPrint(
+      critinputs()  
+    )
 
 # Filters -----------------------------------------------------------------
 
