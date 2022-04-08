@@ -31,7 +31,8 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                        tabPanel("Unknown or missing values", verbatimTextOutput("jsonUoM"))
                           )
                           ),
-                 tabPanel("Edit JSON",
+                 navbarMenu("Edit JSON",
+                  tabPanel("Criteria",
                           fluidRow(
                             column(
                               tags$h1("MIDS criteria"),
@@ -81,6 +82,19 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           ),
                           fluidRow(
                             column(
+                              width = 12,
+                              tags$b("Result"),
+                              column(
+                                width = 12,
+                                tags$p("input$midscriteria"),
+                                verbatimTextOutput("results_3")
+                              )
+                            )
+                          )
+                  ),
+                  tabPanel("Unknown or Missing",
+                          fluidRow(
+                            column(
                               tags$h1("MIDS unknown or missing values"),
                               width = 12,
                               div(
@@ -101,17 +115,6 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               )
                             )
                           ),
-                          fluidRow(
-                            column(
-                              width = 12,
-                              tags$b("Result"),
-                              column(
-                                width = 12,
-                                tags$p("input$midscriteria"),
-                                verbatimTextOutput("results_3")
-                              )
-                            )
-                          ),
                             fluidRow(
                               column(
                                 width = 12,
@@ -123,7 +126,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                 )
                               )
                             )
-                        ),
+                        )),
                  
                  tabPanel("Results",
                           sidebarLayout(
