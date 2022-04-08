@@ -256,11 +256,15 @@ server <- function(input, output, session) {
   counter <- 1
   for (i in 1:length(jsonschema())){
     for (j in 1:length(jsonschema()[[i]])){
+      subcond <- strsplit(jsonschema()[[i]][[j]], split = "\\|")
       name <- paste0(names(jsonschema()[i]), ": ", names(jsonschema()[[i]][j]))
-      v[[counter]] <- rank_list(name, jsonschema()[[i]][[j]], 
-                                paste0("crit", names(jsonschema()[[i]][j])), 
-                                options = sortable_options(group = "midscriteria"))
-      counter <- counter + 1
+      for (k in 1:length(subcond)){
+        prop <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)")
+        v[[counter]] <- rank_list(name, prop, 
+                                  paste0("crit", names(jsonschema()[[i]][j])), 
+                                  options = sortable_options(group = "midscriteria"))
+        counter <- counter + 1
+      }
     }
   }
   return(v)
