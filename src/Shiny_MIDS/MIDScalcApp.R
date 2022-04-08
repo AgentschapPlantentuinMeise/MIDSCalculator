@@ -89,9 +89,13 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                 textInput("UoMnewvalue", "Enter a new value you'd like to use here", 
                                           value = "Enter text..."),
                                 actionButton("addUoM", "Add"),
+                                textInput("UoMnewprop", "Enter a new property you'd like to use here", 
+                                          value = "Enter text..."),
+                                actionButton("addUoMprop", "Add"),
                                 div(
                                   class = "bucket-list-container default-sortable",
                                   uiOutput("UoMall"),
+                                  uiOutput("UoMextra"),
                                   uiOutput("UoMunused")
                                 )
                               )
@@ -209,8 +213,11 @@ server <- function(input, output, session) {
   
 
 # Edit JSON ---------------------------------------------------------------
+  
 
-  #add UoM values and properties from existing JSON schema
+# Edit Unknown or Missing section -----------------------------------------
+
+  ## add UoM values and properties from existing JSON schema
   UoMranklists <- reactive({v <- list()
   for (i in 1:length(jsonUoM())){
     v[[i]] <- rank_list(names(jsonUoM()[i]), jsonUoM()[[i]], paste0("UoM", names(jsonUoM()[i])), options = sortable_options(group = "midsUoM"))
@@ -219,17 +226,42 @@ server <- function(input, output, session) {
   })
   output$UoMall <- renderUI(UoMranklists())
   
-  #add new UoM values from text input field (and keep existing values)
-  existing <- eventReactive(input$addUoM, {input$UoMunused})
+  ## add UoM properties specified by user
+  #get new UoM property from text input field
+  newprop <- eventReactive(input$addUoMprop, {input$UoMnewprop})
+  ## also get previously submitted properties
+  newprops <- reactiveValues(prev_bins = NULL)
+  observeEvent(input$addUoMprop, {
+    newprops$prev_bins <- c(newprops$prev_bins, input$UoMnewprop)
+  })
+  #add rank list for each submitted property
+  UoMnewpropranklists <- reactive({v <- list()
+  for (i in 1:length(req(newprops$prev_bins))){
+    #get value inside property
+    value <- input[[paste0("UoM", newprops$prev_bins[i])]]
+    #add rank list for each property
+    v[[i]] <- rank_list(newprops$prev_bins[i], value, paste0("UoM", newprops$prev_bins[i]), options = sortable_options(group = "midsUoM"))
+  }
+  return(v)
+  })
+  output$UoMextra <- renderUI(UoMnewpropranklists())
+  
+  ## add UoM values specified by user (and keep existing values)
+  existing <- eventReactive(input$addUoM, {input$UoMunused}) 
   new <- eventReactive(input$addUoM, {input$UoMnewvalue})
   output$UoMunused <- renderUI(rank_list("Unused values", c(existing(), new()), "UoMunused", options = sortable_options(group = "midsUoM")))
   
-  #combine UoM inputs
+  ## combine all UoM inputs
   UoMinputs <- reactive({x <- list()
-  for (j in 1:length(jsonUoM())){
-    value <-  reactiveValuesToList(input)[paste0("UoM", names(jsonUoM()[j]))]
-    x[[names(jsonUoM()[j])]] <- value[[1]]
-    }
+  #get names of original properties from schema and of user specified properties
+  properties <- c(names(jsonUoM()), newprops$prev_bins)
+  #get values for each property
+  for (j in 1:length(properties)){
+    value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
+    #don't include empty properties
+    if (rlang::is_empty(value[[1]])){next}
+    x[[properties[j]]] <- value[[1]]
+  }
   return(x)
   })
   
@@ -243,7 +275,8 @@ server <- function(input, output, session) {
     )
   
   output$results_UoM <-
-    renderPrint(UoMinputs())
+    renderPrint(UoMinputs()
+      )
 
 # Filters -----------------------------------------------------------------
 
