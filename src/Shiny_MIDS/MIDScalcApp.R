@@ -296,7 +296,7 @@ server <- function(input, output, session) {
     previnput <- reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
     if (length(previnput) > 0){
     for (k in 1:length(previnput)){
-      prevcrit <- strsplit(previnput[[k]], split = "\\\n\\\n")[[1]]
+      prevcrit <- strsplit(previnput[[k]], split = "\\\n\\\n")[[1]][1]
       prevcrits <- c(prevcrits, prevcrit)
     }
     return(c(newcrit(), prevcrits))}
@@ -308,9 +308,9 @@ server <- function(input, output, session) {
   extracrits <- list()
   for (i in 1:length(req(unusedcrits()))){
     #get value inside criterium
-    value <- input[[unusedcrits()[[i]][1]]]
+    value <- input[[unusedcrits()[[i]]]]
     #rank list for each criterium
-    extracrit <- rank_list(unusedcrits()[[i]][1], value, unusedcrits()[[i]][1], options = sortable_options(group = "midsproperties"))
+    extracrit <- rank_list(unusedcrits()[[i]], value, unusedcrits()[[i]], options = sortable_options(group = "midsproperties"))
     extracrits <- c(extracrits, extracrit)
   }
   v <- rank_list("Unused criteria",
@@ -344,9 +344,7 @@ server <- function(input, output, session) {
   #show output
   output$results_3 <-
     renderPrint(
-      #unusedcrits()
-      reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
-      #critinputs()  
+      critinputs()  
     )
 
 # Filters -----------------------------------------------------------------
