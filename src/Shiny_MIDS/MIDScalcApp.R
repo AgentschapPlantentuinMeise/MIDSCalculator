@@ -45,10 +45,14 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                                choices = readLines("www/DWCAcolumnnames.txt"),
                                                multiple = TRUE),
                                 actionButton("addcritprop", "Add"),
+                                textInput("newcrit", "Enter a new criterium you'd like to use here", 
+                                          value = "Enter text..."),
+                                actionButton("addcrit", "Add"),
                                 div(
                                   class = "default-sortable bucket-list bucket-list-horizontal",
                                   uiOutput("crit"),
                                   uiOutput("unused"),
+                                  uiOutput("extracrit")
                                 )
                               )
                             )
@@ -283,15 +287,47 @@ server <- function(input, output, session) {
                           "unused", options = sortable_options(group = "midsproperties")))
   
   
+  ## add criteria specified by user
+  #get new criterium from text input field
+  newcrit <- eventReactive(input$addcrit, {input$newcrit})
+  #also get previously submitted criteria
+  newcrits <- reactiveValues(prev_bins = NULL)
+  observeEvent(input$addcrit, {
+    newcrits$prev_bins <- c(newcrits$prev_bins, input$newcrit)
+  })
+  #add rank list for each submitted criterium (under Unused criteria)
+  newcritranklists <- reactive({v <- list()
+  extracrits <- list()
+  for (i in 1:length(req(newcrits$prev_bins))){
+    #get value inside criterium
+    value <- input[[newcrits$prev_bins[i]]]
+    #rank list for each criterium
+    extracrit <- rank_list(newcrits$prev_bins[i], value, newcrits$prev_bins[i], options = sortable_options(group = "midsproperties"))
+    extracrits <- c(extracrits, extracrit)
+  }
+  v <- rank_list("Unused criteria", 
+                 extracrits,
+                 "unusedcrit",
+                 options = sortable_options(group = "midscriteria"))
+  return(v)
+  })
+  output$extracrit <- renderUI(newcritranklists())
+  
+  
   ## get inputs
   critinputs <- reactive({x <- list()
-  #get values for each criterium
-  for (i in 1:length(jsonschema())){
-    for (j in 1:length(jsonschema()[[i]])){
-      value <-  reactiveValuesToList(input)[names(jsonschema()[[i]][j])]
-     #don't include empty properties
-      if (rlang::is_empty(value[[1]])){next}
-      x[[names(jsonschema()[i])]][[names(jsonschema()[[i]][j])]] <- value[[1]]
+  #loop through mids levels
+  midslevels <- names(jsonschema())
+  for (i in 1:length(midslevels)){
+    #get criteria and subconditions for a given mids level
+    critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
+    critsubcond <- critsubcond[critsubcond != ""]
+    #get values for each criterium
+    for (j in 1:length(critsubcond)){
+      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
+      crit <- valuesplit[[1]][1]
+      subconds <- strsplit(valuesplit[[1]][2], split = "\\\n")[[1]]
+      x[[midslevels[i]]][[crit]] <- subconds
     }
   }
   return(x)
@@ -300,6 +336,7 @@ server <- function(input, output, session) {
   #show output
   output$results_3 <-
     renderPrint(
+      #reactiveValuesToList(input)[["mids0"]]
       critinputs()  
     )
 
