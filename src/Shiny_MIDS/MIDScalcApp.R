@@ -254,19 +254,22 @@ server <- function(input, output, session) {
   
   ## add criteria from existing JSON schema
   critranklists <- reactive({v <- list()
-  counter <- 1
   for (i in 1:length(jsonschema())){
+    midslevel <- names(jsonschema()[i])
+    midscritranks <- list()
     for (j in 1:length(jsonschema()[[i]])){
+      midscritname <- names(jsonschema()[[i]][j])
+      props <- list()
       subcond <- strsplit(jsonschema()[[i]][[j]], split = "\\|")
-      name <- paste0(names(jsonschema()[i]), ": ", names(jsonschema()[[i]][j]))
       for (k in 1:length(subcond)){
-        prop <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)")
-        v[[counter]] <- rank_list(name, prop, 
-                                  paste0("crit", names(jsonschema()[[i]][j])), 
-                                  options = sortable_options(group = "midscriteria"))
-        counter <- counter + 1
+        props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
       }
+      midscritrank <- rank_list(midscritname, props, 
+                        midscritname, options = sortable_options(group = "midsproperties"))
+      midscritranks <- c(midscritranks, midscritrank)
     }
+    v[[i]] <- rank_list(midslevel, midscritranks, midslevel,
+                        options = sortable_options(group = "midscriteria"))
   }
   return(v)
   })
@@ -277,7 +280,7 @@ server <- function(input, output, session) {
   existingcrit <- eventReactive(input$addcritprop, {input$unused}) 
   newcrit <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = " & ")})
   output$unused <- renderUI(rank_list("Unused values", c(existingcrit(), newcrit()), 
-                          "unused", options = sortable_options(group = "midscriteria")))
+                          "unused", options = sortable_options(group = "midsproperties")))
   
   
   ## get inputs
@@ -285,7 +288,7 @@ server <- function(input, output, session) {
   #get values for each criterium
   for (i in 1:length(jsonschema())){
     for (j in 1:length(jsonschema()[[i]])){
-      value <-  reactiveValuesToList(input)[paste0("crit", names(jsonschema()[[i]][j]))]
+      value <-  reactiveValuesToList(input)[names(jsonschema()[[i]][j])]
      #don't include empty properties
       if (rlang::is_empty(value[[1]])){next}
       x[[names(jsonschema()[[i]][j])]] <- value[[1]]
