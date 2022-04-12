@@ -291,7 +291,7 @@ server <- function(input, output, session) {
       value <-  reactiveValuesToList(input)[names(jsonschema()[[i]][j])]
      #don't include empty properties
       if (rlang::is_empty(value[[1]])){next}
-      x[[names(jsonschema()[[i]][j])]] <- value[[1]]
+      x[[names(jsonschema()[i])]][[names(jsonschema()[[i]][j])]] <- value[[1]]
     }
   }
   return(x)
