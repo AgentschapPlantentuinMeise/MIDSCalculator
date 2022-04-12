@@ -281,31 +281,39 @@ server <- function(input, output, session) {
   
 
   ## add properties specified by user (and keep existing values)
-  existingcrit <- eventReactive(input$addcritprop, {input$unused}) 
-  newcrit <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = " & ")})
-  output$unused <- renderUI(rank_list("Unused values", c(existingcrit(), newcrit()), 
+  existingcritprop <- eventReactive(input$addcritprop, {input$unused}) 
+  newcritprop <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = " & ")})
+  output$unused <- renderUI(rank_list("Unused values", c(existingcritprop(), newcritprop()), 
                           "unused", options = sortable_options(group = "midsproperties")))
   
   
   ## add criteria specified by user
   #get new criterium from text input field
   newcrit <- eventReactive(input$addcrit, {input$newcrit})
-  #also get previously submitted criteria
-  newcrits <- reactiveValues(prev_bins = NULL)
-  observeEvent(input$addcrit, {
-    newcrits$prev_bins <- c(newcrits$prev_bins, input$newcrit)
+  # also get other criteria still under unused criteria
+  unusedcrits <- eventReactive(input$addcrit, {
+    prevcrits <- list()
+    previnput <- reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
+    if (length(previnput) > 0){
+    for (k in 1:length(previnput)){
+      prevcrit <- strsplit(previnput[[k]], split = "\\\n\\\n")[[1]]
+      prevcrits <- c(prevcrits, prevcrit)
+    }
+    return(c(newcrit(), prevcrits))}
+    else
+    {return(newcrit())}
   })
-  #add rank list for each submitted criterium (under Unused criteria)
+  #add rank list for each submitted and existing criterium (under Unused criteria)
   newcritranklists <- reactive({v <- list()
   extracrits <- list()
-  for (i in 1:length(req(newcrits$prev_bins))){
+  for (i in 1:length(req(unusedcrits()))){
     #get value inside criterium
-    value <- input[[newcrits$prev_bins[i]]]
+    value <- input[[unusedcrits()[[i]][1]]]
     #rank list for each criterium
-    extracrit <- rank_list(newcrits$prev_bins[i], value, newcrits$prev_bins[i], options = sortable_options(group = "midsproperties"))
+    extracrit <- rank_list(unusedcrits()[[i]][1], value, unusedcrits()[[i]][1], options = sortable_options(group = "midsproperties"))
     extracrits <- c(extracrits, extracrit)
   }
-  v <- rank_list("Unused criteria", 
+  v <- rank_list("Unused criteria",
                  extracrits,
                  "unusedcrit",
                  options = sortable_options(group = "midscriteria"))
@@ -336,8 +344,9 @@ server <- function(input, output, session) {
   #show output
   output$results_3 <-
     renderPrint(
-      #reactiveValuesToList(input)[["mids0"]]
-      critinputs()  
+      #unusedcrits()
+      reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
+      #critinputs()  
     )
 
 # Filters -----------------------------------------------------------------
