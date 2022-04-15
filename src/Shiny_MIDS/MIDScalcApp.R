@@ -186,12 +186,16 @@ server <- function(input, output, session) {
 
   #calculate mids levels and criteria
   gbif_dataset_mids <- eventReactive(input$start, {
-    withProgress(message = 'Calculating MIDS scores', value = 0, {
-      calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())
-    })
+    if (input$interactivejson == FALSE){
+      withProgress(message = 'Calculating MIDS scores', value = 0, {
+        calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())})
+    }
+    else if (input$interactivejson == TRUE){
+      withProgress(message = 'Calculating MIDS scores', value = 0, {
+        calculate_mids(gbiffile = input$gbiffile$datapath, jsontype = "list", jsonlist = jsonlist())})
+    }
   })
   
-
   #json schema
   jsonschema <- reactive({ 
     read_json_mids_criteria(file = jsonpath(), outtype = "criteria")
@@ -360,6 +364,24 @@ server <- function(input, output, session) {
   return(x)
   })
   
+  ## get properties used in the schema
+  usedcriteria <- reactive({x <- character()
+  #loop through mids levels
+  midslevels <- names(jsonschema())
+  for (i in 1:length(midslevels)){
+    #get criteria and subconditions for a given mids level
+    critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
+    critsubcond <- critsubcond[critsubcond != ""]
+    #get properties for each criterium
+    for (j in 1:length(critsubcond)){
+      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
+      props <- gsub("!", "", strsplit(valuesplit[[1]][2], split = "\\\n|&")[[1]])
+      x <- c(x, props)
+    }
+  }
+  return(x)
+  })
+  
   ## convert outputs to usable filters for mids calc
   midscalccrits <- reactive({x <- list()
   for (i in 1:length(critinputs())){
@@ -393,12 +415,21 @@ server <- function(input, output, session) {
   return(x)
   })
   
+  ## Combine interactive JSON section in 1 list
+  jsonlist <- reactive({
+    list <- list()
+    list[["criteria"]] <- midscalccrits()  
+    list[["UoM"]] <- UoMinputs()  
+    list[["properties"]] <- usedcriteria() 
+    return(list)
+  })
+
   #show output
   output$results_3 <-
     renderPrint(
-      midscalccrits()  
+      jsonlist()  
     )
-
+  
 # Filters -----------------------------------------------------------------
 
   #Setting filters when new analysis is started
