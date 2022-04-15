@@ -40,14 +40,19 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               div(
                                 class = "bucket-list-container default-sortable",
                                 "Drag the properties to the desired MIDS level",
-                                selectizeInput("critnewprop", 
+                                br(),br(),
+                                fluidPage(fluidRow(
+                                  column(5, selectizeInput("critnewprop", 
                                                label = "Enter a new property you'd like to use here \n Select multiple values at once if they must all be true (&)",  
                                                choices = readLines("www/DWCAcolumnnames.txt"),
-                                               multiple = TRUE),
-                                actionButton("addcritprop", "Add"),
-                                textInput("newcrit", "Enter a new criterium you'd like to use here", 
-                                          value = "Enter text..."),
-                                actionButton("addcrit", "Add"),
+                                               multiple = TRUE)),
+                                  column(5, textInput("newcrit", "Enter a new criterium you'd like to use here", 
+                                          value = "Enter text..."))
+                                )),
+                                fluidPage(fluidRow(
+                                  column(5, actionButton("addcritprop", "Add")),
+                                  column(5, actionButton("addcrit", "Add"))
+                                )),
                                 div(
                                   class = "default-sortable bucket-list bucket-list-horizontal",
                                   uiOutput("crit"),
@@ -77,12 +82,17 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               div(
                                 class = "bucket-list-container default-sortable",
                                 "Drag the unknown or missing values to the desired properties",
-                                textInput("UoMnewvalue", "Enter a new value you'd like to use here", 
-                                          value = "Enter text..."),
-                                actionButton("addUoM", "Add"),
-                                textInput("UoMnewprop", "Enter a new property you'd like to use here", 
-                                          value = "Enter text..."),
-                                actionButton("addUoMprop", "Add"),
+                                br(),br(),
+                                fluidPage(fluidRow(
+                                  column(5, textInput("UoMnewvalue", "Enter a new value you'd like to use here", 
+                                            value = "Enter text...")),
+                                  column(5, textInput("UoMnewprop", "Enter a new property you'd like to use here", 
+                                            value = "Enter text..."))
+                                )),
+                                fluidPage(fluidRow(
+                                  column(5, actionButton("addUoM", "Add")),
+                                  column(5, actionButton("addUoMprop", "Add"))
+                                )),
                                 div(
                                   class = "bucket-list-container default-sortable",
                                   uiOutput("UoMall"),
