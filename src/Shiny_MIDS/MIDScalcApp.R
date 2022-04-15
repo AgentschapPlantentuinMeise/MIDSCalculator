@@ -88,8 +88,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                 fluidPage(fluidRow(
                                   column(5, textInput("UoMnewvalue", "Enter a new value you'd like to use here", 
                                             value = "Enter text...")),
-                                  column(5, textInput("UoMnewprop", "Enter a new property you'd like to use here", 
-                                            value = "Enter text..."))
+                                  column(5, uiOutput("UoMnewprop"))
                                 )),
                                 fluidPage(fluidRow(
                                   column(5, actionButton("addUoM", "Add")),
@@ -222,7 +221,11 @@ server <- function(input, output, session) {
   
 
 # Edit Unknown or Missing section -----------------------------------------
-
+  
+  ##update propertie selection
+  output$UoMnewprop <- renderUI({selectInput("UoMnewprop", label = "Enter a new property you'd like to use here",
+                             choices = sort(usedproperties()))})
+  
   ## add UoM values and properties from existing JSON schema
   UoMranklists <- reactive({v <- list()
   for (i in 1:length(jsonUoM())){
@@ -367,7 +370,7 @@ server <- function(input, output, session) {
   })
   
   ## get properties used in the schema
-  usedcriteria <- reactive({x <- character()
+  usedproperties <- reactive({x <- character()
   #loop through mids levels
   midslevels <- names(jsonschema())
   for (i in 1:length(midslevels)){
@@ -422,7 +425,7 @@ server <- function(input, output, session) {
     list <- list()
     list[["criteria"]] <- midscalccrits()  
     list[["UoM"]] <- UoMinputs()  
-    list[["properties"]] <- usedcriteria() 
+    list[["properties"]] <- usedproperties() 
     return(list)
   })
 
