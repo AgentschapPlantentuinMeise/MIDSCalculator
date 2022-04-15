@@ -11,6 +11,7 @@ options(shiny.maxRequestSize = 5000*1024^2)
 
 # Define UI ----
 ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
+                 id = "tabs",
                  useShinyjs(),
                  tabPanel("Submit data",
                           fileInput("gbiffile", "Upload zipped GBIF annotated archive (max 5 GB)",
@@ -22,7 +23,8 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                        choiceValues = list("default", "custom")),
                           fileInput("customjsonfile", label = NULL,
                                     accept = ".json"),
-                          br(),
+                          checkboxInput("interactivejson", "Edit schema interactively", value = FALSE, width = NULL),
+                          br(),br(),
                           actionButton("start", "Start MIDS score calculations")
                           ),
                  tabPanel("View JSON",
@@ -114,7 +116,6 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               )
                             )
                         )),
-                 
                  tabPanel("Results",
                           sidebarLayout(
                             sidebarPanel(
@@ -162,6 +163,14 @@ server <- function(input, output, session) {
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
     if (is.null(input$gbiffile) | (input$jsonfile == "custom" & is.null(input$customjsonfile))){
       shinyjs::hide("start")} else {shinyjs::show("start")}
+  })
+  
+  #hide "Edit JSON" tab if schema doesn't need to be edited
+  observe({
+    if (input$interactivejson == FALSE){
+      hideTab("tabs", target = "Edit JSON")}
+    if (input$interactivejson == TRUE){
+      showTab("tabs", target = "Edit JSON")}
   })
   
   #get path to json schema
