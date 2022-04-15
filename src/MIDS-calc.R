@@ -11,7 +11,7 @@ library(magrittr)
 # Load functions ----------------------------------------------------------
 # source(file = "src/parse_json_schema.R")
 
-calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
+calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath, jsontype = "file", jsonlist = NULL) {
 
   # Get data ----------------------------------------------------------------
   
@@ -19,10 +19,21 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
   # gbif_dataset <- fread(occpath, encoding = "UTF-8", colClasses = "character")
   
   #get unknown or missing values
-  list_UoM <- read_json_unknownOrMissing(jsonfile)
+  if (jsontype == "file"){
+    list_UoM <- read_json_unknownOrMissing(jsonfile)
+  }
+  else if (jsontype == "list"){
+    list_UoM <- jsonlist[["UoM"]]
+  }
   
   #get list of used properties
-  list_props <- read_json_mids_criteria(jsonfile, out = "properties")
+  if (jsontype == "file"){
+    list_props <- read_json_mids_criteria(jsonfile, out = "properties")
+  }
+  else if (jsontype == "list"){
+    list_props <- jsonlist[["properties"]]
+  }
+  
   
   #add other needed/interesting properties
   list_props <- c(list_props, "datasetKey", "countryCode", "class", "order", "family", "subfamily", "genus")
@@ -86,7 +97,12 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath) {
   # Define criteria ---------------------------------------------------------
   
   # Get list of criteria
-  list_criteria <- read_json_mids_criteria(jsonfile)
+  if (jsontype == "file"){
+    list_criteria <- read_json_mids_criteria(jsonfile)
+  }
+  else if (jsontype == "list"){
+    list_criteria <- jsonlist[["criteria"]]
+  }
   
   # Check if separate MIDS conditions are met -------------------------------
   
