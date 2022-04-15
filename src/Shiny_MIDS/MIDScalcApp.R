@@ -341,10 +341,43 @@ server <- function(input, output, session) {
   return(x)
   })
   
+  ## convert outputs to usable filters for mids calc
+  midscalccrits <- reactive({x <- list()
+  for (i in 1:length(critinputs())){
+    for (j in 1:length(critinputs()[[i]])){
+      subcond <- critinputs()[[i]][[j]]
+      nasubconds <- list()
+      for (k in 1:length(subcond)){
+        #deal with !
+        if (grepl("!", subcond[k], fixed = TRUE)){
+          nasubcond <- paste0("is.na(", substring(subcond[k],2), ")")}
+        #deal with &
+        else if (grepl("&", subcond[k], fixed = TRUE)){
+          nasubcond <- "("
+          split <- strsplit(subcond[k], "&")[[1]]
+          for (l in 1:length(split)){
+            nasubcond <- paste0(nasubcond, "!is.na(", split[l], ") & ")
+            }
+          nasubcond <- paste0(substr(nasubcond, 1, nchar(nasubcond)-3), ")")
+        }
+        #others (no & or !):
+        else {nasubcond <- paste0("!is.na(", subcond[k], ")")}
+        #combine
+        nasubconds <- c(nasubconds, nasubcond)
+      }
+      #collapse subconditions
+      collsubcond <- paste(nasubconds, collapse = " | ")
+      #create list again
+      x[[names(critinputs())[i]]][[names(critinputs()[[i]][j])]] <- collsubcond
+      }
+  }
+  return(x)
+  })
+  
   #show output
   output$results_3 <-
     renderPrint(
-      critinputs()  
+      midscalccrits()  
     )
 
 # Filters -----------------------------------------------------------------
