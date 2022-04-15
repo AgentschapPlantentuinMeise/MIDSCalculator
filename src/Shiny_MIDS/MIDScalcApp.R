@@ -168,9 +168,11 @@ server <- function(input, output, session) {
   #hide "Edit JSON" tab if schema doesn't need to be edited
   observe({
     if (input$interactivejson == FALSE){
-      hideTab("tabs", target = "Edit JSON")}
+      hideTab("tabs", target = "Edit JSON")
+      showTab("tabs", target = "View JSON")}
     if (input$interactivejson == TRUE){
-      showTab("tabs", target = "Edit JSON")}
+      showTab("tabs", target = "Edit JSON")
+      hideTab("tabs", target = "View JSON")}
   })
   
   #get path to json schema
@@ -196,12 +198,12 @@ server <- function(input, output, session) {
     }
   })
   
-  #json schema
+  #json schema from file
   jsonschema <- reactive({ 
     read_json_mids_criteria(file = jsonpath(), outtype = "criteria")
   })
   
-  #json UoM
+  #json UoM from file
   jsonUoM <- reactive({ 
     read_json_unknownOrMissing(file = jsonpath())
   })
@@ -209,10 +211,10 @@ server <- function(input, output, session) {
 
 # View JSON ---------------------------------------------------------------
 
-  #show json schema
+  #show json schema from file
   output$json <- renderPrint(jsonschema())
   
-  #show json UoM
+  #show json UoM from file
   output$jsonUoM <- renderPrint(jsonUoM())
   
 
