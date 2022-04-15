@@ -174,6 +174,12 @@ server <- function(input, output, session) {
       hideTab("tabs", target = "View JSON")}
   })
   
+  #hide results and export tab when calculation isn't started
+  hideTab("tabs", target = "Results")
+  hideTab("tabs", target = "Export csv")
+  observeEvent(input$start, {showTab("tabs", target = "Results")})
+  observeEvent(input$start, {showTab("tabs", target = "Export csv")})
+  
   #get path to json schema
   jsonpath <- reactive({
     if (input$jsonfile == "default"){
@@ -222,7 +228,7 @@ server <- function(input, output, session) {
 
 # Edit Unknown or Missing section -----------------------------------------
   
-  ##update propertie selection
+  ##update property selection
   output$UoMnewprop <- renderUI({selectInput("UoMnewprop", label = "Enter a new property you'd like to use here",
                              choices = sort(usedproperties()))})
   
