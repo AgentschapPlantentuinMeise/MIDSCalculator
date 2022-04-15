@@ -41,14 +41,15 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               width = 12,
                               div(
                                 class = "bucket-list-container default-sortable",
-                                "Drag the properties to the desired MIDS level",
+                                "Drag the properties to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level",
                                 br(),br(),
                                 fluidPage(fluidRow(
                                   column(5, selectizeInput("critnewprop", 
-                                               label = "Enter a new property you'd like to use here \n Select multiple values at once if they must all be true (&)",  
+                                               label = "Enter a new property",   
                                                choices = readLines("www/DWCAcolumnnames.txt"),
-                                               multiple = TRUE)),
-                                  column(5, textInput("newcrit", "Enter a new criterium you'd like to use here", 
+                                               multiple = TRUE), 
+                                         helpText("Select multiple values at once if they must all be true (&)"),),
+                                  column(5, textInput("newcrit", "Enter a new criterium", 
                                           value = "Enter text..."))
                                 )),
                                 fluidPage(fluidRow(
@@ -86,9 +87,10 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                 "Drag the unknown or missing values to the desired properties",
                                 br(),br(),
                                 fluidPage(fluidRow(
-                                  column(5, textInput("UoMnewvalue", "Enter a new value you'd like to use here", 
+                                  column(5, textInput("UoMnewvalue", "Enter a new value", 
                                             value = "Enter text...")),
-                                  column(5, uiOutput("UoMnewprop"))
+                                  column(5, uiOutput("UoMnewprop"),
+                                         helpText("First add needed properties to MIDS criteria"))
                                 )),
                                 fluidPage(fluidRow(
                                   column(5, actionButton("addUoM", "Add")),
@@ -229,7 +231,7 @@ server <- function(input, output, session) {
 # Edit Unknown or Missing section -----------------------------------------
   
   ##update property selection
-  output$UoMnewprop <- renderUI({selectInput("UoMnewprop", label = "Enter a new property you'd like to use here",
+  output$UoMnewprop <- renderUI({selectInput("UoMnewprop", label = "Enter a new property",
                              choices = sort(usedproperties()))})
   
   ## add UoM values and properties from existing JSON schema
