@@ -325,7 +325,7 @@ server <- function(input, output, session) {
 
   ## add properties specified by user (and keep existing values)
   existingcritprop <- eventReactive(input$addcritprop, {input$unused}) 
-  newcritprop <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = " & ")})
+  newcritprop <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = "&")})
   output$unused <- renderUI(rank_list("Unused properties", c(existingcritprop(), newcritprop()), 
                           "unused", options = sortable_options(group = "midsproperties")))
   
