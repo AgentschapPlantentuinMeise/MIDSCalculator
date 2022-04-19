@@ -376,7 +376,9 @@ server <- function(input, output, session) {
       valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
       subconds <- strsplit(valuesplit[[1]][2], split = "\\\n")[[1]]
-      x[[midslevels[i]]][[crit]] <- subconds
+      #don't use criteria that have no subconditions/properties
+      if (!is.na(subconds[1])){
+        x[[midslevels[i]]][[crit]] <- subconds}
     }
   }
   return(x)
