@@ -363,7 +363,6 @@ server <- function(input, output, session) {
   
   
   ## get inputs
-  # doesn't work when adding subcondition, only when changing criteria! need to fix
   critinputs <- reactive({x <- list()
   #loop through mids levels
   midslevels <- names(jsonschema())
@@ -375,7 +374,7 @@ server <- function(input, output, session) {
     for (j in 1:length(critsubcond)){
       valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
-      subconds <- strsplit(valuesplit[[1]][2], split = "\\\n")[[1]]
+      subconds <- reactiveValuesToList(input)[[crit]]
       #don't use criteria that have no subconditions/properties
       if (!is.na(subconds[1])){
         x[[midslevels[i]]][[crit]] <- subconds}
@@ -385,7 +384,6 @@ server <- function(input, output, session) {
   })
   
   ## get properties used in the schema
-  # doesn't work when adding subcondition, only when changing criteria! need to fix
   usedproperties <- eventReactive(input$addcritprop|(input$interactivejson == TRUE), 
   {x <- character()
   #loop through mids levels
@@ -397,7 +395,8 @@ server <- function(input, output, session) {
     #get properties for each criterium
     for (j in 1:length(critsubcond)){
       valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
-      props <- gsub("!", "", strsplit(valuesplit[[1]][2], split = "\\\n|&")[[1]])
+      crit <- valuesplit[[1]][1]
+      props <- gsub("!", "", strsplit(reactiveValuesToList(input)[[crit]], split = "&")[[1]])
       x <- c(x, props)
     }
   }
