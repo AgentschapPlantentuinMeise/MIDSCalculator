@@ -235,8 +235,11 @@ server <- function(input, output, session) {
 # Edit Unknown or Missing section -----------------------------------------
   
   ##update property selection
+  #only update choices when navigating to this tab
+  mcprops <- eventReactive(input$tabs == "2. Unknown or Missing",
+                {usedproperties()})
   output$UoMnewprop <- renderUI({selectInput("UoMnewprop", label = "Enter a new property",
-                             choices = sort(usedproperties()))})
+                             choices = sort(mcprops()))})
   
   ## add UoM values and properties from existing JSON schema
   UoMranklists <- reactive({v <- list()
