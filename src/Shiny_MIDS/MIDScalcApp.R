@@ -384,7 +384,7 @@ server <- function(input, output, session) {
   })
   
   ## get properties used in the schema
-  usedproperties <- eventReactive(input$addcritprop|(input$interactivejson == TRUE), 
+  usedproperties <- reactive(
   {x <- character()
   #loop through mids levels
   midslevels <- names(jsonschema())
@@ -396,8 +396,11 @@ server <- function(input, output, session) {
     for (j in 1:length(critsubcond)){
       valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
-      props <- gsub("!", "", strsplit(reactiveValuesToList(input)[[crit]], split = "&")[[1]])
-      x <- c(x, props)
+      subconds <- reactiveValuesToList(input)[[crit]]
+      #don't use criteria that have no subconditions/properties
+      if (!rlang::is_empty(subconds[1])){
+        props <- gsub("!", "", flatten_chr(strsplit(subconds, split = "&")))
+        x <- c(x, props)}
     }
   }
   return(x)
