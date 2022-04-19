@@ -34,7 +34,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           )
                           ),
                  navbarMenu("Edit JSON",
-                  tabPanel("Criteria",
+                  tabPanel("1. Criteria",
                           fluidRow(
                             column(
                               tags$h1("MIDS criteria"),
@@ -51,7 +51,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                                label = "Enter a new subcondition",   
                                                choices = readLines("www/DWCAcolumnnames.txt"),
                                                multiple = TRUE), 
-                                         helpText("Select multiple properties at once if they must all be true (&)"),)
+                                         helpText("Select multiple properties at once if they must all be true (&)"))
                                 )),
                                 fluidPage(fluidRow(
                                   column(5, actionButton("addcrit", "Add")),
@@ -81,7 +81,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                             )
                           )
                   ),
-                  tabPanel("Unknown or Missing",
+                  tabPanel("2. Unknown or Missing",
                           fluidRow(
                             column(
                               tags$h1("MIDS unknown or missing values"),
@@ -363,6 +363,7 @@ server <- function(input, output, session) {
   
   
   ## get inputs
+  # doesn't work when adding subcondition, only when changing criteria! need to fix
   critinputs <- reactive({x <- list()
   #loop through mids levels
   midslevels <- names(jsonschema())
@@ -382,7 +383,9 @@ server <- function(input, output, session) {
   })
   
   ## get properties used in the schema
-  usedproperties <- reactive({x <- character()
+  # doesn't work when adding subcondition, only when changing criteria! need to fix
+  usedproperties <- eventReactive(input$addcritprop|(input$interactivejson == TRUE), 
+  {x <- character()
   #loop through mids levels
   midslevels <- names(jsonschema())
   for (i in 1:length(midslevels)){
