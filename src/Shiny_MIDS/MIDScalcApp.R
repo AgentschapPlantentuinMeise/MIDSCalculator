@@ -41,21 +41,25 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               width = 12,
                               div(
                                 class = "bucket-list-container default-sortable",
-                                "Drag the properties to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level",
+                                "To reach a given MIDS level all criteria must be met (AND), 
+                                and to meet a criterium one of its subconditions (composed of properties) must be met (OR).",
                                 br(),br(),
                                 fluidPage(fluidRow(
+                                  column(5, textInput("newcrit", "Enter a new criterium", 
+                                                      value = "Enter text...")),
                                   column(5, selectizeInput("critnewprop", 
-                                               label = "Enter a new property",   
+                                               label = "Enter a new subcondition",   
                                                choices = readLines("www/DWCAcolumnnames.txt"),
                                                multiple = TRUE), 
-                                         helpText("Select multiple values at once if they must all be true (&)"),),
-                                  column(5, textInput("newcrit", "Enter a new criterium", 
-                                          value = "Enter text..."))
+                                         helpText("Select multiple properties at once if they must all be true (&)"),)
                                 )),
                                 fluidPage(fluidRow(
-                                  column(5, actionButton("addcritprop", "Add")),
-                                  column(5, actionButton("addcrit", "Add"))
+                                  column(5, actionButton("addcrit", "Add")),
+                                  column(5, actionButton("addcritprop", "Add"))
                                 )),
+                                br(), br(),
+                                "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
+                                br(),
                                 div(
                                   class = "default-sortable bucket-list bucket-list-horizontal",
                                   uiOutput("crit"),
@@ -319,7 +323,7 @@ server <- function(input, output, session) {
   ## add properties specified by user (and keep existing values)
   existingcritprop <- eventReactive(input$addcritprop, {input$unused}) 
   newcritprop <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = " & ")})
-  output$unused <- renderUI(rank_list("Unused values", c(existingcritprop(), newcritprop()), 
+  output$unused <- renderUI(rank_list("Unused properties", c(existingcritprop(), newcritprop()), 
                           "unused", options = sortable_options(group = "midsproperties")))
   
   
