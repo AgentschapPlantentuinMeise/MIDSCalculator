@@ -10,9 +10,11 @@ source(file = "../MIDS-calc.R")
 options(shiny.maxRequestSize = 5000*1024^2)
 
 # Define UI ----
-ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
+ui <- 
+  tagList(
+  useShinyjs(),
+  navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
                  id = "tabs",
-                 useShinyjs(),
                  tabPanel("Submit data",
                           fileInput("gbiffile", "Upload zipped GBIF annotated archive (max 5 GB)",
                                     accept = ".zip"),
@@ -162,7 +164,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                           )
                           )
                  
-)
+))
 
 # Define server logic ----
 server <- function(input, output, session) {
@@ -172,7 +174,7 @@ server <- function(input, output, session) {
     if (input$jsonfile == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
     if (is.null(input$gbiffile) | (input$jsonfile == "custom" & is.null(input$customjsonfile))){
-      shinyjs::hide("start")} else {shinyjs::show("start")}
+      shinyjs::disable("start")} else {shinyjs::enable("start")}
   })
   
   #hide "Edit MIDS implementation" tab if schema doesn't need to be edited
@@ -185,11 +187,9 @@ server <- function(input, output, session) {
       hideTab("tabs", target = "View MIDS implementation")}
   })
   
-  #hide results and export tab when calculation isn't started
+  #hide results when calculation isn't started
   hideTab("tabs", target = "Results")
-  hideTab("tabs", target = "Export csv")
   observeEvent(input$start, {showTab("tabs", target = "Results")})
-  observeEvent(input$start, {showTab("tabs", target = "Export csv")})
   
   #get path to json schema
   jsonpath <- reactive({
@@ -198,7 +198,6 @@ server <- function(input, output, session) {
     if (input$jsonfile == "custom"){
       return(input$customjsonfile$datapath)}
   })
-  
 
 # Calculations ------------------------------------------------------------
 
