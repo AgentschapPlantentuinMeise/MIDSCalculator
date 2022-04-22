@@ -18,22 +18,24 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                     accept = ".zip"),
                           br(), 
                           radioButtons("jsonfile", label = NULL, 
-                                       choiceNames = list("Use default schema", 
-                                                          "Upload a custom JSON schema"),
-                                       choiceValues = list("default", "custom")),
+                                       choiceNames = list("Use default MIDS implementation schema", 
+                                                          "Upload a custom MIDS implementation schema"),
+                                       choiceValues = list("default", "custom"),
+                                       width = "400px"),
                           fileInput("customjsonfile", label = NULL,
                                     accept = ".json"),
-                          checkboxInput("interactivejson", "Edit schema interactively", value = FALSE, width = NULL),
+                          checkboxInput("interactivejson", "Edit MIDS implementation schema interactively", 
+                                        value = FALSE, width = "400px"),
                           br(),br(),
                           actionButton("start", "Start MIDS score calculations")
                           ),
-                 tabPanel("View JSON",
+                 tabPanel("View MIDS implementation",
                           tabsetPanel( type = "tabs",
-                                       tabPanel("MIDS criteria", verbatimTextOutput("json")),
+                                       tabPanel("Criteria", verbatimTextOutput("json")),
                                        tabPanel("Unknown or missing values", verbatimTextOutput("jsonUoM"))
                           )
                           ),
-                 tabPanel("Edit JSON",
+                 tabPanel("Edit MIDS implementation",
                   tabsetPanel(type = "tabs",
                     tabPanel("Criteria",
                           fluidRow(
@@ -42,21 +44,21 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                               width = 12,
                               div(
                                 class = "bucket-list-container default-sortable",
-                                "To reach a given MIDS level all criteria must be met (AND), 
-                                and to meet a criterium one of its subconditions (composed of properties) must be met (OR).",
+                                "To reach a given MIDS level all MIDS elements must be met (AND), 
+                                and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
                                 br(),br(),
                                 fluidPage(fluidRow(
-                                  column(5, textInput("newcrit", "Enter a new criterium", 
+                                  column(5, textInput("newElement", "Enter a new MIDS element", 
                                                       value = "Enter text...")),
-                                  column(5, selectizeInput("critnewprop", 
-                                               label = "Enter a new subcondition",   
+                                  column(5, selectizeInput("newMapping", 
+                                               label = "Enter a new mapping",   
                                                choices = readLines("www/DWCAcolumnnames.txt"),
                                                multiple = TRUE), 
-                                         helpText("Select multiple properties at once if they must all be true (&)"))
+                                         helpText("Select multiple properties at once if they must all be present (&)"))
                                 )),
                                 fluidPage(fluidRow(
-                                  column(5, actionButton("addcrit", "Add")),
-                                  column(5, actionButton("addcritprop", "Add"))
+                                  column(5, actionButton("addElement", "Add")),
+                                  column(5, actionButton("addMapping", "Add"))
                                 )),
                                 br(), br(),
                                 "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
@@ -82,7 +84,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                             )
                           )
                   ),
-                  tabPanel("Unknown or Missing",
+                  tabPanel("Unknown or Missing values",
                           fluidRow(
                             column(
                               tags$h1("MIDS unknown or missing values"),
@@ -173,14 +175,14 @@ server <- function(input, output, session) {
       shinyjs::hide("start")} else {shinyjs::show("start")}
   })
   
-  #hide "Edit JSON" tab if schema doesn't need to be edited
+  #hide "Edit MIDS implementation" tab if schema doesn't need to be edited
   observe({
     if (input$interactivejson == FALSE){
-      hideTab("tabs", target = "Edit JSON")
-      showTab("tabs", target = "View JSON")}
+      hideTab("tabs", target = "Edit MIDS implementation")
+      showTab("tabs", target = "View MIDS implementation")}
     if (input$interactivejson == TRUE){
-      showTab("tabs", target = "Edit JSON")
-      hideTab("tabs", target = "View JSON")}
+      showTab("tabs", target = "Edit MIDS implementation")
+      hideTab("tabs", target = "View MIDS implementation")}
   })
   
   #hide results and export tab when calculation isn't started
@@ -315,29 +317,29 @@ server <- function(input, output, session) {
         props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
       }
       midscritrank <- rank_list(midscritname, props, 
-                        midscritname, options = sortable_options(group = "midsproperties"))
+                        midscritname, options = sortable_options(group = "midsMappings"))
       midscritranks <- c(midscritranks, midscritrank)
     }
     v[[i]] <- rank_list(midslevel, midscritranks, midslevel,
-                        options = sortable_options(group = "midscriteria"))
+                        options = sortable_options(group = "midsElements"))
   }
   return(v)
   })
   output$crit <- renderUI(critranklists())
   
 
-  ## add properties specified by user (and keep existing values)
-  existingcritprop <- eventReactive(input$addcritprop, {input$unused}) 
-  newcritprop <- eventReactive(input$addcritprop, {paste(input$critnewprop, collapse = "&")})
-  output$unused <- renderUI(rank_list("Unused properties", c(existingcritprop(), newcritprop()), 
-                          "unused", options = sortable_options(group = "midsproperties")))
+  ## add mappings specified by user (and keep existing values)
+  existingMappings <- eventReactive(input$addMapping, {input$unused}) 
+  newMapping <- eventReactive(input$addMapping, {paste(input$newMapping, collapse = "&")})
+  output$unused <- renderUI(rank_list("Unused mappings", c(existingMappings(), newMapping()), 
+                          "unused", options = sortable_options(group = "midsMappings")))
   
   
-  ## add criteria specified by user
-  #get new criterium from text input field
-  newcrit <- eventReactive(input$addcrit, {input$newcrit})
-  # also get other criteria still under unused criteria
-  unusedcrits <- eventReactive(input$addcrit, {
+  ## add MIDS elements specified by user
+  #get new MIDS element from text input field
+  newElement <- eventReactive(input$addElement, {input$newElement})
+  # also get other elements still under unused elements
+  unusedcrits <- eventReactive(input$addElement, {
     prevcrits <- list()
     previnput <- reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
     if (length(previnput) > 0){
@@ -345,24 +347,24 @@ server <- function(input, output, session) {
       prevcrit <- strsplit(previnput[[k]], split = "\\\n\\\n")[[1]][1]
       prevcrits <- c(prevcrits, prevcrit)
     }
-    return(c(newcrit(), prevcrits))}
+    return(c(newElement(), prevcrits))}
     else
-    {return(newcrit())}
+    {return(newElement())}
   })
-  #add rank list for each submitted and existing criterium (under Unused criteria)
+  #add rank list for each submitted and existing element (under Unused elements)
   newcritranklists <- reactive({v <- list()
   extracrits <- list()
   for (i in 1:length(req(unusedcrits()))){
     #get value inside criterium
     value <- input[[unusedcrits()[[i]]]]
     #rank list for each criterium
-    extracrit <- rank_list(unusedcrits()[[i]], value, unusedcrits()[[i]], options = sortable_options(group = "midsproperties"))
+    extracrit <- rank_list(unusedcrits()[[i]], value, unusedcrits()[[i]], options = sortable_options(group = "midsMappings"))
     extracrits <- c(extracrits, extracrit)
   }
-  v <- rank_list("Unused criteria",
+  v <- rank_list("Unused MIDS elements",
                  extracrits,
                  "unusedcrit",
-                 options = sortable_options(group = "midscriteria"))
+                 options = sortable_options(group = "midsElements"))
   return(v)
   })
   output$extracrit <- renderUI(newcritranklists())
@@ -373,15 +375,15 @@ server <- function(input, output, session) {
   #loop through mids levels
   midslevels <- names(jsonschema())
   for (i in 1:length(midslevels)){
-    #get criteria and subconditions for a given mids level
+    #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
     critsubcond <- critsubcond[critsubcond != ""]
-    #get values for each criterium
+    #get mappings for each element
     for (j in 1:length(critsubcond)){
       valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
       subconds <- reactiveValuesToList(input)[[crit]]
-      #don't use criteria that have no subconditions/properties
+      #don't use elements that have no mappings
       if (!is.na(subconds[1])){
         x[[midslevels[i]]][[crit]] <- subconds}
     }
@@ -395,15 +397,15 @@ server <- function(input, output, session) {
   #loop through mids levels
   midslevels <- names(jsonschema())
   for (i in 1:length(midslevels)){
-    #get criteria and subconditions for a given mids level
+    #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
     critsubcond <- critsubcond[critsubcond != ""]
-    #get properties for each criterium
+    #get mappings for each element
     for (j in 1:length(critsubcond)){
       valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
       subconds <- reactiveValuesToList(input)[[crit]]
-      #don't use criteria that have no subconditions/properties
+      #don't use elements that have no mappings
       if (!rlang::is_empty(subconds[1])){
         props <- gsub("!", "", flatten_chr(strsplit(subconds, split = "&")))
         x <- c(x, props)}
