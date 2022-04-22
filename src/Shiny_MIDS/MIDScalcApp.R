@@ -33,8 +33,9 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                        tabPanel("Unknown or missing values", verbatimTextOutput("jsonUoM"))
                           )
                           ),
-                 navbarMenu("Edit JSON",
-                  tabPanel("1. Criteria",
+                 tabPanel("Edit JSON",
+                  tabsetPanel(type = "tabs",
+                    tabPanel("Criteria",
                           fluidRow(
                             column(
                               tags$h1("MIDS criteria"),
@@ -81,7 +82,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                             )
                           )
                   ),
-                  tabPanel("2. Unknown or Missing",
+                  tabPanel("Unknown or Missing",
                           fluidRow(
                             column(
                               tags$h1("MIDS unknown or missing values"),
@@ -120,7 +121,7 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                 )
                               )
                             )
-                        )),
+                        ))),
                  tabPanel("Results",
                           sidebarLayout(
                             sidebarPanel(
@@ -148,15 +149,17 @@ ui <- navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_
                                                    br(),
                                                    DT::dataTableOutput("summarycrit")),
                                           tabPanel("Record table", 
-                                                   DT::dataTableOutput("table"))
+                                                   DT::dataTableOutput("table")),
+                                          tabPanel("Export csv",
+                                                   br(), br(),
+                                                   downloadButton("downloadData", "Download all"),
+                                                   br(), br(),
+                                                   downloadButton("downloadDataFiltered", "Download filtered dataset"))
                               )
                             )
                           )
-                          ),
-                 tabPanel("Export csv",
-                          downloadButton("downloadData", "Download all"),
-                          br(), br(),
-                          downloadButton("downloadDataFiltered", "Download filtered dataset"))
+                          )
+                 
 )
 
 # Define server logic ----
