@@ -553,10 +553,10 @@ server <- function(input, output, session) {
   })
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", tabPanel(paste0("Results", startcounter$countervalue), 
-                                                        renderPrint(allplots$prev_bins),
+                                                        renderPrint(isolate(startcounter$countervalue)),
                                                         plotOutput(paste0("midsplot_prev", startcounter$countervalue))))})
   #plot each plot
-  observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(allplots$prev_bins[[startcounter$countervalue]]))
+  observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(isolate(allplots$prev_bins[[startcounter$countervalue]])))
   
   #plot mids criteria
   output$midscritsplot<-renderPlot({
