@@ -462,15 +462,24 @@ server <- function(input, output, session) {
       jsonlist()  
     )
   
-# Filters -----------------------------------------------------------------
 
+# Create multiple results tabs --------------------------------------------
+
+  #count how many times start is clicked
+  startcounter <- reactiveValues(countervalue = 0)
+  observeEvent(input$start, {
+    startcounter$countervalue <- startcounter$countervalue + 1})
+  
+  
+# Filters -----------------------------------------------------------------
+  
   #Setting filters when new analysis is started
   observeEvent(input$start, {
     #reset rank filter when new dataset is provided 
     updateSelectInput(session, "rank",
                     selected = "None")
     #update country filter with countries from the dataset
-    updateSelectInput(session, "country", label = "Filter on countrycode", 
+    updateSelectInput(session, paste0("country", startcounter$countervalue), label = "Filter on countrycode", 
                       choices = sort(unique(gbif_dataset_mids()$countryCode)))
     #update date filter with dates from the dataset
     updateSliderInput(session, "date", label = "Filter on collection date", 
@@ -494,8 +503,8 @@ server <- function(input, output, session) {
   #apply filters if they are set
   gbif_dataset_mids_filtered <- reactive({
     gbif_dataset_mids() %>%
-    {if (!is.null(input$country) && input$country != "All") {
-        filter(., countryCode %in% input$country)} else {.}} %>%
+    {if (!is.null(input[[paste0("country", startcounter$countervalue)]]) && input[[paste0("country", startcounter$countervalue)]] != "All") {
+        filter(., countryCode %in% input[[paste0("country", startcounter$countervalue)]])} else {.}} %>%
     {if (input$date[1] != min(gbif_dataset_mids()$eventDate, na.rm = TRUE)){
         filter(., eventDate >= input$date[1])} else {.}} %>%
     {if (input$date[2] != max(gbif_dataset_mids()$eventDate, na.rm = TRUE)) {
@@ -557,10 +566,7 @@ server <- function(input, output, session) {
   output$midscritsplot<-renderPlot(midscritsplot())
   
   ## show previous plots in new tab
-  #count how many times start is clicked
-  startcounter <- reactiveValues(countervalue = 0)
-  observeEvent(input$start, {
-    startcounter$countervalue <- startcounter$countervalue + 1})
+  
   #save all MIDS levels plots
   allplots <- reactiveValues(prev_bins = NULL)
   observe({
@@ -587,11 +593,16 @@ server <- function(input, output, session) {
       tabPanel(paste0("Results", startcounter$countervalue),
                sidebarLayout(
                  sidebarPanel(
+                   helpText("Dataset:"),
+                   verbatimTextOutput(paste0("Used_dataset", startcounter$countervalue)),
+                   helpText("MIDS implementation:"),
+                   verbatimTextOutput(paste0("Used_MIDS_implementation", startcounter$countervalue)),
+                   br(), br(), br(),
                    helpText("Filter to view MIDS scores for part of the dataset"),
                    sliderInput("date", 
                                label = "Filter on collection date:",
                                min = 0, max = 100, value = c(0, 100)),
-                   selectizeInput("country", 
+                   selectizeInput(paste0("country", startcounter$countervalue), 
                                   label = "Filter on countrycode",  
                                   choices = "Nothing yet",
                                   multiple = TRUE),
@@ -625,6 +636,25 @@ server <- function(input, output, session) {
               )
   )
   })
+  
+  #show which dataset was used
+  observe(
+    output[[paste0("Used_dataset", startcounter$countervalue)]] <-
+      renderText(tools::file_path_sans_ext(isolate(input$gbiffile)[[1]]))
+  )
+  
+  #show which MIDS implementation was used
+  observe(
+  output[[paste0("Used_MIDS_implementation", startcounter$countervalue)]] <-
+    renderText(
+      if (input$jsonfile == "default" & input$interactivejson == FALSE){
+       return(c("Default: ", basename(jsonpath())))}
+      else if (input$jsonfile == "custom" & input$interactivejson == FALSE){
+       return(c("Custom: ", input$customjsonfile[[1]]))}
+      else {return("Interactive")}
+    )
+  )
+  
   #plot each MIDS levels plot
   observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(isolate(allplots$prev_bins[[startcounter$countervalue]])))
   #plot each MIDS elements plot
