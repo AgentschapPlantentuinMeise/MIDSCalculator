@@ -198,6 +198,7 @@ server <- function(input, output, session) {
     if (input$jsonfile == "custom"){
       return(input$customjsonfile$datapath)}
   })
+  
 
 # Calculations ------------------------------------------------------------
 
@@ -524,7 +525,7 @@ server <- function(input, output, session) {
   })
   
   #plot mids levels
-  output$midsplot<-renderPlot({
+  midsplot<-reactive({
     ggplot(midssum(), aes(x=MIDS_level, y=Percentage)) + 
     geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) +
     coord_cartesian(xlim = c(-1.5, 3.5)) +
@@ -538,6 +539,25 @@ server <- function(input, output, session) {
     ggtitle("MIDS levels") +
     theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
+  output$midsplot <- renderPlot(midsplot())
+  
+  ## show previous plots in new tab
+  #count how many times start is clicked
+  startcounter <- reactiveValues(countervalue = 0)
+  observeEvent(input$start, {
+    startcounter$countervalue <- startcounter$countervalue + 1})
+  #save all plots
+  allplots <- reactiveValues(prev_bins = NULL)
+  observeEvent(input$start, {
+    allplots$prev_bins[[startcounter$countervalue]] <- isolate(midsplot())
+  })
+  #add new tab for each analysis
+  observeEvent(input$start, {appendTab("tabs", tabPanel(paste0("Results", startcounter$countervalue), 
+                                                        renderPrint(allplots$prev_bins),
+                                                        plotOutput(paste0("midsplot_prev", startcounter$countervalue))))})
+  #plot each plot
+  observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(allplots$prev_bins[[startcounter$countervalue]]))
+  
   #plot mids criteria
   output$midscritsplot<-renderPlot({
     ggplot(midscrit(), aes(x= MIDS_criteria, y=Percentage)) + 
