@@ -541,24 +541,8 @@ server <- function(input, output, session) {
   })
   output$midsplot <- renderPlot(midsplot())
   
-  ## show previous plots in new tab
-  #count how many times start is clicked
-  startcounter <- reactiveValues(countervalue = 0)
-  observeEvent(input$start, {
-    startcounter$countervalue <- startcounter$countervalue + 1})
-  #save all plots
-  allplots <- reactiveValues(prev_bins = NULL)
-  observe({
-    allplots$prev_bins[[startcounter$countervalue]] <- midsplot()
-  })
-  #add new tab for each analysis
-  observeEvent(input$start, {appendTab("tabs", tabPanel(paste0("Results", startcounter$countervalue), 
-                                                        plotOutput(paste0("midsplot_prev", startcounter$countervalue))))})
-  #plot each plot
-  observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(isolate(allplots$prev_bins[[startcounter$countervalue]])))
-  
   #plot mids criteria
-  output$midscritsplot<-renderPlot({
+  midscritsplot<-reactive({
     ggplot(midscrit(), aes(x= MIDS_criteria, y=Percentage)) + 
       geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) + 
       coord_flip() + 
@@ -570,6 +554,59 @@ server <- function(input, output, session) {
       ggtitle("MIDS criteria") +
       theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
+  output$midscritsplot<-renderPlot(midscritsplot())
+  
+  ## show previous plots in new tab
+  #count how many times start is clicked
+  startcounter <- reactiveValues(countervalue = 0)
+  observeEvent(input$start, {
+    startcounter$countervalue <- startcounter$countervalue + 1})
+  #save all MIDS levels plots
+  allplots <- reactiveValues(prev_bins = NULL)
+  observe({
+    allplots$prev_bins[[startcounter$countervalue]] <- midsplot()
+  })
+  #save all MIDS elements plots
+  allelplots <- reactiveValues(prev_bins = NULL)
+  observe({
+    allelplots$prev_bins[[startcounter$countervalue]] <- midscritsplot()
+  })
+  
+  #add new tab for each analysis
+  observeEvent(input$start, {appendTab("tabs", 
+      tabPanel(paste0("Results", startcounter$countervalue),
+               sidebarLayout(
+                 sidebarPanel(
+                   helpText("Filter to view MIDS scores for part of the dataset"),
+                   sliderInput("date", 
+                               label = "Filter on collection date:",
+                               min = 0, max = 100, value = c(0, 100)),
+                   selectizeInput("country", 
+                                  label = "Filter on countrycode",  
+                                  choices = "Nothing yet",
+                                  multiple = TRUE),
+                   selectInput("rank", 
+                               label = "Filter on the following taxonomic rank",
+                               choices = c("None", "Class", "Order", "Family", "Subfamily", "Genus")),
+                   selectizeInput("taxonomy", 
+                                  label = "Filter on taxonomy", 
+                                  choices = "Select a rank first",
+                                  multiple = TRUE)
+                 ),
+                 mainPanel(                       
+                    tabsetPanel(type = "tabs",
+                        tabPanel("Plots",
+                              plotOutput(paste0("midsplot_prev", startcounter$countervalue)),
+                              plotOutput(paste0("midscritsplot", startcounter$countervalue))))
+                )
+               )
+              )
+  )
+  })
+  #plot each MIDS levels plot
+  observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(isolate(allplots$prev_bins[[startcounter$countervalue]])))
+  #plot each MIDS elements plot
+  observe(output[[paste0("midscritsplot", startcounter$countervalue)]] <- renderPlot(isolate(allelplots$prev_bins[[startcounter$countervalue]])))
   
   #summary of mids levels
   output$summary <- DT::renderDataTable(
