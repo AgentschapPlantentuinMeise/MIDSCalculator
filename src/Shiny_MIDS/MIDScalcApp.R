@@ -571,6 +571,16 @@ server <- function(input, output, session) {
   observe({
     allelplots$prev_bins[[startcounter$countervalue]] <- midscritsplot()
   })
+  # save all summaries of MIDS levels
+  allmidssums <- reactiveValues(prev_bins = NULL)
+  observe({
+    allmidssums$prev_bins[[startcounter$countervalue]] <- midssum()
+  })
+  # save all summaries of MIDS elements
+  allmidsels <- reactiveValues(prev_bins = NULL)
+  observe({
+    allmidsels$prev_bins[[startcounter$countervalue]] <- midscrit()
+  })
   
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", 
@@ -597,7 +607,19 @@ server <- function(input, output, session) {
                     tabsetPanel(type = "tabs",
                         tabPanel("Plots",
                               plotOutput(paste0("midsplot_prev", startcounter$countervalue)),
-                              plotOutput(paste0("midscritsplot", startcounter$countervalue))))
+                              plotOutput(paste0("midscritsplot", startcounter$countervalue))),
+                        tabPanel("Summary tables", 
+                              DT::dataTableOutput(paste0("summary", startcounter$countervalue)), 
+                              br(),
+                              DT::dataTableOutput(paste0("summarycrit", startcounter$countervalue))),
+                        tabPanel("Record table", 
+                              DT::dataTableOutput(paste0("table", startcounter$countervalue))),
+                        tabPanel("Export csv",
+                              br(), br(),
+                              downloadButton(paste0("downloadData", startcounter$countervalue), "Download all"),
+                              br(), br(),
+                              downloadButton(paste0("downloadDataFiltered", startcounter$countervalue), "Download filtered dataset"))
+                    )
                 )
                )
               )
@@ -607,6 +629,35 @@ server <- function(input, output, session) {
   observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(isolate(allplots$prev_bins[[startcounter$countervalue]])))
   #plot each MIDS elements plot
   observe(output[[paste0("midscritsplot", startcounter$countervalue)]] <- renderPlot(isolate(allelplots$prev_bins[[startcounter$countervalue]])))
+  #render each summary of MIDS levels
+  observe(output[[paste0("summary", startcounter$countervalue)]] <- 
+      DT::renderDataTable(isolate(allmidssums$prev_bins[[startcounter$countervalue]]), rownames = FALSE, options = list(dom = 't')))
+  #render each summary of MIDS levels
+  observe(output[[paste0("summarycrit", startcounter$countervalue)]] <- 
+            DT::renderDataTable(isolate(allmidsels$prev_bins[[startcounter$countervalue]]), rownames = FALSE, options = list(dom = 't')))
+  #render each records table with mids levels and criteria
+  observe(output[[paste0("table", startcounter$countervalue)]] <- 
+            DT::renderDataTable(isolate(gbif_dataset_mids_filtered())))
+  #download csv of each record table with mids levels
+  observe(output[[paste0("downloadData", startcounter$countervalue)]] <- 
+    downloadHandler(
+    filename = function() {
+      paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
+    },
+    content = function(file) {
+      write.csv(isolate(gbif_dataset_mids()), file, row.names = FALSE)
+    })
+  )
+  #download csv of each filtered record table with mids levels
+  observe(output[[paste0("downloadDataFiltered", startcounter$countervalue)]] <- 
+            downloadHandler(
+              filename = function() {
+                paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
+              },
+              content = function(file) {
+                write.csv(isolate(isolate(gbif_dataset_mids_filtered())), file, row.names = FALSE)
+              })
+  )
   
   #summary of mids levels
   output$summary <- DT::renderDataTable(
