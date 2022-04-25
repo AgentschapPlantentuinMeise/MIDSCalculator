@@ -548,12 +548,11 @@ server <- function(input, output, session) {
     startcounter$countervalue <- startcounter$countervalue + 1})
   #save all plots
   allplots <- reactiveValues(prev_bins = NULL)
-  observeEvent(input$start, {
-    allplots$prev_bins[[startcounter$countervalue]] <- isolate(midsplot())
+  observe({
+    allplots$prev_bins[[startcounter$countervalue]] <- midsplot()
   })
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", tabPanel(paste0("Results", startcounter$countervalue), 
-                                                        renderPrint(isolate(startcounter$countervalue)),
                                                         plotOutput(paste0("midsplot_prev", startcounter$countervalue))))})
   #plot each plot
   observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(isolate(allplots$prev_bins[[startcounter$countervalue]])))
