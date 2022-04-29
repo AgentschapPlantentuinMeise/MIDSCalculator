@@ -476,13 +476,13 @@ server <- function(input, output, session) {
   #Setting filters when new analysis is started
   observeEvent(input$start, {
     #reset rank filter when new dataset is provided 
-    updateSelectInput(session, "rank",
+    updateSelectInput(session, paste0("rank", startcounter$countervalue),
                     selected = "None")
     #update country filter with countries from the dataset
     updateSelectInput(session, paste0("country", startcounter$countervalue), label = "Filter on countrycode", 
                       choices = sort(unique(gbif_dataset_mids()$countryCode)))
     #update date filter with dates from the dataset
-    updateSliderInput(session, "date", label = "Filter on collection date", 
+    updateSliderInput(session, paste0("date", startcounter$countervalue), label = "Filter on collection date", 
                       min = min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
                       max = max(gbif_dataset_mids()$eventDate, na.rm = TRUE),
                       value = c(min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
@@ -491,13 +491,13 @@ server <- function(input, output, session) {
   })
   
   #update taxonomy filter when a taxonomic rank is chosen
-  observeEvent(input$rank, {
-    if (input$rank != "None"){
-      updateSelectInput(session, "taxonomy", label = "Filter on taxonomy",
-                        choices = sort(unique(gbif_dataset_mids()[[tolower(input$rank)]])))
-      shinyjs::show("taxonomy")
+  observeEvent(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]], {
+    if (input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]] != "None"){
+      updateSelectInput(session, paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))), label = "Filter on taxonomy",
+                        choices = sort(unique(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
+      shinyjs::show(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))
     }
-    else {shinyjs::hide("taxonomy")}
+    else {shinyjs::hide(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))}
   })
   
   #apply filters if they are set
@@ -505,12 +505,12 @@ server <- function(input, output, session) {
     req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]]) %>%
     {if (!is.null(input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]]) && input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]] != "All") {
         filter(., countryCode %in% input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]])} else {.}} %>%
-    {if (input$date[1] != min(gbif_dataset_mids()$eventDate, na.rm = TRUE)){
-        filter(., eventDate >= input$date[1])} else {.}} %>%
-    {if (input$date[2] != max(gbif_dataset_mids()$eventDate, na.rm = TRUE)) {
-        filter(., eventDate <= input$date[2])} else {.}} %>%
-    {if (input$rank != "None" && !is.null(input$taxonomy) && input$taxonomy != "All"){
-        filter(., .data[[tolower(input$rank)]] %in% input$taxonomy)} else {.}}
+    {if (req(input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][1]) != 0) {
+      filter(., eventDate >= input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][1])} else {.}} %>%
+    {if (req(input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][2]) != 100) {
+      filter(., eventDate <= input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][2])} else {.}} %>%
+    {if (input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]] != "None" && !is.null(input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]]) && input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]] != "All"){
+        filter(., .data[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]] %in% input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]])} else {.}}
   })
   
 
@@ -590,17 +590,17 @@ server <- function(input, output, session) {
                    verbatimTextOutput(paste0("Used_MIDS_implementation", startcounter$countervalue)),
                    br(), br(), br(),
                    helpText("Filter to view MIDS scores for part of the dataset"),
-                   sliderInput("date", 
+                   sliderInput(paste0("date", startcounter$countervalue), 
                                label = "Filter on collection date:",
                                min = 0, max = 100, value = c(0, 100)),
                    selectizeInput(paste0("country", startcounter$countervalue), 
                                   label = "Filter on countrycode",  
                                   choices = "Nothing yet",
                                   multiple = TRUE),
-                   selectInput("rank", 
+                   selectInput(paste0("rank", startcounter$countervalue), 
                                label = "Filter on the following taxonomic rank",
                                choices = c("None", "Class", "Order", "Family", "Subfamily", "Genus")),
-                   selectizeInput("taxonomy", 
+                   selectizeInput(paste0("taxonomy", startcounter$countervalue), 
                                   label = "Filter on taxonomy", 
                                   choices = "Select a rank first",
                                   multiple = TRUE)
