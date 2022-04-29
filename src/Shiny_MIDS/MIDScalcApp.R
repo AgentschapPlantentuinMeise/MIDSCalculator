@@ -125,44 +125,7 @@ ui <-
                                 )
                               )
                             )
-                        ))),
-                 tabPanel("Results",
-                          sidebarLayout(
-                            sidebarPanel(
-                              helpText("Filter to view MIDS scores for part of the dataset"),
-                              sliderInput("date", 
-                                          label = "Filter on collection date:",
-                                          min = 0, max = 100, value = c(0, 100)),
-                              selectizeInput("country", 
-                                          label = "Filter on countrycode",  
-                                          choices = "Nothing yet",
-                                          multiple = TRUE),
-                              selectInput("rank", 
-                                          label = "Filter on the following taxonomic rank",
-                                          choices = c("None", "Class", "Order", "Family", "Subfamily", "Genus")),
-                              selectizeInput("taxonomy", 
-                                          label = "Filter on taxonomy", 
-                                          choices = "Select a rank first",
-                                          multiple = TRUE)
-                            ),
-                            mainPanel(
-                              tabsetPanel(type = "tabs",
-                                          tabPanel("Plots", plotOutput("midsplot"),
-                                                   plotOutput("midscritsplot")),
-                                          tabPanel("Summary tables", DT::dataTableOutput("summary"), 
-                                                   br(),
-                                                   DT::dataTableOutput("summarycrit")),
-                                          tabPanel("Record table", 
-                                                   DT::dataTableOutput("table")),
-                                          tabPanel("Export csv",
-                                                   br(), br(),
-                                                   downloadButton("downloadData", "Download all"),
-                                                   br(), br(),
-                                                   downloadButton("downloadDataFiltered", "Download filtered dataset"))
-                              )
-                            )
-                          )
-                          )
+                        )))
                  
 ))
 
@@ -186,10 +149,6 @@ server <- function(input, output, session) {
       showTab("tabs", target = "Edit MIDS implementation")
       hideTab("tabs", target = "View MIDS implementation")}
   })
-  
-  #hide results when calculation isn't started
-  hideTab("tabs", target = "Results")
-  observeEvent(input$start, {showTab("tabs", target = "Results")})
   
   #get path to json schema
   jsonpath <- reactive({
@@ -683,19 +642,6 @@ server <- function(input, output, session) {
     }
   )
   
-  #summary of mids levels
-  output$summary <- DT::renderDataTable(
-    midssum(), rownames = FALSE, options = list(dom = 't')
-  )
-  #summary of mids criteria
-  output$summarycrit <- DT::renderDataTable(
-    midscrit(), rownames = FALSE, options = list(dom = 't', pageLength = -1)
-  )
-  #records table with mids levels and criteria
-  output$table <- DT::renderDataTable({
-    gbif_dataset_mids_filtered()
-  })
-  
   ## Close results tabs
   observe(
   for (i in 1:startcounter$countervalue){
@@ -703,26 +649,6 @@ server <- function(input, output, session) {
                  removeTab(inputId="tabs", target=paste0("Results", i)))
   }
   )
-  
-# Downloads ---------------------------------------------------------------
-
-  #download csv of record table with mids levels
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
-    },
-    content = function(file) {
-      write.csv(gbif_dataset_mids(), file, row.names = FALSE)
-  })
-  
-  #download csv of filtered record table with mids levels
-  output$downloadDataFiltered <- downloadHandler(
-    filename = function() {
-      paste0(tools::file_path_sans_ext(input$gbiffile), "_filtered.csv")
-    },
-    content = function(file) {
-      write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
-    })
   
 }
 
