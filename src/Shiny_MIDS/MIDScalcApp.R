@@ -499,12 +499,12 @@ server <- function(input, output, session) {
     }
     else {shinyjs::hide("taxonomy")}
   })
-
+  
   #apply filters if they are set
   gbif_dataset_mids_filtered <- reactive({
-    gbif_dataset_mids() %>%
-    {if (!is.null(input[[paste0("country", startcounter$countervalue)]]) && input[[paste0("country", startcounter$countervalue)]] != "All") {
-        filter(., countryCode %in% input[[paste0("country", startcounter$countervalue)]])} else {.}} %>%
+    req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]]) %>%
+    {if (!is.null(input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]]) && input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]] != "All") {
+        filter(., countryCode %in% input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]])} else {.}} %>%
     {if (input$date[1] != min(gbif_dataset_mids()$eventDate, na.rm = TRUE)){
         filter(., eventDate >= input$date[1])} else {.}} %>%
     {if (input$date[2] != max(gbif_dataset_mids()$eventDate, na.rm = TRUE)) {
@@ -567,25 +567,10 @@ server <- function(input, output, session) {
   
   ## show previous plots in new tab
   
-  #save all MIDS levels plots
-  allplots <- reactiveValues(prev_bins = NULL)
+  #save all MIDS calculations
+  allmidscalc <- reactiveValues(prev_bins = NULL)
   observe({
-    allplots$prev_bins[[startcounter$countervalue]] <- midsplot()
-  })
-  #save all MIDS elements plots
-  allelplots <- reactiveValues(prev_bins = NULL)
-  observe({
-    allelplots$prev_bins[[startcounter$countervalue]] <- midscritsplot()
-  })
-  # save all summaries of MIDS levels
-  allmidssums <- reactiveValues(prev_bins = NULL)
-  observe({
-    allmidssums$prev_bins[[startcounter$countervalue]] <- midssum()
-  })
-  # save all summaries of MIDS elements
-  allmidsels <- reactiveValues(prev_bins = NULL)
-  observe({
-    allmidsels$prev_bins[[startcounter$countervalue]] <- midscrit()
+    allmidscalc$prev_bins[[startcounter$countervalue]] <- gbif_dataset_mids()
   })
   
   #add new tab for each analysis
@@ -620,7 +605,7 @@ server <- function(input, output, session) {
                                   choices = "Select a rank first",
                                   multiple = TRUE)
                  ),
-                 mainPanel(                       
+                 mainPanel(
                     tabsetPanel(type = "tabs",
                         tabPanel("Plots",
                               plotOutput(paste0("midsplot_prev", startcounter$countervalue)),
@@ -661,38 +646,41 @@ server <- function(input, output, session) {
     )
   )
   
-  #plot each MIDS levels plot
-  observe(output[[paste0("midsplot_prev", startcounter$countervalue)]] <- renderPlot(isolate(allplots$prev_bins[[startcounter$countervalue]])))
-  #plot each MIDS elements plot
-  observe(output[[paste0("midscritsplot", startcounter$countervalue)]] <- renderPlot(isolate(allelplots$prev_bins[[startcounter$countervalue]])))
-  #render each summary of MIDS levels
-  observe(output[[paste0("summary", startcounter$countervalue)]] <- 
-      DT::renderDataTable(isolate(allmidssums$prev_bins[[startcounter$countervalue]]), rownames = FALSE, options = list(dom = 't')))
-  #render each summary of MIDS levels
-  observe(output[[paste0("summarycrit", startcounter$countervalue)]] <- 
-            DT::renderDataTable(isolate(allmidsels$prev_bins[[startcounter$countervalue]]), rownames = FALSE, options = list(dom = 't')))
-  #render each records table with mids levels and criteria
-  observe(output[[paste0("table", startcounter$countervalue)]] <- 
-            DT::renderDataTable(isolate(gbif_dataset_mids_filtered())))
-  #download csv of each record table with mids levels
-  observe(output[[paste0("downloadData", startcounter$countervalue)]] <- 
-    downloadHandler(
-    filename = function() {
-      paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
-    },
-    content = function(file) {
-      write.csv(isolate(gbif_dataset_mids()), file, row.names = FALSE)
-    })
-  )
-  #download csv of each filtered record table with mids levels
-  observe(output[[paste0("downloadDataFiltered", startcounter$countervalue)]] <- 
+  #render all outputs for each results tab
+  observe(
+    for (count1 in 1:startcounter$countervalue){
+      local({
+        count <- count1
+        #render plots
+        output[[paste0("midsplot_prev", count)]] <- renderPlot(midsplot())
+        output[[paste0("midscritsplot", count)]] <- renderPlot(midscritsplot())
+        #render summaries
+        output[[paste0("summary", count)]] <- 
+            DT::renderDataTable(midssum(), rownames = FALSE, options = list(dom = 't'))
+        output[[paste0("summarycrit", count)]] <- 
+            DT::renderDataTable(midscrit(), rownames = FALSE, options = list(dom = 't'))
+        #render table
+        output[[paste0("table", count)]] <- 
+            DT::renderDataTable(gbif_dataset_mids_filtered())
+        #downloads
+        output[[paste0("downloadData", count)]] <- 
             downloadHandler(
               filename = function() {
                 paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
               },
               content = function(file) {
-                write.csv(isolate(isolate(gbif_dataset_mids_filtered())), file, row.names = FALSE)
+                write.csv(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]]), file, row.names = FALSE)
               })
+        output[[paste0("downloadDataFiltered", count)]] <- 
+          downloadHandler(
+            filename = function() {
+              paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
+            },
+            content = function(file) {
+              write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
+            })
+      })
+    }
   )
   
   #summary of mids levels
