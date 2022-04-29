@@ -590,8 +590,9 @@ server <- function(input, output, session) {
   
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", 
-      tabPanel(paste0("Results", startcounter$countervalue), 
-               div(actionButton(paste0("close", startcounter$countervalue), "Close this tab"), style = "float:right"),
+      tabPanel(title = tags$span(paste0("Results", startcounter$countervalue),
+                                 actionButton(paste0("close", startcounter$countervalue), "X")), 
+               value = paste0("Results", startcounter$countervalue), 
                sidebarLayout(
                  sidebarPanel(
                    helpText("Dataset:"),
