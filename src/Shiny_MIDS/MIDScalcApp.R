@@ -590,7 +590,8 @@ server <- function(input, output, session) {
   
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", 
-      tabPanel(paste0("Results", startcounter$countervalue),
+      tabPanel(paste0("Results", startcounter$countervalue), 
+               div(actionButton(paste0("close", startcounter$countervalue), "Close this tab"), style = "float:right"),
                sidebarLayout(
                  sidebarPanel(
                    helpText("Dataset:"),
@@ -701,6 +702,14 @@ server <- function(input, output, session) {
   output$table <- DT::renderDataTable({
     gbif_dataset_mids_filtered()
   })
+  
+  ## Close results tabs
+  observe(
+  for (i in 1:startcounter$countervalue){
+    observeEvent(input[[paste0("close", i)]], 
+                 removeTab(inputId="tabs", target=paste0("Results", i)))
+  }
+  )
   
 # Downloads ---------------------------------------------------------------
 
