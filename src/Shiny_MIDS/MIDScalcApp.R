@@ -435,6 +435,17 @@ server <- function(input, output, session) {
     allmidscalc$prev_bins[[startcounter$countervalue]] <- gbif_dataset_mids()
   })
   
+  #save all MIDS implementations
+  allschemas <- reactiveValues(prev_bins = NULL)
+  observe({
+    if (startcounter$countervalue > 0){
+      if (input$interactivejson == TRUE){
+        allschemas$prev_bins[[startcounter$countervalue]] <- jsonlist()[1:2]
+      } else {
+        allschemas$prev_bins[[startcounter$countervalue]] <- c(criteria = jsonschema(), UoM = jsonUoM())
+      }
+    }
+  })
   
 # Filters -----------------------------------------------------------------
   
@@ -549,6 +560,7 @@ server <- function(input, output, session) {
                    verbatimTextOutput(paste0("Used_dataset", startcounter$countervalue)),
                    helpText("MIDS implementation:"),
                    verbatimTextOutput(paste0("Used_MIDS_implementation", startcounter$countervalue)),
+                   actionButton(paste0("showschema", startcounter$countervalue), "Show MIDS implementation"),
                    br(), br(), br(),
                    helpText("Filter to view MIDS scores for part of the dataset"),
                    sliderInput(paste0("date", startcounter$countervalue), 
@@ -595,10 +607,10 @@ server <- function(input, output, session) {
       renderText(tools::file_path_sans_ext(isolate(input$gbiffile)[[1]]))
   )
   
-  #show which MIDS implementation was used
+  #show basic info on which MIDS implementation was used
   observe(
   output[[paste0("Used_MIDS_implementation", startcounter$countervalue)]] <-
-    renderText(
+    renderPrint(
       if (input$jsonfile == "default" & input$interactivejson == FALSE){
        return(c("Default: ", basename(jsonpath())))}
       else if (input$jsonfile == "custom" & input$interactivejson == FALSE){
@@ -606,6 +618,16 @@ server <- function(input, output, session) {
       else {return("Interactive")}
     )
   )
+  
+  #show complete schema in modal window
+  observeEvent(input[[paste0("showschema", as.integer(gsub("Results", "", input$tabs)))]], {
+    showModal(modalDialog(
+      title = "MIDS implementation used",
+      renderPrint(allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]]),
+      easyClose = TRUE,
+      footer = NULL
+    ))
+  })
   
   #render all outputs for each results tab
   observe(
