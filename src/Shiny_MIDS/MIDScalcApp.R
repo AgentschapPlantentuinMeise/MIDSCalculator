@@ -422,12 +422,18 @@ server <- function(input, output, session) {
     )
   
 
-# Create multiple results tabs --------------------------------------------
+# Allow multiple results tabs --------------------------------------------
 
   #count how many times start is clicked
   startcounter <- reactiveValues(countervalue = 0)
   observeEvent(input$start, {
     startcounter$countervalue <- startcounter$countervalue + 1})
+  
+  #save all MIDS calculations
+  allmidscalc <- reactiveValues(prev_bins = NULL)
+  observe({
+    allmidscalc$prev_bins[[startcounter$countervalue]] <- gbif_dataset_mids()
+  })
   
   
 # Filters -----------------------------------------------------------------
@@ -473,7 +479,7 @@ server <- function(input, output, session) {
   })
   
 
-# MIDS calculation outputs ------------------------------------------------
+# Calculate summarized results --------------------------------------------
 
   #create summary of MIDS levels
   midssum <- reactive({
@@ -492,6 +498,9 @@ server <- function(input, output, session) {
     set_colnames(c("MIDS_criteria", "Number_of_records","Percentage")) 
   })
   
+
+# Set up plots ------------------------------------------------------------
+
   #plot mids levels
   midsplot<-reactive({
     ggplot(midssum(), aes(x=MIDS_level, y=Percentage)) + 
@@ -507,7 +516,6 @@ server <- function(input, output, session) {
     ggtitle("MIDS levels") +
     theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
-  output$midsplot <- renderPlot(midsplot())
   
   #plot mids criteria
   midscritsplot<-reactive({
@@ -522,16 +530,10 @@ server <- function(input, output, session) {
       ggtitle("MIDS criteria") +
       theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
   })
-  output$midscritsplot<-renderPlot(midscritsplot())
   
-  ## show previous plots in new tab
-  
-  #save all MIDS calculations
-  allmidscalc <- reactiveValues(prev_bins = NULL)
-  observe({
-    allmidscalc$prev_bins[[startcounter$countervalue]] <- gbif_dataset_mids()
-  })
-  
+
+# Create Results tabs -----------------------------------------------------
+
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", 
       tabPanel(title = tags$span(paste0("Results", startcounter$countervalue, "    "),
@@ -642,7 +644,9 @@ server <- function(input, output, session) {
     }
   )
   
-  ## Close results tabs
+
+# Close results tabs ------------------------------------------------------
+
   observe(
   for (i in 1:startcounter$countervalue){
     observeEvent(input[[paste0("close", i)]], 
