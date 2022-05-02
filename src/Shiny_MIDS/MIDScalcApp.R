@@ -437,16 +437,14 @@ server <- function(input, output, session) {
   
   #save all MIDS implementations
   allschemas <- reactiveValues(prev_bins = NULL)
-  observe({
-    if (startcounter$countervalue > 0){
-      if (input$interactivejson == TRUE){
-        allschemas$prev_bins[[startcounter$countervalue]] <- jsonlist()[1:2]
-      } else {
-        allschemas$prev_bins[[startcounter$countervalue]] <- c(criteria = jsonschema(), UoM = jsonUoM())
-      }
+  observeEvent(input$start, {
+    if (input$interactivejson == TRUE){
+      allschemas$prev_bins[[startcounter$countervalue]] <- jsonlist()[1:2]
+    } else {
+      allschemas$prev_bins[[startcounter$countervalue]] <- c(criteria = jsonschema(), UoM = jsonUoM())
     }
   })
-  
+
 # Filters -----------------------------------------------------------------
   
   #Setting filters when new analysis is started
@@ -619,7 +617,7 @@ server <- function(input, output, session) {
     )
   )
   
-  #show complete schema in modal window
+  #show complete MIDS implementaiton schema in modal window
   observeEvent(input[[paste0("showschema", as.integer(gsub("Results", "", input$tabs)))]], {
     showModal(modalDialog(
       title = "MIDS implementation used",
