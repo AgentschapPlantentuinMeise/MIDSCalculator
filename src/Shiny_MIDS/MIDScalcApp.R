@@ -50,17 +50,17 @@ ui <-
                                 and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
                                 br(),br(),
                                 fluidPage(fluidRow(
-                                  column(5, textInput("newElement", "Enter a new MIDS element", 
+                                  column(6, textInput("newElement", "Enter a new MIDS element", 
                                                       value = "Enter text...")),
-                                  column(5, selectizeInput("newMapping", 
+                                  column(6, selectizeInput("newMapping", 
                                                label = "Enter a new mapping",   
                                                choices = readLines("www/DWCAcolumnnames.txt"),
                                                multiple = TRUE), 
                                          helpText("Select multiple properties at once if they must all be present (&)"))
                                 )),
                                 fluidPage(fluidRow(
-                                  column(5, actionButton("addElement", "Add")),
-                                  column(5, actionButton("addMapping", "Add"))
+                                  column(6, actionButton("addElement", "Add")),
+                                  column(6, actionButton("addMapping", "Add"))
                                 )),
                                 br(), br(),
                                 "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
@@ -96,14 +96,13 @@ ui <-
                                 "Drag the unknown or missing values to the desired properties",
                                 br(),br(),
                                 fluidPage(fluidRow(
-                                  column(5, textInput("UoMnewvalue", "Enter a new value", 
+                                  column(6, textInput("UoMnewvalue", "Enter a new value", 
                                             value = "Enter text...")),
-                                  column(5, uiOutput("UoMnewprop"),
-                                         helpText("First add needed properties to MIDS criteria"))
+                                  column(6, uiOutput("UoMnewprop"))
                                 )),
                                 fluidPage(fluidRow(
-                                  column(5, actionButton("addUoM", "Add")),
-                                  column(5, actionButton("addUoMprop", "Add"))
+                                  column(6, actionButton("addUoM", "Add")),
+                                  column(6, actionButton("addUoMprop", "Add"))
                                 )),
                                 div(
                                   class = "bucket-list-container default-sortable",
@@ -600,7 +599,6 @@ server <- function(input, output, session) {
                       actionButton(paste0("showschema", startcounter$countervalue), "Show MIDS implementation")
                     )
                   ))
-                  
                 )
                )
               )
@@ -625,7 +623,7 @@ server <- function(input, output, session) {
     )
   )
   
-  #show complete MIDS implementaiton schema in modal window
+  #show complete MIDS implementation schema in modal window
   observeEvent(input[[paste0("showschema", as.integer(gsub("Results", "", input$tabs)))]], {
     showModal(modalDialog(
       title = "MIDS implementation used",
