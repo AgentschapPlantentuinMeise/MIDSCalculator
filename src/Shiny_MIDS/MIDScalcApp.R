@@ -554,12 +554,6 @@ server <- function(input, output, session) {
                value = paste0("Results", startcounter$countervalue), 
                sidebarLayout(
                  sidebarPanel(
-                   helpText("Dataset:"),
-                   verbatimTextOutput(paste0("Used_dataset", startcounter$countervalue)),
-                   helpText("MIDS implementation:"),
-                   verbatimTextOutput(paste0("Used_MIDS_implementation", startcounter$countervalue)),
-                   actionButton(paste0("showschema", startcounter$countervalue), "Show MIDS implementation"),
-                   br(), br(), br(),
                    helpText("Filter to view MIDS scores for part of the dataset"),
                    sliderInput(paste0("date", startcounter$countervalue), 
                                label = "Filter on collection date:",
@@ -592,7 +586,21 @@ server <- function(input, output, session) {
                               downloadButton(paste0("downloadData", startcounter$countervalue), "Download all"),
                               br(), br(),
                               downloadButton(paste0("downloadDataFiltered", startcounter$countervalue), "Download filtered dataset"))
+                    ),
+                  br(),
+                  wellPanel(
+                  fluidRow(
+                    column(6,
+                      helpText("Dataset:"),
+                      verbatimTextOutput(paste0("Used_dataset", startcounter$countervalue))
+                    ),
+                    column(6,
+                      helpText("MIDS implementation:"),
+                      verbatimTextOutput(paste0("Used_MIDS_implementation", startcounter$countervalue)),
+                      actionButton(paste0("showschema", startcounter$countervalue), "Show MIDS implementation")
                     )
+                  ))
+                  
                 )
                )
               )
