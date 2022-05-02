@@ -33,7 +33,7 @@ ui <-
                           ),
                  tabPanel("View MIDS implementation",
                           tabsetPanel( type = "tabs",
-                                       tabPanel("Criteria", verbatimTextOutput("json")),
+                                       tabPanel("Criteria", htmlOutput("json")),
                                        tabPanel("Unknown or missing values", verbatimTextOutput("jsonUoM"))
                           )
                           ),
@@ -186,7 +186,20 @@ server <- function(input, output, session) {
 # View JSON ---------------------------------------------------------------
 
   #show json schema from file
-  output$json <- renderPrint(jsonschema())
+  output$json <- renderPrint(
+    for (n_level in seq_along(jsonschema())){
+      print(h3(toupper(names(jsonschema())[[n_level]])))
+      mids_el <- jsonschema()[[n_level]]
+      for(n_element in seq_along(mids_el)){
+        print(h4(names(mids_el)[[n_element]]))
+        mids_mapping <- mids_el[[n_element]]
+        for (n_map in seq_along(mids_mapping)){
+          print(div(mids_mapping[[n_map]]))
+        }
+      }
+    }
+    
+  )
   
   #show json UoM from file
   output$jsonUoM <- renderPrint(jsonUoM())
