@@ -188,7 +188,20 @@ server <- function(input, output, session) {
   #show json schema from file
   output$json <- renderPrint(
     for (n_level in seq_along(jsonschema())){
-      print(HTML("<div style='background-color: #E5E7E9'>"))
+      if (n_level == 1)
+      {print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; grid-template-columns: auto auto; gap: 20px'>"))}
+      if (names(jsonschema())[[n_level]] == "mids0"){
+        print(HTML("<div style='background-color: #E5E7E9; grid-column: 1; grid-row:1'>"))
+      }
+      if (names(jsonschema())[[n_level]] == "mids1"){
+        print(HTML("<div style='background-color: #E5E7E9; grid-column: 2; grid-row:1'>"))
+      }
+      if (names(jsonschema())[[n_level]] == "mids2"){
+        print(HTML("<div style='background-color: #E5E7E9; grid-column: 1; grid-row:2'>"))
+      }
+      if (names(jsonschema())[[n_level]] == "mids3"){
+        print(HTML("<div style='background-color: #E5E7E9; grid-column: 2; grid-row:2'>"))
+      }
       #MIDS levels
       print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
       print(h3(toupper(names(jsonschema())[[n_level]])))
@@ -217,14 +230,14 @@ server <- function(input, output, session) {
           }
           #Print mappings that must be present
           if (!is_empty(present)){
-            print(div("One of these must be present:"))
+            print(tags$u("One of these must be present:"))
             for (presmap in present){
               print(div(gsub("\\!is.na", "", presmap)))
             }
           }
           #Print mappings that must be absent
           if (!is_empty(absent)){
-            print(div("Must be absent:"))
+            print(tags$u("Must be absent:"))
             for (absmap in absent){
               print(div(gsub("!!is.na", "", absmap)))
             }
@@ -233,6 +246,8 @@ server <- function(input, output, session) {
       }
       print(HTML("</div>"))
       print(br())
+      if (n_level == length(jsonschema()))
+      {print(HTML("</div>"))}
     }
   )
   
