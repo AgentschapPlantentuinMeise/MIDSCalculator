@@ -189,19 +189,16 @@ server <- function(input, output, session) {
   output$json <- renderPrint(
     for (n_level in seq_along(jsonschema())){
       if (n_level == 1)
-      {print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; grid-template-columns: auto auto; gap: 20px'>"))}
-      if (names(jsonschema())[[n_level]] == "mids0"){
-        print(HTML("<div style='background-color: #E5E7E9; grid-column: 1; grid-row:1'>"))
-      }
-      if (names(jsonschema())[[n_level]] == "mids1"){
-        print(HTML("<div style='background-color: #E5E7E9; grid-column: 2; grid-row:1'>"))
-      }
-      if (names(jsonschema())[[n_level]] == "mids2"){
-        print(HTML("<div style='background-color: #E5E7E9; grid-column: 1; grid-row:2'>"))
-      }
-      if (names(jsonschema())[[n_level]] == "mids3"){
-        print(HTML("<div style='background-color: #E5E7E9; grid-column: 2; grid-row:2'>"))
-      }
+      {print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px'>"))}
+      #determine position of element in grid
+      if (n_level %% 2 == 0){
+        column <- 2
+        row <- n_level/2}
+      else {
+        column <- 1
+        row <- (n_level+1)/2}
+      print(HTML(paste0("<div style='background-color: #E5E7E9; grid-column: ",
+        column, "; grid-row:", row, "'>")))
       #MIDS levels
       print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
       print(h3(toupper(names(jsonschema())[[n_level]])))
@@ -209,7 +206,7 @@ server <- function(input, output, session) {
       #MIDS elements
       mids_el <- jsonschema()[[n_level]]
       for(n_element in seq_along(mids_el)){
-        print(HTML("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.2); background-opacity: 0.5; font-size: 18px'"))
+        print(HTML("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.2); font-size: 18px; color: #1A5276'"))
         print(h4(names(mids_el)[[n_element]]))
         print(HTML("</div>"))
         #MIDS mappings
