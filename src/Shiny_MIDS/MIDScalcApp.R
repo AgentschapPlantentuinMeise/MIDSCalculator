@@ -188,10 +188,15 @@ server <- function(input, output, session) {
   #show json schema from file
   output$json <- renderPrint(
     for (n_level in seq_along(jsonschema())){
+      print(HTML("<div style='background-color: #E5E7E9'>"))
+      print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
       print(h3(toupper(names(jsonschema())[[n_level]])))
+      print(HTML("</div>"))
       mids_el <- jsonschema()[[n_level]]
       for(n_element in seq_along(mids_el)){
+        print(HTML("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.2); background-opacity: 0.5; font-size: 18px'"))
         print(h4(names(mids_el)[[n_element]]))
+        print(HTML("</div>"))
         mids_mapping <- mids_el[[n_element]]
         for (n_map in seq_along(mids_mapping)){
           mappings <- stringr::str_split(
@@ -206,6 +211,8 @@ server <- function(input, output, session) {
           }
         }
       }
+      print(HTML("</div>"))
+      print(br())
     }
   )
   
