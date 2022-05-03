@@ -194,11 +194,19 @@ server <- function(input, output, session) {
         print(h4(names(mids_el)[[n_element]]))
         mids_mapping <- mids_el[[n_element]]
         for (n_map in seq_along(mids_mapping)){
-          print(div(mids_mapping[[n_map]]))
+          mappings <- stringr::str_split(
+          gsub("\\(|\\)", "",
+          gsub("&", "and",
+          gsub("\\!", "not ",
+          gsub("!is.na", "is present:  ",
+          gsub("|", "or@", mids_mapping[[n_map]], fixed = TRUE)
+          )))), "@")
+          for (map in mappings[[1]]){
+            print(div(map))
+          }
         }
       }
     }
-    
   )
   
   #show json UoM from file
