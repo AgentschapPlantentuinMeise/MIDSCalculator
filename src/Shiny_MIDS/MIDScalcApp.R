@@ -189,25 +189,45 @@ server <- function(input, output, session) {
   output$json <- renderPrint(
     for (n_level in seq_along(jsonschema())){
       print(HTML("<div style='background-color: #E5E7E9'>"))
+      #MIDS levels
       print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
       print(h3(toupper(names(jsonschema())[[n_level]])))
       print(HTML("</div>"))
+      #MIDS elements
       mids_el <- jsonschema()[[n_level]]
       for(n_element in seq_along(mids_el)){
         print(HTML("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.2); background-opacity: 0.5; font-size: 18px'"))
         print(h4(names(mids_el)[[n_element]]))
         print(HTML("</div>"))
+        #MIDS mappings
         mids_mapping <- mids_el[[n_element]]
         for (n_map in seq_along(mids_mapping)){
+          #Split mappings on OR, remove brackets, replace &
           mappings <- stringr::str_split(
           gsub("\\(|\\)", "",
-          gsub("&", "and",
-          gsub("\\!", "not ",
-          gsub("!is.na", "is present:  ",
-          gsub("|", "or@", mids_mapping[[n_map]], fixed = TRUE)
-          )))), "@")
+          gsub("&", "and", mids_mapping[[n_map]]
+          )), "\\|")
+          #Divide mappings according to their functions
+          present <- list()
+          absent <- list()
           for (map in mappings[[1]]){
-            print(div(map))
+            if (grepl("!!is.na", map)){
+              absent <- c(absent, map)}
+            else {present <- c(present, map)}
+          }
+          #Print mappings that must be present
+          if (!is_empty(present)){
+            print(div("One of these must be present:"))
+            for (presmap in present){
+              print(div(gsub("\\!is.na", "", presmap)))
+            }
+          }
+          #Print mappings that must be absent
+          if (!is_empty(absent)){
+            print(div("Must be absent:"))
+            for (absmap in absent){
+              print(div(gsub("!!is.na", "", absmap)))
+            }
           }
         }
       }
