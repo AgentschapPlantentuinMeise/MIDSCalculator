@@ -34,7 +34,7 @@ ui <-
                  tabPanel("View MIDS implementation",
                           tabsetPanel( type = "tabs",
                                        tabPanel("Criteria", htmlOutput("json")),
-                                       tabPanel("Unknown or missing values", verbatimTextOutput("jsonUoM"))
+                                       tabPanel("Unknown or missing values", htmlOutput("jsonUoM"))
                           )
                           ),
                  tabPanel("Edit MIDS implementation",
@@ -189,7 +189,11 @@ server <- function(input, output, session) {
   output$json <- renderPrint(
     for (n_level in seq_along(jsonschema())){
       if (n_level == 1)
-      {print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px'>"))}
+        {#print title
+        print(HTML(paste0("<div style='text-align: center; background-color: #2874A6; 
+              font-size: 25px; color: white'>",
+                          "Criteria", "</div>")))
+        print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px'>"))}
       #determine position of element in grid
       if (n_level %% 2 == 0){
         column <- 2
@@ -242,14 +246,45 @@ server <- function(input, output, session) {
         }
       }
       print(HTML("</div>"))
-      print(br())
       if (n_level == length(jsonschema()))
       {print(HTML("</div>"))}
     }
   )
   
   #show json UoM from file
-  output$jsonUoM <- renderPrint(jsonUoM())
+  output$jsonUoM <- renderPrint(
+    for (n_prop in seq_along(jsonUoM()))
+     {prop <- names(jsonUoM())[[n_prop]]
+     values <- jsonUoM()[[n_prop]]
+     if (n_prop == 1)
+      {#print title
+       print(HTML(paste0("<div style='text-align: center; background-color: #2874A6; 
+              font-size: 25px; color: white'>",
+              "Unkown or missing values", "</div>")))
+       #set up grid layout
+       print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px'>"))}
+     #determine position of element in grid
+     if (n_prop %% 2 == 0){
+       column <- 2
+       row <- n_prop/2}
+     else {
+       column <- 1
+       row <- (n_prop+1)/2}
+     print(HTML(paste0("<div style='background-color: #E5E7E9; grid-column: ",
+                       column, "; grid-row:", row, "'>")))
+     #Property
+     print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
+     print(h3(prop))
+     print(HTML("</div>"))
+     #Unknown or missing values for that property
+     for (value in values){
+       print(div(value))
+     }
+     print(HTML("</div>"))
+     if (n_prop == length(jsonUoM()))
+      {print(HTML("</div>"))}
+    }
+  )
   
 
 # Edit JSON ---------------------------------------------------------------
