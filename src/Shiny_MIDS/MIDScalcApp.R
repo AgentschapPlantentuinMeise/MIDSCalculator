@@ -620,11 +620,11 @@ server <- function(input, output, session) {
   #show basic info on which MIDS implementation was used
   observe(
   output[[paste0("Used_MIDS_implementation", startcounter$countervalue)]] <-
-    renderPrint(
+    renderText(
       if (isolate(input$jsonfile) == "default" & isolate(input$interactivejson) == FALSE){
-       return(c("Default: ", isolate(basename(jsonpath()))))}
+       return(paste("Default:", isolate(basename(jsonpath()))))}
       else if (isolate(input$jsonfile) == "custom" & isolate(input$interactivejson) == FALSE){
-       return(c("Custom: ", isolate(input$customjsonfile[[1]])))}
+       return(paste("Custom:", isolate(input$customjsonfile[[1]])))}
       else {return("Interactive")}
     )
   )
