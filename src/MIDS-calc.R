@@ -58,27 +58,30 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath, jsontype = "
   #which datasets have records that don't have the modified property
   keys <- filter(gbif_dataset, is.na(modified)) %>% .$datasetKey %>% unique()
   #get paths for those datasets
-  filenames <- paste0("dataset/", keys, ".xml")
+  if (!is_empty(keys)){
+    filenames <- paste0("dataset/", keys, ".xml")}
   
   #read xml files to get publication date out of metadata
   pubdate <- data.table(datasetKey=character(), pubdate=character())
-  for (file in filenames){
-    filename <- tools::file_path_sans_ext(basename(file))
-    #extract pubdate, if it is not found it returns an emtpy list
-    trydate <- XML::xmlRoot(XML::xmlParse(
-      xml2::read_xml(unzip(gbiffile, file, exdir = tempfile()), 
-                     encoding = "UTF-8"))) %>%
-      XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
-    #if there is a date, add it to the list
-    if(length(trydate) != 0){
-      date <- 
-        trydate %>%
-        .[[1]] %>% 
-        XML::xmlValue() %>% 
-        trimws()
-    
-    } else {date <- NA}
-    pubdate <- rbind(pubdate, list(filename, date))
+  if(exists("filenames")){
+    for (file in filenames){
+      filename <- tools::file_path_sans_ext(basename(file))
+      #extract pubdate, if it is not found it returns an emtpy list
+      trydate <- XML::xmlRoot(XML::xmlParse(
+        xml2::read_xml(unzip(gbiffile, file, exdir = tempfile()), 
+                       encoding = "UTF-8"))) %>%
+        XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
+      #if there is a date, add it to the list
+      if(length(trydate) != 0){
+        date <- 
+          trydate %>%
+          .[[1]] %>% 
+          XML::xmlValue() %>% 
+          trimws()
+      
+      } else {date <- NA}
+      pubdate <- rbind(pubdate, list(filename, date))
+    }
   }
   
   # Add modified metadata to the dataset ------------------------------------
