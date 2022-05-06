@@ -4,14 +4,15 @@ ViewImplementationUI <- function(id) {
   tagList(
     tabPanel(
       id,
-      htmlOutput(ns("json")),
-      htmlOutput(ns("jsonUoM"))
+      actionButton(ns("view"), "Show MIDS implementation")
     )
   )
 }
 
 ViewImplementationServer <- function(id, schema, UoM) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
+    
     #show criteria
     output$json <- renderPrint(
       for (n_level in seq_along(schema)){
@@ -112,6 +113,15 @@ ViewImplementationServer <- function(id, schema, UoM) {
       {print(HTML("</div>"))}
       }
     )
+    
+    observeEvent(input$view,
+        {showModal(modalDialog(
+             title = "MIDS implementation",
+             htmlOutput(ns("json")),
+             htmlOutput(ns("jsonUoM")),
+             easyClose = TRUE,
+             footer = NULL
+           ))})
     
   })
 }
