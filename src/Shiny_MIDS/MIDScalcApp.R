@@ -607,10 +607,10 @@ server <- function(input, output, session) {
   observe(
   output[[paste0("Used_MIDS_implementation", startcounter$countervalue)]] <-
     renderPrint(
-      if (input$jsonfile == "default" & input$interactivejson == FALSE){
-       return(c("Default: ", basename(jsonpath())))}
-      else if (input$jsonfile == "custom" & input$interactivejson == FALSE){
-       return(c("Custom: ", input$customjsonfile[[1]]))}
+      if (isolate(input$jsonfile) == "default" & isolate(input$interactivejson) == FALSE){
+       return(c("Default: ", isolate(basename(jsonpath()))))}
+      else if (isolate(input$jsonfile) == "custom" & isolate(input$interactivejson) == FALSE){
+       return(c("Custom: ", isolate(input$customjsonfile[[1]])))}
       else {return("Interactive")}
     )
   )
