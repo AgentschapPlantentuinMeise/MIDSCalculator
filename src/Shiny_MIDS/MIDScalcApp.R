@@ -678,10 +678,28 @@ server <- function(input, output, session) {
 
   observe(
   for (i in 1:startcounter$countervalue){
+    #open modal when clicking close button
     observeEvent(input[[paste0("close", i)]], 
-                 removeTab(inputId="tabs", target=paste0("Results", i)))
-  }
-  )
+         showModal(modalDialog(
+           title = "Close tab",
+           "Are you sure you want to close this tab?",
+           easyClose = TRUE,
+           footer = tagList(
+             modalButton("Cancel"),
+             actionButton(paste0("closetab", i), "Close")
+           )
+         ))
+    )
+    observeEvent(input[[paste0("closetab", i)]], {
+      #close results tab
+      removeTab(inputId="tabs", target=paste0("Results", i))
+      #close modal
+      removeModal()
+      #clear associated saved data
+      allmidscalc$prev_bins[[i]] <- ""
+      allschemas$prev_bins[[i]] <- ""
+    })
+  })
   
 }
 
