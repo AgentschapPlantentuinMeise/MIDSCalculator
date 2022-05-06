@@ -615,20 +615,12 @@ server <- function(input, output, session) {
     )
   )
   
-  #show complete MIDS implementation schema in modal window
+  #show complete MIDS implementation schema in modal window  
   observe(
-    for (count1 in 1:startcounter$countervalue){
-      local({
-        count <- count1
-        if (grepl(paste0("Results", count), input$tabs, fixed = TRUE)){ 
-        ViewImplementationServer(paste0("showschema", count),
-         allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["criteria"]],
-         allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]]
-         )
-        }
-      })
-    }
-  )
+  ViewImplementationServer(paste0("showschema", as.integer(gsub("Results", "", input$tabs))),
+                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["criteria"]],
+                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]]
+  ))
 
   #render all outputs for each results tab
   observe(
