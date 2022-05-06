@@ -620,7 +620,7 @@ server <- function(input, output, session) {
     for (count1 in 1:startcounter$countervalue){
       local({
         count <- count1
-        if (grepl("Results", input$tabs, fixed = TRUE)){ 
+        if (grepl(paste0("Results", count), input$tabs, fixed = TRUE)){ 
         ViewImplementationServer(paste0("showschema", count),
          allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["criteria"]],
          allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]]

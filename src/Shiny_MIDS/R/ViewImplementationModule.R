@@ -121,7 +121,8 @@ ViewImplementationServer <- function(id, schema, UoM) {
              htmlOutput(ns("jsonUoM")),
              easyClose = TRUE,
              footer = NULL
-           ))})
+           ))}, 
+        ignoreInit = TRUE)
     
   })
 }
