@@ -16,23 +16,29 @@ ui <-
   navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
                  id = "tabs",
                  tabPanel("Submit data",
+                          div(
+                          fluidRow(column(width = 6, offset = 3,
+                          wellPanel(
+                          h4("Submit dataset"),
                           fileInput("gbiffile", "Upload zipped GBIF annotated archive (max 5 GB)",
-                                    accept = ".zip"),
+                                    accept = ".zip")))),
                           br(), 
+                          fluidRow(column(width = 6, offset = 3,
+                          wellPanel(
+                          h4("Specify MIDS implementation"), br(),
                           radioButtons("jsonfile", label = NULL, 
-                                       choiceNames = list("Use default MIDS implementation schema", 
-                                                          "Upload a custom MIDS implementation schema"),
-                                       choiceValues = list("default", "custom"),
-                                       width = "400px"),
+                                       choiceNames = list("Use default", 
+                                                          "Upload custom"),
+                                       choiceValues = list("default", "custom")),
                           fileInput("customjsonfile", label = NULL,
                                     accept = ".json"),
-                          checkboxInput("interactivejson", "Edit MIDS implementation schema interactively", 
-                                        value = FALSE, width = "400px"),
+                          checkboxInput("interactivejson", "Edit interactively", 
+                                        value = FALSE),
+                          ViewImplementationUI("viewcurrentschema")))),
                           br(),br(),
-                          actionButton("start", "Start MIDS score calculations")
+                          actionButton("start", "Start MIDS score calculations"),
+                          align="center")
                           ),
-                 tabPanel("View MIDS implementation",
-                          ViewImplementationUI("viewschema")),
                  tabPanel("Edit MIDS implementation",
                   tabsetPanel(type = "tabs",
                     tabPanel("Criteria",
@@ -138,19 +144,9 @@ server <- function(input, output, session) {
   #hide "Edit MIDS implementation" tab if schema doesn't need to be edited
   observe({
     if (input$interactivejson == FALSE){
-      hideTab("tabs", target = "Edit MIDS implementation")
-      showTab("tabs", target = "View MIDS implementation")}
+      hideTab("tabs", target = "Edit MIDS implementation")}
     if (input$interactivejson == TRUE){
-      showTab("tabs", target = "Edit MIDS implementation")
-      hideTab("tabs", target = "View MIDS implementation")}
-  })
-  
-  #get path to json schema
-  jsonpath <- reactive({
-    if (input$jsonfile == "default"){
-      return("../../data/schemas/secondschema_conditions_same_level.json")}
-    if (input$jsonfile == "custom"){
-      return(input$customjsonfile$datapath)}
+      showTab("tabs", target = "Edit MIDS implementation")}
   })
   
 
@@ -168,6 +164,16 @@ server <- function(input, output, session) {
     }
   })
   
+# Initialize MIDS implementation ------------------------------------------
+
+  #get path to json schema
+  jsonpath <- reactive({
+    if (input$jsonfile == "default"){
+      return("../../data/schemas/secondschema_conditions_same_level.json")}
+    if (input$jsonfile == "custom"){
+      return(input$customjsonfile$datapath)}
+  })
+  
   #json schema from file
   jsonschema <- reactive({ 
     read_json_mids_criteria(file = jsonpath(), outtype = "criteria")
@@ -179,10 +185,18 @@ server <- function(input, output, session) {
   })
   
 
-# View JSON ---------------------------------------------------------------
+# Show current MIDS implementation ----------------------------------------
 
-  ViewImplementationServer("viewschema", jsonschema(), jsonUoM())
-  
+  #view MIDS implementation in modal window
+  observe(
+  #show schema from interactive
+  if (input$interactivejson == TRUE){
+    ViewImplementationServer("viewcurrentschema", jsonlist()[[1]], jsonlist()[[2]])
+  #show schema from file
+  } else {
+    ViewImplementationServer("viewcurrentschema", jsonschema(), jsonUoM())
+  })
+    
 
 # Edit JSON ---------------------------------------------------------------
   
