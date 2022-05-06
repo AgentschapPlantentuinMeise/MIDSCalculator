@@ -432,7 +432,7 @@ server <- function(input, output, session) {
     if (input$interactivejson == TRUE){
       allschemas$prev_bins[[startcounter$countervalue]] <- jsonlist()[1:2]
     } else {
-      allschemas$prev_bins[[startcounter$countervalue]] <- c(criteria = jsonschema(), UoM = jsonUoM())
+      allschemas$prev_bins[[startcounter$countervalue]] <- c(list("criteria" = jsonschema()), list("UoM" = jsonUoM()))
     }
   })
 
@@ -588,7 +588,7 @@ server <- function(input, output, session) {
                     column(6,
                       helpText("MIDS implementation:"),
                       verbatimTextOutput(paste0("Used_MIDS_implementation", startcounter$countervalue)),
-                      actionButton(paste0("showschema", startcounter$countervalue), "Show MIDS implementation")
+                      ViewImplementationUI(paste0("showschema", startcounter$countervalue))
                     )
                   ))
                 )
@@ -620,19 +620,16 @@ server <- function(input, output, session) {
     for (count1 in 1:startcounter$countervalue){
       local({
         count <- count1
-        observeEvent(input[[paste0("showschema", count)]],
-          {if (grepl("Results", input$tabs, fixed = TRUE)){ 
-          showModal(modalDialog(
-            title = "MIDS implementation used",
-            renderPrint(allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]]),
-            easyClose = TRUE,
-            footer = NULL
-          ))}
-        })
+        if (grepl("Results", input$tabs, fixed = TRUE)){ 
+        ViewImplementationServer(paste0("showschema", count),
+         allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["criteria"]],
+         allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]]
+         )
+        }
       })
     }
   )
-  
+
   #render all outputs for each results tab
   observe(
     for (count1 in 1:startcounter$countervalue){
