@@ -341,7 +341,7 @@ server <- function(input, output, session) {
       crit <- valuesplit[[1]][1]
       subconds <- reactiveValuesToList(input)[[crit]]
        #don't use elements that have no mappings
-      if (!is.null(subconds)){
+      if (!is_empty(subconds)){
         x[[midslevels[i]]][[crit]] <- subconds
       }
     }
