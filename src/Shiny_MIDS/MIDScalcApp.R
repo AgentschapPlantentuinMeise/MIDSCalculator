@@ -551,10 +551,7 @@ server <- function(input, output, session) {
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", 
       tabPanel(title = tags$span(paste0("Results", startcounter$countervalue, "    "),
-                                 actionButton(paste0("close", startcounter$countervalue), 
-                                              icon("times"),
-                                              style = "padding:5px; font-size:70%; border-style: none"
-                                              )
+                                 CloseTabUI(paste0("close", startcounter$countervalue))
                                  ), 
                value = paste0("Results", startcounter$countervalue), 
                sidebarLayout(
@@ -676,31 +673,14 @@ server <- function(input, output, session) {
 
 # Close results tabs ------------------------------------------------------
 
-  observe(
-  for (i in 1:startcounter$countervalue){
-    #open modal when clicking close button
-    observeEvent(input[[paste0("close", i)]], 
-         showModal(modalDialog(
-           title = "Close tab",
-           "Are you sure you want to close this tab?",
-           easyClose = TRUE,
-           footer = tagList(
-             modalButton("Cancel"),
-             actionButton(paste0("closetab", i), "Close")
-           )
-         ))
+    observe(
+    CloseTabServer(paste0("close", as.integer(gsub("Results", "", input$tabs))), input$tabs, session)
     )
-    observeEvent(input[[paste0("closetab", i)]], {
-      #close results tab
-      removeTab(inputId="tabs", target=paste0("Results", i))
-      #close modal
-      removeModal()
-      #clear associated saved data
-      allmidscalc$prev_bins[[i]] <- ""
-      allschemas$prev_bins[[i]] <- ""
-    })
-  })
   
+    #   #clear associated saved data
+    #   allmidscalc$prev_bins[[i]] <- ""
+    #   allschemas$prev_bins[[i]] <- ""
+
 }
 
 # Run the app ----
