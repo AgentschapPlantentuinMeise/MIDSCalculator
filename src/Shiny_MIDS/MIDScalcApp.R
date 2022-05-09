@@ -34,100 +34,12 @@ ui <-
                                     accept = ".json"),
                           checkboxInput("interactivejson", "Edit interactively", 
                                         value = FALSE),
-                          ViewImplementationUI("viewcurrentschema")))),
+                          fluidRow(column(5, actionButton("editschema", "Edit interactively")),
+                          column(7, ViewImplementationUI("viewcurrentschema")))))),
                           br(),br(),
                           actionButton("start", "Start MIDS score calculations"),
                           align="center")
-                          ),
-                 tabPanel("Edit MIDS implementation",
-                  tabsetPanel(type = "tabs",
-                    tabPanel("Criteria",
-                          fluidRow(
-                            column(
-                              tags$h1("MIDS criteria"),
-                              width = 12,
-                              div(
-                                class = "bucket-list-container default-sortable",
-                                "To reach a given MIDS level all MIDS elements must be met (AND), 
-                                and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
-                                br(),br(),
-                                fluidPage(fluidRow(
-                                  column(6, textInput("newElement", "Enter a new MIDS element", 
-                                                      value = "Enter text...")),
-                                  column(6, selectizeInput("newMapping", 
-                                               label = "Enter a new mapping",   
-                                               choices = readLines("www/DWCAcolumnnames.txt"),
-                                               multiple = TRUE), 
-                                         helpText("Select multiple properties at once if they must all be present (&)"))
-                                )),
-                                fluidPage(fluidRow(
-                                  column(6, actionButton("addElement", "Add")),
-                                  column(6, actionButton("addMapping", "Add"))
-                                )),
-                                br(), br(),
-                                "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
-                                br(),
-                                div(
-                                  class = "default-sortable bucket-list bucket-list-horizontal",
-                                  uiOutput("crit"),
-                                  uiOutput("unused"),
-                                  uiOutput("extracrit")
-                                )
-                              )
-                            )
-                          ),
-                          fluidRow(
-                            column(
-                              width = 12,
-                              tags$b("Result"),
-                              column(
-                                width = 12,
-                                tags$p("input$midscriteria"),
-                                verbatimTextOutput("results_3")
-                              )
-                            )
                           )
-                  ),
-                  tabPanel("Unknown or Missing values",
-                          fluidRow(
-                            column(
-                              tags$h1("MIDS unknown or missing values"),
-                              width = 12,
-                              div(
-                                class = "bucket-list-container default-sortable",
-                                "Drag the unknown or missing values to the desired properties",
-                                br(),br(),
-                                fluidPage(fluidRow(
-                                  column(6, textInput("UoMnewvalue", "Enter a new value", 
-                                            value = "Enter text...")),
-                                  column(6, uiOutput("UoMnewprop"))
-                                )),
-                                fluidPage(fluidRow(
-                                  column(6, actionButton("addUoM", "Add")),
-                                  column(6, actionButton("addUoMprop", "Add"))
-                                )),
-                                div(
-                                  class = "bucket-list-container default-sortable",
-                                  uiOutput("UoMall"),
-                                  uiOutput("UoMextra"),
-                                  uiOutput("UoMunused")
-                                )
-                              )
-                            )
-                          ),
-                            fluidRow(
-                              column(
-                                width = 12,
-                                tags$b("Result"),
-                                column(
-                                  width = 12,
-                                  tags$p("input$midsUoM"),
-                                  verbatimTextOutput("results_UoM")
-                                )
-                              )
-                            )
-                        )))
-                 
 ))
 
 # Define server logic ----
@@ -144,9 +56,9 @@ server <- function(input, output, session) {
   #hide "Edit MIDS implementation" tab if schema doesn't need to be edited
   observe({
     if (input$interactivejson == FALSE){
-      hideTab("tabs", target = "Edit MIDS implementation")}
+      shinyjs::disable("editschema")}
     if (input$interactivejson == TRUE){
-      showTab("tabs", target = "Edit MIDS implementation")}
+      shinyjs::enable("editschema")}
   })
   
 
@@ -199,6 +111,102 @@ server <- function(input, output, session) {
     
 
 # Edit JSON ---------------------------------------------------------------
+  
+  #edit MIDS implementation opening in modal window
+  observeEvent(input$editschema,
+               {showModal(modalDialog(
+                 title = "Edit MIDS implementation",
+  tabsetPanel(type = "tabs",
+              tabPanel("Criteria",
+                       fluidRow(
+                         column(
+                           tags$h1("MIDS criteria"),
+                           width = 12,
+                           div(
+                             class = "bucket-list-container default-sortable",
+                             "To reach a given MIDS level all MIDS elements must be met (AND), 
+                                and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
+                             br(),br(),
+                             fluidPage(fluidRow(
+                               column(6, textInput("newElement", "Enter a new MIDS element", 
+                                                   value = "Enter text...")),
+                               column(6, selectizeInput("newMapping", 
+                                                        label = "Enter a new mapping",   
+                                                        choices = readLines("www/DWCAcolumnnames.txt"),
+                                                        multiple = TRUE), 
+                                      helpText("Select multiple properties at once if they must all be present (&)"))
+                             )),
+                             fluidPage(fluidRow(
+                               column(6, actionButton("addElement", "Add")),
+                               column(6, actionButton("addMapping", "Add"))
+                             )),
+                             br(), br(),
+                             "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
+                             br(),
+                             div(
+                               class = "default-sortable bucket-list bucket-list-horizontal",
+                               uiOutput("crit"),
+                               uiOutput("unused"),
+                               uiOutput("extracrit")
+                             )
+                           )
+                         )
+                       ),
+                       fluidRow(
+                         column(
+                           width = 12,
+                           tags$b("Result"),
+                           column(
+                             width = 12,
+                             tags$p("input$midscriteria"),
+                             verbatimTextOutput("results_3")
+                           )
+                         )
+                       )
+              ),
+              tabPanel("Unknown or Missing values",
+                       fluidRow(
+                         column(
+                           tags$h1("MIDS unknown or missing values"),
+                           width = 12,
+                           div(
+                             class = "bucket-list-container default-sortable",
+                             "Drag the unknown or missing values to the desired properties",
+                             br(),br(),
+                             fluidPage(fluidRow(
+                               column(6, textInput("UoMnewvalue", "Enter a new value", 
+                                                   value = "Enter text...")),
+                               column(6, uiOutput("UoMnewprop"))
+                             )),
+                             fluidPage(fluidRow(
+                               column(6, actionButton("addUoM", "Add")),
+                               column(6, actionButton("addUoMprop", "Add"))
+                             )),
+                             div(
+                               class = "bucket-list-container default-sortable",
+                               uiOutput("UoMall"),
+                               uiOutput("UoMextra"),
+                               uiOutput("UoMunused")
+                             )
+                           )
+                         )
+                       ),
+                       fluidRow(
+                         column(
+                           width = 12,
+                           tags$b("Result"),
+                           column(
+                             width = 12,
+                             tags$p("input$midsUoM"),
+                             verbatimTextOutput("results_UoM")
+                           )
+                         )
+                       )
+              )),
+  easyClose = TRUE,
+  footer = NULL
+               ))}, 
+  ignoreInit = TRUE)
   
 
 # Edit Unknown or Missing section -----------------------------------------
