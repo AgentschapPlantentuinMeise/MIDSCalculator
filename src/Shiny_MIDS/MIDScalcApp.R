@@ -18,6 +18,7 @@ ui <-
                  id = "tabs",
                  tabPanel("Submit data",
                           div(
+                          br(), br(),
                           fluidRow(column(width = 6, offset = 3,
                           wellPanel(
                           h4("Submit dataset"),
@@ -408,10 +409,13 @@ server <- function(input, output, session) {
   jsonlist <- reactive({
     list <- list()
     list[["criteria"]] <- midscalccrits()  
-    list[["UoM"]] <- UoMinputs()  
+    list[["UoM"]] <- UoMinputs()
+    #if UoM section wasn't visited, fill this with the UoM from file
+    if (is_empty(list[["UoM"]])){list[["UoM"]] <- jsonUoM()}
     list[["properties"]] <- usedproperties() 
     return(list)
   })
+  
 
   #show output
   output$results_3 <-
