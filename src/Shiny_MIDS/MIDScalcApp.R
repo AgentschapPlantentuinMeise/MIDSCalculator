@@ -349,15 +349,16 @@ server <- function(input, output, session) {
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    critsubcond <- critsubcond[critsubcond != ""]
+    critsubcond <- critsubcond[seq(1, length(critsubcond), 3)]
     #get mappings for each element
     for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
+      valuesplit <- strsplit(gsub(" ", "", critsubcond[[j]]), split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
       subconds <- reactiveValuesToList(input)[[crit]]
-      #don't use elements that have no mappings
-      if (!is.na(subconds[1])){
-        x[[midslevels[i]]][[crit]] <- subconds}
+       #don't use elements that have no mappings
+      if (!is.null(subconds)){
+        x[[midslevels[i]]][[crit]] <- subconds
+      }
     }
   }
   return(x)
@@ -371,10 +372,10 @@ server <- function(input, output, session) {
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    critsubcond <- critsubcond[critsubcond != ""]
+    critsubcond <- critsubcond[seq(1, length(critsubcond), 3)]
     #get mappings for each element
     for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
+      valuesplit <- strsplit(gsub(" ", "", critsubcond[[j]]), split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
       subconds <- reactiveValuesToList(input)[[crit]]
       #don't use elements that have no mappings
@@ -430,9 +431,9 @@ server <- function(input, output, session) {
 
   #show output
   output$results_3 <-
-    renderPrint(
+    renderPrint({
       jsonlist()  
-    )
+    })
   
 
 # Allow multiple results tabs --------------------------------------------
