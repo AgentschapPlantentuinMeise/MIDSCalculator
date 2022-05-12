@@ -483,11 +483,15 @@ server <- function(input, output, session) {
   #update taxonomy filter when a taxonomic rank is chosen
   observeEvent(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]], {
     if (input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]] != "None"){
-      updateSelectInput(session, paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))), label = "Filter on taxonomy",
-                        choices = sort(unique(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
+      #only update taxonomy when nothing has been selected yet
+      if (input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]] == "Select a rank first"){
+        #update taxonomy filter with values from the dataset
+        updateSelectInput(session, paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))), label = "Filter on taxonomy",
+            choices = sort(unique(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
+      }
+      #only show taxonomy filter when a rank is chosen
       shinyjs::show(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))
-    }
-    else {shinyjs::hide(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))}
+    } else {shinyjs::hide(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))}
   })
   
   #apply filters if they are set
@@ -581,6 +585,7 @@ server <- function(input, output, session) {
                    selectizeInput(paste0("taxonomy", startcounter$countervalue), 
                                   label = "Filter on taxonomy", 
                                   choices = "Select a rank first",
+                                  selected = "Select a rank first",
                                   multiple = TRUE)
                  ),
                  mainPanel(
