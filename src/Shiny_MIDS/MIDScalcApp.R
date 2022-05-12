@@ -275,11 +275,10 @@ server <- function(input, output, session) {
   
 # Edit criteria -----------------------------------------------------------
   
-  ## add criteria from existing JSON schema
-  critranklists <- reactive({v <- list()
+  ## create list of elements and mappings from existing JSON schema
+  critlists <- reactive({v <- list()
   for (i in 1:length(jsonschema())){
     midslevel <- names(jsonschema()[i])
-    labels <- list()
     #loop over MIDS elements
     for (j in 1:length(jsonschema()[[i]])){
       midscritname <- names(jsonschema()[[i]][j])
@@ -288,23 +287,55 @@ server <- function(input, output, session) {
       #loop over mappings
       for (k in seq_along(subcond)){
         props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
-        htmlprops <- list()
-        htmlmidscritname <- htmltools::tags$div(midscritname)
-        for (prop in props){
-          htmlprop <- htmltools::tags$div(htmltools::tags$li(prop))
-          htmlprops <- list(htmlprops,htmlprop)
-        }
-        htmlcontent <- list(htmlmidscritname, htmlprops)
+        v[[midslevel]][[midscritname]] <- props
       }
-      labels[[j]] <- htmlcontent
     }
-    v[[i]] <- rank_list(toupper(midslevel), labels, midslevel,
+  }
+  return(v)
+  })
+  
+  ## create labels for ranklists
+  startlabels <- reactive({v <- list()
+  for (i in 1:length(critlists())){
+    midslevel <- names(critlists()[i])
+    labels <- list()
+    #loop over MIDS elements
+    for (j in 1:length(critlists()[[i]])){
+      midscritname <- names(critlists()[[i]][j])
+      props <- list()
+      subcond <- critlists()[[i]][[j]]
+      #loop over mappings
+      htmlprops <- list()
+      for (k in seq_along(subcond)){
+        htmlprops <- list(htmlprops,htmltools::tags$li(subcond[[k]]))
+      }
+      labels[[midscritname]] <- htmltools::tags$div(id=midscritname, list(midscritname, htmlprops))
+    }
+    v[[midslevel]] <- labels
+  }
+  return(v)
+  })
+  
+  ## create ranklists
+  critranklists <- reactive({v <- list()
+  for (i in 1:length(startlabels())){
+    midslevel <- names(startlabels()[i])
+    v[[i]] <- rank_list(toupper(midslevel), startlabels()[[midslevel]], midslevel,
                         options = sortable_options(group = "midsElements"))
   }
   return(v)
   })
   output$crit <- renderUI(critranklists())
   
+  #open modal when clicking a MIDS element
+  observe({
+    onclick("Modified", showModal(modalDialog(
+      title = "Somewhat important message",
+      "This is a somewhat important message.",
+      easyClose = TRUE,
+      footer = NULL
+    )))
+  })
 
   # ## add mappings specified by user (and keep existing values)
   # existingMappings <- eventReactive(input$addMapping, {input$unused}) 
@@ -351,19 +382,17 @@ server <- function(input, output, session) {
   ## get inputs
   critinputs <- reactive({x <- list()
   #loop through mids levels
-  midslevels <- names(jsonschema())
+  midslevels <- names(critlists())
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
-    critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    #get mappings for each element
-    for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n")
-      crit <- valuesplit[[1]][1]
-      subconds <- valuesplit[[1]][-1]
-        #don't use elements that have no mappings
-       if (!is_empty(subconds)){
-         x[[midslevels[i]]][[crit]] <- subconds
-       }
+    elements <- reactiveValuesToList(input)[[midslevels[i]]]
+    for (j in 1:length(elements)){
+      #get mappings for each element
+      mappings <- critlists()[[midslevels[i]]][[elements[j]]]
+      # #don't use elements that have no mappings
+      # if (!is_empty(mappings)){
+      x[[midslevels[i]]][[elements[j]]] <- mappings
+      # }
     }
   }
   return(x)
@@ -373,19 +402,17 @@ server <- function(input, output, session) {
   usedproperties <- reactive(
   {x <- character()
   #loop through mids levels
-  midslevels <- names(jsonschema())
+  midslevels <- names(critlists())
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
-    critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    #get mappings for each element
-    for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n")
-      crit <- valuesplit[[1]][1]
-      subconds <- valuesplit[[1]][-1]
-      #don't use elements that have no mappings
-      if (!rlang::is_empty(subconds[1])){
-        props <- gsub("!", "", flatten_chr(strsplit(subconds, split = "&")))
-        x <- c(x, props)}
+    elements <- reactiveValuesToList(input)[[midslevels[i]]]
+    for (j in 1:length(elements)){
+      #get mappings for each element
+      mappings <- critlists()[[midslevels[i]]][[elements[j]]]
+      # #don't use elements that have no mappings
+      # if (!is_empty(mappings)){
+      x <- c(x, mappings)
+      # }
     }
   }
   return(x)
@@ -439,6 +466,13 @@ server <- function(input, output, session) {
   #show output
   output$results_3 <-
     renderPrint({
+      #reactiveValuesToList(input)
+      #startlabels()
+      #critlists()[[1]][[2]][[2]]
+      #jsonschema()
+      #critlists()
+      #critinputs()
+      #midscalccrits()
       jsonlist()  
     })
 
