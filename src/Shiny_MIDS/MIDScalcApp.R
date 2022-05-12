@@ -279,19 +279,26 @@ server <- function(input, output, session) {
   critranklists <- reactive({v <- list()
   for (i in 1:length(jsonschema())){
     midslevel <- names(jsonschema()[i])
-    midscritranks <- list()
+    labels <- list()
+    #loop over MIDS elements
     for (j in 1:length(jsonschema()[[i]])){
       midscritname <- names(jsonschema()[[i]][j])
       props <- list()
       subcond <- strsplit(jsonschema()[[i]][[j]], split = "\\|")
-      for (k in 1:length(subcond)){
+      #loop over mappings
+      for (k in seq_along(subcond)){
         props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
+        htmlprops <- list()
+        htmlmidscritname <- htmltools::tags$div(midscritname)
+        for (prop in props){
+          htmlprop <- htmltools::tags$div(htmltools::tags$li(prop))
+          htmlprops <- list(htmlprops,htmlprop)
+        }
+        htmlcontent <- list(htmlmidscritname, htmlprops)
       }
-      midscritrank <- rank_list(midscritname, props, 
-                        midscritname, options = sortable_options(group = "midsMappings"))
-      midscritranks <- c(midscritranks, midscritrank)
+      labels[[j]] <- htmlcontent
     }
-    v[[i]] <- rank_list(midslevel, midscritranks, midslevel,
+    v[[i]] <- rank_list(toupper(midslevel), labels, midslevel,
                         options = sortable_options(group = "midsElements"))
   }
   return(v)
