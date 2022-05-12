@@ -306,46 +306,46 @@ server <- function(input, output, session) {
   output$crit <- renderUI(critranklists())
   
 
-  ## add mappings specified by user (and keep existing values)
-  existingMappings <- eventReactive(input$addMapping, {input$unused}) 
-  newMapping <- eventReactive(input$addMapping, {paste(input$newMapping, collapse = "&")})
-  output$unused <- renderUI(rank_list("Unused mappings", c(existingMappings(), newMapping()), 
-                          "unused", options = sortable_options(group = "midsMappings")))
-  
-  
-  ## add MIDS elements specified by user
-  #get new MIDS element from text input field
-  newElement <- eventReactive(input$addElement, {input$newElement})
-  # also get other elements still under unused elements
-  unusedcrits <- eventReactive(input$addElement, {
-    prevcrits <- list()
-    previnput <- reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
-    if (length(previnput) > 0){
-    for (k in 1:length(previnput)){
-      prevcrit <- strsplit(previnput[[k]], split = "\\\n\\\n")[[1]][1]
-      prevcrits <- c(prevcrits, prevcrit)
-    }
-    return(c(newElement(), prevcrits))}
-    else
-    {return(newElement())}
-  })
-  #add rank list for each submitted and existing element (under Unused elements)
-  newcritranklists <- reactive({v <- list()
-  extracrits <- list()
-  for (i in 1:length(req(unusedcrits()))){
-    #get value inside criterium
-    value <- input[[unusedcrits()[[i]]]]
-    #rank list for each criterium
-    extracrit <- rank_list(unusedcrits()[[i]], value, unusedcrits()[[i]], options = sortable_options(group = "midsMappings"))
-    extracrits <- c(extracrits, extracrit)
-  }
-  v <- rank_list("Unused MIDS elements",
-                 extracrits,
-                 "unusedcrit",
-                 options = sortable_options(group = "midsElements"))
-  return(v)
-  })
-  output$extracrit <- renderUI(newcritranklists())
+  # ## add mappings specified by user (and keep existing values)
+  # existingMappings <- eventReactive(input$addMapping, {input$unused}) 
+  # newMapping <- eventReactive(input$addMapping, {paste(input$newMapping, collapse = "&")})
+  # output$unused <- renderUI(rank_list("Unused mappings", c(existingMappings(), newMapping()), 
+  #                         "unused", options = sortable_options(group = "midsMappings")))
+  # 
+  # 
+  # ## add MIDS elements specified by user
+  # #get new MIDS element from text input field
+  # newElement <- eventReactive(input$addElement, {input$newElement})
+  # # also get other elements still under unused elements
+  # unusedcrits <- eventReactive(input$addElement, {
+  #   prevcrits <- list()
+  #   previnput <- reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
+  #   if (length(previnput) > 0){
+  #   for (k in 1:length(previnput)){
+  #     prevcrit <- strsplit(previnput[[k]], split = "\\\n\\\n")[[1]][1]
+  #     prevcrits <- c(prevcrits, prevcrit)
+  #   }
+  #   return(c(newElement(), prevcrits))}
+  #   else
+  #   {return(newElement())}
+  # })
+  # #add rank list for each submitted and existing element (under Unused elements)
+  # newcritranklists <- reactive({v <- list()
+  # extracrits <- list()
+  # for (i in 1:length(req(unusedcrits()))){
+  #   #get value inside criterium
+  #   value <- input[[unusedcrits()[[i]]]]
+  #   #rank list for each criterium
+  #   extracrit <- rank_list(unusedcrits()[[i]], value, unusedcrits()[[i]], options = sortable_options(group = "midsMappings"))
+  #   extracrits <- c(extracrits, extracrit)
+  # }
+  # v <- rank_list("Unused MIDS elements",
+  #                extracrits,
+  #                "unusedcrit",
+  #                options = sortable_options(group = "midsElements"))
+  # return(v)
+  # })
+  # output$extracrit <- renderUI(newcritranklists())
   
   
   ## get inputs
@@ -355,16 +355,15 @@ server <- function(input, output, session) {
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    critsubcond <- critsubcond[seq(1, length(critsubcond), 3)]
     #get mappings for each element
     for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(gsub(" ", "", critsubcond[[j]]), split = "\\\n\\\n")
+      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n")
       crit <- valuesplit[[1]][1]
-      subconds <- reactiveValuesToList(input)[[crit]]
-       #don't use elements that have no mappings
-      if (!is_empty(subconds)){
-        x[[midslevels[i]]][[crit]] <- subconds
-      }
+      subconds <- valuesplit[[1]][-1]
+        #don't use elements that have no mappings
+       if (!is_empty(subconds)){
+         x[[midslevels[i]]][[crit]] <- subconds
+       }
     }
   }
   return(x)
@@ -378,12 +377,11 @@ server <- function(input, output, session) {
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    critsubcond <- critsubcond[seq(1, length(critsubcond), 3)]
     #get mappings for each element
     for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(gsub(" ", "", critsubcond[[j]]), split = "\\\n\\\n")
+      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n")
       crit <- valuesplit[[1]][1]
-      subconds <- reactiveValuesToList(input)[[crit]]
+      subconds <- valuesplit[[1]][-1]
       #don't use elements that have no mappings
       if (!rlang::is_empty(subconds[1])){
         props <- gsub("!", "", flatten_chr(strsplit(subconds, split = "&")))
