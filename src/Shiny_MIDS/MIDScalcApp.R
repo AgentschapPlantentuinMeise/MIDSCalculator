@@ -134,15 +134,29 @@ ui <-
 
 # Define server logic ----
 server <- function(input, output, session) {
-
-  #show and hide json upload button and start button
+  
+  #show and hide schema file upload and disable/enable start button
   observe({
+    #hide schema upload when schema is default
     if (input$jsonfile == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
+    #disable start when there is no input file, or when custom upload is chosen but empty
     if (is.null(input$gbiffile) | (input$jsonfile == "custom" & is.null(input$customjsonfile))){
       shinyjs::disable("start")} else {shinyjs::enable("start")}
   })
-  
+    
+  #disable edit and view schema when custom upload is chosen but empty
+  disableviewschema <- reactiveVal(FALSE)  
+  observe({
+    if (input$jsonfile == "custom" & is.null(input$customjsonfile)){
+      shinyjs::disable("interactiveschema")
+      disableviewschema(TRUE)
+    } else {shinyjs::enable("interactiveschema")
+      disableviewschema(FALSE)}
+    #never disable the view button on results tabs
+    if (grepl("Results", input$tabs))
+    {disableviewschema(FALSE)}
+  })
 
 # Calculations ------------------------------------------------------------
 
@@ -185,10 +199,10 @@ server <- function(input, output, session) {
   observe(
   #show schema from interactive
   if (input$interactiveschema > 0){
-    ViewImplementationServer("viewcurrentschema", jsonlist()[[1]], jsonlist()[[2]])
+    ViewImplementationServer("viewcurrentschema", jsonlist()[[1]], jsonlist()[[2]], disableviewschema)
   #show schema from file
   } else {
-    ViewImplementationServer("viewcurrentschema", jsonschema(), jsonUoM())
+    ViewImplementationServer("viewcurrentschema", jsonschema(), jsonUoM(), disableviewschema)
   })
     
 
@@ -627,7 +641,8 @@ server <- function(input, output, session) {
   observe(
   ViewImplementationServer(paste0("showschema", as.integer(gsub("Results", "", input$tabs))),
                            allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["criteria"]],
-                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]]
+                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]],
+                           disableviewschema
   ))
 
   #render all outputs for each results tab
