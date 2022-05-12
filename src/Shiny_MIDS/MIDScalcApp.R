@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyBS)
 library(ggplot2)
 library(DT)
 library(shinyjs)
@@ -17,6 +18,7 @@ ui <-
                  id = "tabs",
                  tabPanel("Submit data",
                           div(
+                          br(), br(),
                           fluidRow(column(width = 6, offset = 3,
                           wellPanel(
                           h4("Submit dataset"),
@@ -32,133 +34,139 @@ ui <-
                                        choiceValues = list("default", "custom")),
                           fileInput("customjsonfile", label = NULL,
                                     accept = ".json"),
-                          checkboxInput("interactivejson", "Edit interactively", 
-                                        value = FALSE),
-                          ViewImplementationUI("viewcurrentschema")))),
+                          fluidRow(column(5, actionButton("interactiveschema", "Edit interactively")),
+                          column(7, ViewImplementationUI("viewcurrentschema")))))),
                           br(),br(),
                           actionButton("start", "Start MIDS score calculations"),
                           align="center")
                           ),
-                 tabPanel("Edit MIDS implementation",
-                  tabsetPanel(type = "tabs",
-                    tabPanel("Criteria",
-                          fluidRow(
-                            column(
-                              tags$h1("MIDS criteria"),
-                              width = 12,
-                              div(
-                                class = "bucket-list-container default-sortable",
-                                "To reach a given MIDS level all MIDS elements must be met (AND), 
-                                and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
-                                br(),br(),
-                                fluidPage(fluidRow(
-                                  column(6, textInput("newElement", "Enter a new MIDS element", 
-                                                      value = "Enter text...")),
-                                  column(6, selectizeInput("newMapping", 
-                                               label = "Enter a new mapping",   
-                                               choices = readLines("www/DWCAcolumnnames.txt"),
-                                               multiple = TRUE), 
-                                         helpText("Select multiple properties at once if they must all be present (&)"))
-                                )),
-                                fluidPage(fluidRow(
-                                  column(6, actionButton("addElement", "Add")),
-                                  column(6, actionButton("addMapping", "Add"))
-                                )),
-                                br(), br(),
-                                "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
-                                br(),
-                                div(
-                                  class = "default-sortable bucket-list bucket-list-horizontal",
-                                  uiOutput("crit"),
-                                  uiOutput("unused"),
-                                  uiOutput("extracrit")
-                                )
-                              )
-                            )
-                          ),
-                          fluidRow(
-                            column(
-                              width = 12,
-                              tags$b("Result"),
-                              column(
-                                width = 12,
-                                tags$p("input$midscriteria"),
-                                verbatimTextOutput("results_3")
-                              )
-                            )
-                          )
-                  ),
-                  tabPanel("Unknown or Missing values",
-                          fluidRow(
-                            column(
-                              tags$h1("MIDS unknown or missing values"),
-                              width = 12,
-                              div(
-                                class = "bucket-list-container default-sortable",
-                                "Drag the unknown or missing values to the desired properties",
-                                br(),br(),
-                                fluidPage(fluidRow(
-                                  column(6, textInput("UoMnewvalue", "Enter a new value", 
-                                            value = "Enter text...")),
-                                  column(6, uiOutput("UoMnewprop"))
-                                )),
-                                fluidPage(fluidRow(
-                                  column(6, actionButton("addUoM", "Add")),
-                                  column(6, actionButton("addUoMprop", "Add"))
-                                )),
-                                div(
-                                  class = "bucket-list-container default-sortable",
-                                  uiOutput("UoMall"),
-                                  uiOutput("UoMextra"),
-                                  uiOutput("UoMunused")
-                                )
-                              )
-                            )
-                          ),
-                            fluidRow(
-                              column(
-                                width = 12,
-                                tags$b("Result"),
-                                column(
-                                  width = 12,
-                                  tags$p("input$midsUoM"),
-                                  verbatimTextOutput("results_UoM")
-                                )
-                              )
-                            )
-                        )))
-                 
+    #Interactive editing of MIDS implementation in modal window
+    bsModal("id", "title", "interactiveschema", 
+      tabsetPanel(type = "tabs",
+          tabPanel("Criteria",
+             fluidRow(
+               column(
+                 tags$h1("MIDS criteria"),
+                 width = 12,
+                 div(
+                   class = "bucket-list-container default-sortable",
+                   "To reach a given MIDS level all MIDS elements must be met (AND),
+                      and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
+                   br(),br(),
+                   fluidPage(fluidRow(
+                     column(6, textInput("newElement", "Enter a new MIDS element",
+                                         value = "Enter text...")),
+                     column(6, selectizeInput("newMapping",
+                                              label = "Enter a new mapping",
+                                              choices = readLines("www/DWCAcolumnnames.txt"),
+                                              multiple = TRUE),
+                            helpText("Select multiple properties at once if they must all be present (&)"))
+                   )),
+                   fluidPage(fluidRow(
+                     column(6, actionButton("addElement", "Add")),
+                     column(6, actionButton("addMapping", "Add"))
+                   )),
+                   br(), br(),
+                   "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
+                   br(),
+                   div(
+                     class = "default-sortable bucket-list bucket-list-horizontal",
+                     uiOutput("crit"),
+                     uiOutput("unused"),
+                     uiOutput("extracrit")
+                   )
+                 )
+               )
+             ),
+             fluidRow(
+               column(
+                 width = 12,
+                 tags$b("Result"),
+                 column(
+                   width = 12,
+                   tags$p("input$midscriteria"),
+                   verbatimTextOutput("results_3")
+                 )
+               )
+             )
+          ),
+          tabPanel("Unknown or Missing values",
+             fluidRow(
+               column(
+                 tags$h1("MIDS unknown or missing values"),
+                 width = 12,
+                 div(
+                   class = "bucket-list-container default-sortable",
+                   "Drag the unknown or missing values to the desired properties",
+                   br(),br(),
+                   fluidPage(fluidRow(
+                     column(6, textInput("UoMnewvalue", "Enter a new value",
+                                         value = "Enter text...")),
+                     column(6, uiOutput("UoMnewprop"))
+                   )),
+                   fluidPage(fluidRow(
+                     column(6, actionButton("addUoM", "Add")),
+                     column(6, actionButton("addUoMprop", "Add"))
+                   )),
+                   div(
+                     class = "bucket-list-container default-sortable",
+                     uiOutput("UoMall"),
+                     uiOutput("UoMextra"),
+                     uiOutput("UoMunused")
+                   )
+                 )
+               )
+             ),
+             fluidRow(
+               column(
+                 width = 12,
+                 tags$b("Result"),
+                 column(
+                   width = 12,
+                   tags$p("input$midsUoM"),
+                   verbatimTextOutput("results_UoM")
+                 )
+               )
+             )
+          ))
+    )
 ))
 
 # Define server logic ----
 server <- function(input, output, session) {
-
-  #show and hide json upload button and start button
+  
+  #show and hide schema file upload and disable/enable start button
   observe({
+    #hide schema upload when schema is default
     if (input$jsonfile == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
+    #disable start when there is no input file, or when custom upload is chosen but empty
     if (is.null(input$gbiffile) | (input$jsonfile == "custom" & is.null(input$customjsonfile))){
       shinyjs::disable("start")} else {shinyjs::enable("start")}
   })
-  
-  #hide "Edit MIDS implementation" tab if schema doesn't need to be edited
+    
+  #disable edit and view schema when custom upload is chosen but empty
+  disableviewschema <- reactiveVal(FALSE)  
   observe({
-    if (input$interactivejson == FALSE){
-      hideTab("tabs", target = "Edit MIDS implementation")}
-    if (input$interactivejson == TRUE){
-      showTab("tabs", target = "Edit MIDS implementation")}
+    if (input$jsonfile == "custom" & is.null(input$customjsonfile)){
+      shinyjs::disable("interactiveschema")
+      disableviewschema(TRUE)
+    } else {shinyjs::enable("interactiveschema")
+      disableviewschema(FALSE)}
+    #never disable the view button on results tabs
+    if (grepl("Results", input$tabs))
+    {disableviewschema(FALSE)}
   })
-  
 
 # Calculations ------------------------------------------------------------
 
   #calculate mids levels and criteria
   gbif_dataset_mids <- eventReactive(input$start, {
-    if (input$interactivejson == FALSE){
+    if (input$interactiveschema == 0){
       withProgress(message = 'Calculating MIDS scores', value = 0, {
         calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())})
     }
-    else if (input$interactivejson == TRUE){
+    else if (input$interactiveschema > 0){
       withProgress(message = 'Calculating MIDS scores', value = 0, {
         calculate_mids(gbiffile = input$gbiffile$datapath, jsontype = "list", jsonlist = jsonlist())})
     }
@@ -183,23 +191,22 @@ server <- function(input, output, session) {
   jsonUoM <- reactive({ 
     read_json_unknownOrMissing(file = jsonpath())
   })
-  
 
 # Show current MIDS implementation ----------------------------------------
 
+  
   #view MIDS implementation in modal window
   observe(
   #show schema from interactive
-  if (input$interactivejson == TRUE){
-    ViewImplementationServer("viewcurrentschema", jsonlist()[[1]], jsonlist()[[2]])
+  if (input$interactiveschema > 0){
+    ViewImplementationServer("viewcurrentschema", jsonlist()[[1]], jsonlist()[[2]], disableviewschema)
   #show schema from file
   } else {
-    ViewImplementationServer("viewcurrentschema", jsonschema(), jsonUoM())
+    ViewImplementationServer("viewcurrentschema", jsonschema(), jsonUoM(), disableviewschema)
   })
     
 
 # Edit JSON ---------------------------------------------------------------
-  
 
 # Edit Unknown or Missing section -----------------------------------------
   
@@ -341,15 +348,16 @@ server <- function(input, output, session) {
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    critsubcond <- critsubcond[critsubcond != ""]
+    critsubcond <- critsubcond[seq(1, length(critsubcond), 3)]
     #get mappings for each element
     for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
+      valuesplit <- strsplit(gsub(" ", "", critsubcond[[j]]), split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
       subconds <- reactiveValuesToList(input)[[crit]]
-      #don't use elements that have no mappings
-      if (!is.na(subconds[1])){
-        x[[midslevels[i]]][[crit]] <- subconds}
+       #don't use elements that have no mappings
+      if (!is_empty(subconds)){
+        x[[midslevels[i]]][[crit]] <- subconds
+      }
     }
   }
   return(x)
@@ -363,10 +371,10 @@ server <- function(input, output, session) {
   for (i in 1:length(midslevels)){
     #get MIDS elements for a given mids level
     critsubcond <- reactiveValuesToList(input)[[midslevels[i]]]
-    critsubcond <- critsubcond[critsubcond != ""]
+    critsubcond <- critsubcond[seq(1, length(critsubcond), 3)]
     #get mappings for each element
     for (j in 1:length(critsubcond)){
-      valuesplit <- strsplit(critsubcond[[j]], split = "\\\n\\\n")
+      valuesplit <- strsplit(gsub(" ", "", critsubcond[[j]]), split = "\\\n\\\n")
       crit <- valuesplit[[1]][1]
       subconds <- reactiveValuesToList(input)[[crit]]
       #don't use elements that have no mappings
@@ -415,17 +423,20 @@ server <- function(input, output, session) {
   jsonlist <- reactive({
     list <- list()
     list[["criteria"]] <- midscalccrits()  
-    list[["UoM"]] <- UoMinputs()  
+    list[["UoM"]] <- UoMinputs()
+    #if UoM section wasn't visited, fill this with the UoM from file
+    if (is_empty(list[["UoM"]])){list[["UoM"]] <- jsonUoM()}
     list[["properties"]] <- usedproperties() 
     return(list)
   })
+  
 
   #show output
   output$results_3 <-
-    renderPrint(
+    renderPrint({
       jsonlist()  
-    )
-  
+    })
+
 
 # Allow multiple results tabs --------------------------------------------
 
@@ -443,7 +454,7 @@ server <- function(input, output, session) {
   #save all MIDS implementations
   allschemas <- reactiveValues(prev_bins = NULL)
   observeEvent(input$start, {
-    if (input$interactivejson == TRUE){
+    if (input$interactiveschema > 0){
       allschemas$prev_bins[[startcounter$countervalue]] <- jsonlist()[1:2]
     } else {
       allschemas$prev_bins[[startcounter$countervalue]] <- c(list("criteria" = jsonschema()), list("UoM" = jsonUoM()))
@@ -472,11 +483,15 @@ server <- function(input, output, session) {
   #update taxonomy filter when a taxonomic rank is chosen
   observeEvent(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]], {
     if (input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]] != "None"){
-      updateSelectInput(session, paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))), label = "Filter on taxonomy",
-                        choices = sort(unique(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
+      #only update taxonomy when nothing has been selected yet
+      if (input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]] == "Select a rank first"){
+        #update taxonomy filter with values from the dataset
+        updateSelectInput(session, paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))), label = "Filter on taxonomy",
+            choices = sort(unique(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
+      }
+      #only show taxonomy filter when a rank is chosen
       shinyjs::show(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))
-    }
-    else {shinyjs::hide(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))}
+    } else {shinyjs::hide(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))}
   })
   
   #apply filters if they are set
@@ -551,10 +566,7 @@ server <- function(input, output, session) {
   #add new tab for each analysis
   observeEvent(input$start, {appendTab("tabs", 
       tabPanel(title = tags$span(paste0("Results", startcounter$countervalue, "    "),
-                                 actionButton(paste0("close", startcounter$countervalue), 
-                                              icon("times"),
-                                              style = "padding:5px; font-size:70%; border-style: none"
-                                              )
+                                 CloseTabUI(paste0("close", startcounter$countervalue))
                                  ), 
                value = paste0("Results", startcounter$countervalue), 
                sidebarLayout(
@@ -573,6 +585,7 @@ server <- function(input, output, session) {
                    selectizeInput(paste0("taxonomy", startcounter$countervalue), 
                                   label = "Filter on taxonomy", 
                                   choices = "Select a rank first",
+                                  selected = "Select a rank first",
                                   multiple = TRUE)
                  ),
                  mainPanel(
@@ -621,9 +634,9 @@ server <- function(input, output, session) {
   observe(
   output[[paste0("Used_MIDS_implementation", startcounter$countervalue)]] <-
     renderText(
-      if (isolate(input$jsonfile) == "default" & isolate(input$interactivejson) == FALSE){
+      if (isolate(input$jsonfile) == "default" & isolate(input$interactiveschema) == 0){
        return(paste("Default:", isolate(basename(jsonpath()))))}
-      else if (isolate(input$jsonfile) == "custom" & isolate(input$interactivejson) == FALSE){
+      else if (isolate(input$jsonfile) == "custom" & isolate(input$interactiveschema) == 0){
        return(paste("Custom:", isolate(input$customjsonfile[[1]])))}
       else {return("Interactive")}
     )
@@ -633,7 +646,8 @@ server <- function(input, output, session) {
   observe(
   ViewImplementationServer(paste0("showschema", as.integer(gsub("Results", "", input$tabs))),
                            allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["criteria"]],
-                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]]
+                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]],
+                           disableviewschema
   ))
 
   #render all outputs for each results tab
@@ -676,13 +690,14 @@ server <- function(input, output, session) {
 
 # Close results tabs ------------------------------------------------------
 
-  observe(
-  for (i in 1:startcounter$countervalue){
-    observeEvent(input[[paste0("close", i)]], 
-                 removeTab(inputId="tabs", target=paste0("Results", i)))
-  }
-  )
+    observe(
+    CloseTabServer(paste0("close", as.integer(gsub("Results", "", input$tabs))), input$tabs, session)
+    )
   
+    #   #clear associated saved data
+    #   allmidscalc$prev_bins[[i]] <- ""
+    #   allschemas$prev_bins[[i]] <- ""
+
 }
 
 # Run the app ----
