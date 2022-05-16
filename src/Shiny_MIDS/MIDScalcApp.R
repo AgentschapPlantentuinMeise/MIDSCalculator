@@ -344,7 +344,9 @@ server <- function(input, output, session) {
       for (k in seq_along(subcond)){
         htmlprops <- list(htmlprops,htmltools::tags$li(subcond[[k]]))
       }
-      labels[[j]] <- htmltools::tags$div(id=midscritname, list(midscritname, htmlprops))
+      labels[[j]] <- htmltools::tags$div(id=midscritname, list(midscritname, 
+                        actionButton(paste0("edit", midscritname), icon("pencil"), style = "padding:2px; font-size:90%; border-style: none"), 
+                        htmlprops))
     }
     v[[i]] <- rank_list(toupper(midslevel), labels, midslevel,
                         options = sortable_options(group = "midsElements"))
@@ -355,7 +357,7 @@ server <- function(input, output, session) {
   
   ##open modal when clicking a MIDS element
   observe({
-    onclick("Modified", showModal(modalDialog(
+    onclick("editModified", showModal(modalDialog(
       title = "Somewhat important message",
       "This is a somewhat important message.",
       easyClose = TRUE,
