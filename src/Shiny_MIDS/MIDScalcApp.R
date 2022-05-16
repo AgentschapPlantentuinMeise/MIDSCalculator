@@ -404,7 +404,7 @@ server <- function(input, output, session) {
   ## get MIDS mappings specified by user
   newMappings <- reactiveValues()
   observeEvent(input$addMappingInstitution, {
-    newMappings$Institution <- input$newMappingInstitution
+    newMappings$Institution <- paste(input$newMappingInstitution, collapse = "&")
     trigger$count <- trigger$count + 1
   })
 
