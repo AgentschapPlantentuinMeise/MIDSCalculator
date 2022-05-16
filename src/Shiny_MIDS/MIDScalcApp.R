@@ -55,19 +55,11 @@ ui <-
                    br(),br(),
                    fluidPage(fluidRow(
                      column(6, textInput("newElement", "Enter a new MIDS element",
-                                         value = "Enter text...")),
-                     column(6, selectizeInput("newMapping",
-                                              label = "Enter a new mapping",
-                                              choices = readLines("www/DWCAcolumnnames.txt"),
-                                              multiple = TRUE),
-                            helpText("Select multiple properties at once if they must all be present (&)"))
-                   )),
-                   fluidPage(fluidRow(
-                     column(6, actionButton("addElement", "Add")),
-                     column(6, actionButton("addMapping", "Add"))
+                                         value = "Enter text..."),
+                            actionButton("addElement", "Add"))
                    )),
                    br(), br(),
-                   "Drag the subconditions to the desired MIDS criterium, and the MIDS criteria to the desired MIDS level.",
+                   "Drag the MIDS elements to the desired MIDS level. Click the edit button to change the mappings of a MIDS element.",
                    br(),
                    div(
                      class = "default-sortable bucket-list bucket-list-horizontal",
@@ -345,7 +337,7 @@ server <- function(input, output, session) {
         htmlprops <- list(htmlprops,htmltools::tags$li(subcond[[k]]))
       }
       labels[[j]] <- htmltools::tags$div(id=midscritname, list(midscritname, 
-                        actionButton(paste0("edit", midscritname), icon("pencil"), style = "padding:2px; font-size:90%; border-style: none"), 
+                        actionButton(paste0("edit", midscritname), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"), 
                         htmlprops))
     }
     v[[i]] <- rank_list(toupper(midslevel), labels, midslevel,
@@ -357,12 +349,40 @@ server <- function(input, output, session) {
   
   ##open modal when clicking a MIDS element
   observe({
-    onclick("editModified", showModal(modalDialog(
-      title = "Somewhat important message",
-      "This is a somewhat important message.",
+    onclick("editInstitution", showModal(modalDialog(
+      title = "Edit mappings",
+      uiOutput("editmappingsInstitution"),
       easyClose = TRUE,
       footer = NULL
     )))
+  })
+  
+  output$editmappingsInstitution <- renderUI({
+    x <- list()
+    for (mapping in critlists()[["mids0"]][["Institution"]]){
+      x <- list(x, mapping, actionButton(paste0("remove", mapping), 
+                                  icon("trash"),
+                                  style = "padding:5px; font-size:70%; border-style: none"),
+                br())
+    }
+    x <- list(fluidRow(
+              column(6, h4("Institution:"), x),
+              column(6,
+              selectizeInput("newMappingInstitution",
+                                label = "Enter a new mapping",
+                                choices = readLines("www/DWCAcolumnnames.txt"),
+                                multiple = TRUE),
+              helpText("Select multiple properties at once if they must all be present (&)"),
+              actionButton("addMappingInstitution", "Add")
+              )))
+    return(x)
+  })
+  
+  observeEvent(input$removeinstitutionCode, {#remove mapping
+  
+  })
+  observeEvent(input$addMappingInstitution, {#add mapping
+  
   })
 
   ## get inputs
