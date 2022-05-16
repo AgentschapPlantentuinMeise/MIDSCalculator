@@ -275,13 +275,8 @@ server <- function(input, output, session) {
   
 # Edit criteria -----------------------------------------------------------
   
-  ## add MIDS elements specified by user
-  #get new MIDS element from text input field
-  newElements <- reactiveValues()
-  observeEvent(input$addElement, {newElements$el <- c(newElements$el, input$newElement)})
-  
-  ## create list of elements and mappings from existing JSON schema
-  critlists <- reactive({v <- list()
+  ## create initial list of elements and mappings from existing MIDS implementation schema
+  initialcritlists <- reactive({v <- list()
   for (i in 1:length(jsonschema())){
     midslevel <- names(jsonschema()[i])
     #loop over existing MIDS elements
@@ -295,24 +290,46 @@ server <- function(input, output, session) {
         v[[midslevel]][[midscritname]] <- props
       }
     }
-    #loop over interactively added MIDS elements
-    if (!is_empty(newElements$el)){
-        for (j in 1:length(newElements$el)){
-          midscritname <- newElements$el[j]
-          props <- list()
-          # #get mappings
-          # for (k in seq_along(subcond)){
-          #   props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
-          #if newly added
-          v[["unused"]][[midscritname]] <- props
-          #}
-        }
-    }
   }
   return(v)
   })
   
+  ## get MIDS elements specified by user
+  newElements <- reactiveValues()
+  observeEvent(input$addElement, {newElements$el <- c(newElements$el, input$newElement)})
   
+  ##create list of elements and mapping based on input and added elements
+  addedcritlists <- reactive({
+    x <- list()
+    for (i in 1:length(jsonschema())){
+      midslevel <- names(jsonschema()[i])
+      #get MIDS elements for a given mids level
+      elements <- reactiveValuesToList(input)[[midslevel]]
+      for (j in 1:length(elements)){
+        #get mappings for each element
+        valuesplit <- strsplit(elements[[j]], split = "\\\n")
+        element <- valuesplit[[1]][1]
+        mappings <- valuesplit[[1]][-1]
+        x[[midslevel]][[element]] <- mappings
+        #if element in newElements, remove it
+        if (element %in% newElements$el){
+          newElements$el <- newElements$el[!newElements$el %in% element]}
+      }
+    }
+    #add newly added elements
+    for (newEl in newElements$el){
+      x[["unused elements"]][[newEl]] <- ""
+    }
+    return(x)
+  })
+  
+  ##use initial when nothing has been added yet, otherwise use added
+  critlists <- reactive({
+    if(input$addElement == 0){
+      return(initialcritlists())}
+    else {return(addedcritlists())}
+  })
+
   ## create ranklists
   critranklists <- reactive({v <- list()
   for (i in 1:length(critlists())){
@@ -336,7 +353,7 @@ server <- function(input, output, session) {
   })
   output$crit <- renderUI(critranklists())
   
-  #open modal when clicking a MIDS element
+  ##open modal when clicking a MIDS element
   observe({
     onclick("Modified", showModal(modalDialog(
       title = "Somewhat important message",
@@ -346,53 +363,12 @@ server <- function(input, output, session) {
     )))
   })
 
-  # ## add mappings specified by user (and keep existing values)
-  # existingMappings <- eventReactive(input$addMapping, {input$unused}) 
-  # newMapping <- eventReactive(input$addMapping, {paste(input$newMapping, collapse = "&")})
-  # output$unused <- renderUI(rank_list("Unused mappings", c(existingMappings(), newMapping()), 
-  #                         "unused", options = sortable_options(group = "midsMappings")))
-  # 
-  # 
-  # ## add MIDS elements specified by user
-  # #get new MIDS element from text input field
-  # newElement <- eventReactive(input$addElement, {input$newElement})
-  # # also get other elements still under unused elements
-  # unusedcrits <- eventReactive(input$addElement, {
-  #   prevcrits <- list()
-  #   previnput <- reactiveValuesToList(input)[["unusedcrit"]][reactiveValuesToList(input)[["unusedcrit"]]!=""]
-  #   if (length(previnput) > 0){
-  #   for (k in 1:length(previnput)){
-  #     prevcrit <- strsplit(previnput[[k]], split = "\\\n\\\n")[[1]][1]
-  #     prevcrits <- c(prevcrits, prevcrit)
-  #   }
-  #   return(c(newElement(), prevcrits))}
-  #   else
-  #   {return(newElement())}
-  # })
-  # #add rank list for each submitted and existing element (under Unused elements)
-  # newcritranklists <- reactive({v <- list()
-  # extracrits <- list()
-  # for (i in 1:length(req(unusedcrits()))){
-  #   #get value inside criterium
-  #   value <- input[[unusedcrits()[[i]]]]
-  #   #rank list for each criterium
-  #   extracrit <- rank_list(unusedcrits()[[i]], value, unusedcrits()[[i]], options = sortable_options(group = "midsMappings"))
-  #   extracrits <- c(extracrits, extracrit)
-  # }
-  # v <- rank_list("Unused MIDS elements",
-  #                extracrits,
-  #                "unusedcrit",
-  #                options = sortable_options(group = "midsElements"))
-  # return(v)
-  # })
-  # output$extracrit <- renderUI(newcritranklists())
-  
-  
   ## get inputs
   critinputs <- reactive({x <- list()
   #loop through mids levels
   midslevels <- names(critlists())
   for (i in 1:length(midslevels)){
+    if (midslevels[i] != "unused elements"){
     #get MIDS elements for a given mids level
     elements <- reactiveValuesToList(input)[[midslevels[i]]]
     for (j in 1:length(elements)){
@@ -400,10 +376,11 @@ server <- function(input, output, session) {
       valuesplit <- strsplit(elements[[j]], split = "\\\n")
       element <- valuesplit[[1]][1]
       mappings <- valuesplit[[1]][-1]
-      # #don't use elements that have no mappings
-      # if (!is_empty(mappings)){
+      #don't use elements that have no mappings
+      if (!is_empty(mappings)){
       x[[midslevels[i]]][[element]] <- mappings
-      # }
+      }
+    }
     }
   }
   return(x)
@@ -420,11 +397,11 @@ server <- function(input, output, session) {
     for (j in 1:length(elements)){
       #get mappings for each element
       valuesplit <- strsplit(elements[[j]], split = "\\\n")
-      mappings <- valuesplit[[1]][-1]
-      # #don't use elements that have no mappings
-      # if (!is_empty(mappings)){
+      mappings <- gsub("!", "", flatten_chr(strsplit(valuesplit[[1]][-1], "&")))
+      #don't use elements that have no mappings
+      if (!is_empty(mappings)){
       x <- c(x, mappings)
-      # }
+      }
     }
   }
   return(x)
@@ -478,14 +455,6 @@ server <- function(input, output, session) {
   #show output
   output$results_3 <-
     renderPrint({
-      #reactiveValuesToList(input)
-      #startlabels()
-      #critlists()[[1]][[2]][[2]]
-      #jsonschema()
-      #critlists()
-      #critinputs()
-      #midscalccrits()
-      #newElements$el
       jsonlist()  
     })
 
