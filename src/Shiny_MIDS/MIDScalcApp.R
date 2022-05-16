@@ -286,12 +286,16 @@ server <- function(input, output, session) {
   return(v)
   })
   
+  trigger <- reactiveValues(count=0)
   ## get MIDS elements specified by user
   newElements <- reactiveValues()
-  observeEvent(input$addElement, {newElements$el <- c(newElements$el, input$newElement)})
+  observeEvent(input$addElement, {
+    newElements$el <- c(newElements$el, input$newElement)
+    trigger$count <- trigger$count + 1
+  })
   
   ##create list of elements and mapping based on input and added elements
-  addedcritlists <- reactive({
+  addedcritlists <- eventReactive(trigger$count, {
     x <- list()
     for (i in 1:length(jsonschema())){
       midslevel <- names(jsonschema()[i])
@@ -300,8 +304,14 @@ server <- function(input, output, session) {
       for (j in 1:length(elements)){
         #get mappings for each element
         valuesplit <- strsplit(elements[[j]], split = "\\\n")
-        element <- valuesplit[[1]][1]
+        element <- trimws(valuesplit[[1]][1], "r")
         mappings <- valuesplit[[1]][-1]
+        #check if there are new mappings to be added
+        if (!is.null(newMappings[[element]])){
+          mappings <- c(mappings, newMappings[[element]])
+          #remove mappings when used
+          newMappings[[element]] <- NULL
+        }
         x[[midslevel]][[element]] <- mappings
         #if element in newElements, remove it
         if (element %in% newElements$el){
@@ -317,7 +327,7 @@ server <- function(input, output, session) {
   
   ##use initial when nothing has been added yet, otherwise use added
   critlists <- reactive({
-    if(input$addElement == 0){
+    if(trigger$count == 0){
       return(initialcritlists())}
     else {return(addedcritlists())}
   })
@@ -381,6 +391,14 @@ server <- function(input, output, session) {
   observeEvent(input$removeinstitutionCode, {#remove mapping
   
   })
+  
+  ## get MIDS mappings specified by user
+  newMappings <- reactiveValues()
+  observeEvent(input$addMappingInstitution, {
+    newMappings$Institution <- input$newMappingInstitution
+    trigger$count <- trigger$count + 1
+  })
+  
   observeEvent(input$addMappingInstitution, {#add mapping
   
   })
