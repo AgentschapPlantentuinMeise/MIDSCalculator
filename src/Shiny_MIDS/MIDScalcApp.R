@@ -312,6 +312,12 @@ server <- function(input, output, session) {
           #remove mappings when used
           newMappings[[element]] <- NULL
         }
+        #check if there are mappings to be removed
+        if (!is.null(removeMappings[[element]])){
+          mappings <- mappings[!mappings %in% removeMappings[[element]]]
+          #remove mappings when used
+          removeMappings[[element]] <- NULL
+        }
         x[[midslevel]][[element]] <- mappings
         #if element in newElements, remove it
         if (element %in% newElements$el){
@@ -370,7 +376,7 @@ server <- function(input, output, session) {
   output$editmappingsInstitution <- renderUI({
     x <- list()
     for (mapping in critlists()[["mids0"]][["Institution"]]){
-      x <- list(x, mapping, actionButton(paste0("remove", mapping), 
+      x <- list(x, mapping, actionButton(paste0("remove", mapping),
                                   icon("trash"),
                                   style = "padding:5px; font-size:70%; border-style: none"),
                 br())
@@ -388,8 +394,11 @@ server <- function(input, output, session) {
     return(x)
   })
   
-  observeEvent(input$removeinstitutionCode, {#remove mapping
-  
+  ## get MIDS mappings specified by user
+  removeMappings <- reactiveValues()
+  observeEvent(input$removeinstitutionCode, {
+    removeMappings$Institution <- "institutionCode"
+    trigger$count <- trigger$count + 1
   })
   
   ## get MIDS mappings specified by user
@@ -397,10 +406,6 @@ server <- function(input, output, session) {
   observeEvent(input$addMappingInstitution, {
     newMappings$Institution <- input$newMappingInstitution
     trigger$count <- trigger$count + 1
-  })
-  
-  observeEvent(input$addMappingInstitution, {#add mapping
-  
   })
 
   ## get inputs
