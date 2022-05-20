@@ -364,35 +364,55 @@ server <- function(input, output, session) {
   output$crit <- renderUI(critranklists())
   
   ##open modal when clicking a MIDS element
-  observe({
-    onclick("editInstitution", showModal(modalDialog(
-      title = "Edit mappings",
-      uiOutput("editmappingsInstitution"),
-      easyClose = TRUE,
-      footer = NULL
-    )))
+  observe(
+      for (midslevel1 in critlists()){
+          local({
+            midslevel <- midslevel1
+            for (midsel1 in names(midslevel)){
+              local({
+                midsel <- midsel1
+                onclick(paste0("edit", midsel), showModal(modalDialog(
+                  title = "Edit mappings",
+                  uiOutput(paste0("editmappings", midsel)),
+                  easyClose = TRUE,
+                  footer = NULL
+                )))
+              })
+            }
+        })
   })
   
-  output$editmappingsInstitution <- renderUI({
-    x <- list()
-    for (mapping in critlists()[["mids0"]][["Institution"]]){
-      x <- list(x, mapping, actionButton(paste0("remove", mapping),
-                                  icon("trash"),
-                                  style = "padding:5px; font-size:70%; border-style: none"),
-                br())
-    }
-    x <- list(fluidRow(
-              column(6, h4("Institution:"), x),
-              column(6,
-              selectizeInput("newMappingInstitution",
-                                label = "Enter a new mapping",
-                                choices = readLines("www/DWCAcolumnnames.txt"),
-                                multiple = TRUE),
-              helpText("Select multiple properties at once if they must all be present (&)"),
-              actionButton("addMappingInstitution", "Add")
-              )))
-    return(x)
-  })
+  observe(
+    for (midslevel1 in critlists()){
+      local({
+      midslevel <- midslevel1
+      for (midsel1 in names(midslevel)){
+        local({
+          midsel <- midsel1
+          output[[paste0("editmappings", midsel)]] <- renderUI({
+            x <- list()
+            for (mapping in midslevel[[midsel]]){
+              x <- list(x, mapping, actionButton(paste0("remove", mapping),
+                                          icon("trash"),
+                                          style = "padding:5px; font-size:70%; border-style: none"),
+                        br())
+            }
+            x <- list(fluidRow(
+                      column(6, h4(paste0(midsel, ":")), x),
+                      column(6,
+                      selectizeInput(paste0("newMapping", midsel),
+                                        label = "Enter a new mapping",
+                                        choices = readLines("www/DWCAcolumnnames.txt"),
+                                        multiple = TRUE),
+                      helpText("Select multiple properties at once if they must all be present (&)"),
+                      actionButton(paste0("addMapping", midsel), "Add")
+                      )))
+            return(x)
+          })
+        })
+      }
+      })
+    })
   
   ## get MIDS mappings specified by user
   removeMappings <- reactiveValues()
