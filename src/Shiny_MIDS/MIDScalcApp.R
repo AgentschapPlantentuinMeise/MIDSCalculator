@@ -695,6 +695,13 @@ server <- function(input, output, session) {
   )
   
 
+# Open results tab automatically when calculations are performed ----------
+
+  observeEvent(input$start, {
+    updateTabsetPanel(session, "tabs",
+                      selected = paste0("Results", startcounter$countervalue))
+  })
+
 # Close results tabs ------------------------------------------------------
 
     observe(
