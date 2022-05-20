@@ -19,7 +19,9 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
         if (n_level == 1)
         {#print title
           print(HTML(paste0("<div style='text-align: center; background-color: #2874A6;
-              font-size: 25px; color: white'>", "Criteria", "</div>")))
+              font-size: 25px; color: white'>", "MIDS criteria", "</div>")))
+          print(HTML("<div style='text-align: center'> To reach a MIDS level, all of its elements must be met. </div>"))
+          print(HTML("<div style='text-align: center'> To meet a MIDS element, one of its mappings must be present. </div>"))
           #initialize grid
           print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px'>"))}
         #determine position of element in grid
@@ -33,7 +35,7 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
                           column, "; grid-row:", row, "'>")))
         #MIDS levels
         print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
-        print(h3(toupper(names(schema)[[n_level]])))
+        print(h3(gsub("mids", "Level ", names(schema)[[n_level]])))
         print(HTML("</div>"))
         #MIDS elements
         mids_el <- schema[[n_level]]
@@ -46,31 +48,15 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
           for (n_map in seq_along(mids_mapping)){
             #Split mappings on OR, remove brackets, replace &
             mappings <- stringr::str_split(
-              gsub("\\(|\\)", "",
-                   gsub("&", "and", mids_mapping[[n_map]]
-                   )), "\\|")
-            #Divide mappings according to their functions
-            present <- list()
-            absent <- list()
-            for (map in mappings[[1]]){
-              if (grepl("!!is.na", map)){
-                absent <- c(absent, map)}
-              else {present <- c(present, map)}
-            }
-            #Print mappings that must be present
-            if (!is_empty(present)){
-              print(tags$u("One of these must be present:"))
-              for (presmap in present){
-                print(div(gsub("\\!is.na", "", presmap)))
-              }
-            }
-            #Print mappings that must be absent
-            if (!is_empty(absent)){
-              print(tags$u("Must be absent:"))
-              for (absmap in absent){
-                print(div(gsub("!!is.na", "", absmap)))
-              }
-            }
+              gsub("\\!\\!", "NOT !",
+                gsub("\\(|\\)", "",
+                   gsub("&", "AND", mids_mapping[[n_map]]
+                   ))),
+              "\\|")
+            #Print mappings 
+             for (map in mappings[[1]]){
+                  print(div(gsub("\\!is.na", "", map)))
+                }
           }
         }
         print(HTML("</div>"))
