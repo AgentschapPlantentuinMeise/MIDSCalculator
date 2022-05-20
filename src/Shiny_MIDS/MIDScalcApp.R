@@ -63,9 +63,7 @@ ui <-
                    br(),
                    div(
                      class = "default-sortable bucket-list bucket-list-horizontal",
-                     uiOutput("crit"),
-                     uiOutput("unused"),
-                     uiOutput("extracrit")
+                     uiOutput("crit")
                    )
                  )
                )
@@ -306,18 +304,18 @@ server <- function(input, output, session) {
         valuesplit <- strsplit(elements[[j]], split = "\\\n")
         element <- trimws(valuesplit[[1]][1], "r")
         mappings <- valuesplit[[1]][-1]
-        #check if there are new mappings to be added
-        if (!is.null(newMappings[[element]])){
-          mappings <- c(mappings, newMappings[[element]])
-          #remove mappings when used
-          newMappings[[element]] <- NULL
-        }
-        #check if there are mappings to be removed
-        if (!is.null(removeMappings[[element]])){
-          mappings <- mappings[!mappings %in% removeMappings[[element]]]
-          #remove mappings when used
-          removeMappings[[element]] <- NULL
-        }
+        # #check if there are new mappings to be added
+        # if (!is.null(newMappings[[element]])){
+        #   mappings <- c(mappings, newMappings[[element]])
+        #   #remove mappings when used
+        #   newMappings[[element]] <- NULL
+        # }
+        # #check if there are mappings to be removed
+        # if (!is.null(removeMappings[[element]])){
+        #   mappings <- mappings[!mappings %in% removeMappings[[element]]]
+        #   #remove mappings when used
+        #   removeMappings[[element]] <- NULL
+        # }
         x[[midslevel]][[element]] <- mappings
         #if element in newElements, remove it
         if (element %in% newElements$el){
@@ -345,16 +343,17 @@ server <- function(input, output, session) {
     labels <- list()
     #loop over MIDS elements
     for (j in 1:length(critlists()[[i]])){
-      midscritname <- names(critlists()[[i]][j])
-      subcond <- critlists()[[i]][[j]]
+      elementname <- names(critlists()[[i]][j])
+      mappings <- critlists()[[i]][[j]]
       #loop over mappings
       htmlprops <- list()
-      for (k in seq_along(subcond)){
-        htmlprops <- list(htmlprops,htmltools::tags$li(subcond[[k]]))
+      for (k in seq_along(mappings)){
+        htmlprops <- list(htmlprops,htmltools::tags$li(mappings[[k]]))
       }
-      labels[[j]] <- htmltools::tags$div(id=midscritname, list(midscritname, 
-                        actionButton(paste0("edit", midscritname), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"), 
+      labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname, 
+                        EditMappingsUI(paste0("edit", elementname)),
                         htmlprops))
+      EditMappings <- EditMappingsServer(paste0("edit", elementname), elementname, mappings)
     }
     v[[i]] <- rank_list(toupper(midslevel), labels, midslevel,
                         options = sortable_options(group = "midsElements"))
@@ -363,70 +362,20 @@ server <- function(input, output, session) {
   })
   output$crit <- renderUI(critranklists())
   
-  ##open modal when clicking a MIDS element
-  observe(
-      for (midslevel1 in critlists()){
-          local({
-            midslevel <- midslevel1
-            for (midsel1 in names(midslevel)){
-              local({
-                midsel <- midsel1
-                onclick(paste0("edit", midsel), showModal(modalDialog(
-                  title = "Edit mappings",
-                  uiOutput(paste0("editmappings", midsel)),
-                  easyClose = TRUE,
-                  footer = NULL
-                )))
-              })
-            }
-        })
-  })
+
+  # ## get MIDS mappings specified by user
+  # removeMappings <- reactiveValues()
+  # observeEvent(input$removeinstitutionCode, {
+  #   removeMappings$Institution <- "institutionCode"
+  #   trigger$count <- trigger$count + 1
+  # })
   
-  observe(
-    for (midslevel1 in critlists()){
-      local({
-      midslevel <- midslevel1
-      for (midsel1 in names(midslevel)){
-        local({
-          midsel <- midsel1
-          output[[paste0("editmappings", midsel)]] <- renderUI({
-            x <- list()
-            for (mapping in midslevel[[midsel]]){
-              x <- list(x, mapping, actionButton(paste0("remove", mapping),
-                                          icon("trash"),
-                                          style = "padding:5px; font-size:70%; border-style: none"),
-                        br())
-            }
-            x <- list(fluidRow(
-                      column(6, h4(paste0(midsel, ":")), x),
-                      column(6,
-                      selectizeInput(paste0("newMapping", midsel),
-                                        label = "Enter a new mapping",
-                                        choices = readLines("www/DWCAcolumnnames.txt"),
-                                        multiple = TRUE),
-                      helpText("Select multiple properties at once if they must all be present (&)"),
-                      actionButton(paste0("addMapping", midsel), "Add")
-                      )))
-            return(x)
-          })
-        })
-      }
-      })
-    })
-  
-  ## get MIDS mappings specified by user
-  removeMappings <- reactiveValues()
-  observeEvent(input$removeinstitutionCode, {
-    removeMappings$Institution <- "institutionCode"
-    trigger$count <- trigger$count + 1
-  })
-  
-  ## get MIDS mappings specified by user
-  newMappings <- reactiveValues()
-  observeEvent(input$addMappingInstitution, {
-    newMappings$Institution <- paste(input$newMappingInstitution, collapse = "&")
-    trigger$count <- trigger$count + 1
-  })
+  # ## get MIDS mappings specified by user
+  # newMappings <- reactiveValues()
+  # observeEvent(input$addMappingInstitution, {
+  #   newMappings$Institution <- paste(input$newMappingInstitution, collapse = "&")
+  #   trigger$count <- trigger$count + 1
+  # })
 
   ## get inputs
   critinputs <- reactive({x <- list()
