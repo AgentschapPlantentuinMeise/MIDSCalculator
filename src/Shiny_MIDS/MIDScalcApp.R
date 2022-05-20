@@ -143,8 +143,10 @@ server <- function(input, output, session) {
     #hide schema upload when schema is default
     if (input$jsonfile == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
-    #disable start when there is no input file, or when custom upload is chosen but empty
-    if (is.null(input$gbiffile) | (input$jsonfile == "custom" & is.null(input$customjsonfile))){
+    #disable start when there is no input file, when interactive is chosen but not visited, or when custom upload is chosen but empty
+    if (is.null(input$gbiffile) | 
+        (input$editschema == TRUE && input$interactiveschema == 0) | 
+        (input$jsonfile == "custom" & is.null(input$customjsonfile))){
       shinyjs::disable("start")} else {shinyjs::enable("start")}
   })
   
