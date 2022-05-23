@@ -23,7 +23,8 @@ CloseTabServer <- function(id, tab, parent.session) {
                actionButton(ns("closetab"), "Close")
              )
           ))
-        })
+        }, ignoreInit = TRUE)
+        
         observeEvent(input$closetab,{ 
           #close results tab
           removeTab(session = parent.session, inputId="tabs", target=tab)
