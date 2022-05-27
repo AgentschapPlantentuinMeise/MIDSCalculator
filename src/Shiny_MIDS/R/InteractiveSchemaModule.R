@@ -279,11 +279,87 @@ InteractiveSchemaServer <- function(id, jsonschema) {
         })
       })
     
+    ## get inputs
+    critinputs <- reactive({x <- list()
+    #loop through mids levels
+    midslevels <- names(critlists())
+    for (i in 1:length(midslevels)){
+      if (midslevels[i] != "unused elements"){
+        #get MIDS elements for a given mids level
+        elements <- reactiveValuesToList(input)[[midslevels[i]]]
+        for (j in 1:length(elements)){
+          #get mappings for each element
+          valuesplit <- strsplit(elements[[j]], split = "\\\n")
+          element <- valuesplit[[1]][1]
+          mappings <- valuesplit[[1]][-1]
+          #don't use elements that have no mappings
+          if (!is_empty(mappings)){
+            x[[midslevels[i]]][[element]] <- mappings
+          }
+        }
+      }
+    }
+    return(x)
+    })
+    
+    ## get properties used in the schema
+    usedproperties <- reactive(
+      {x <- character()
+      #loop through mids levels
+      midslevels <- names(critlists())
+      for (i in 1:length(midslevels)){
+        #get MIDS elements for a given mids level
+        elements <- reactiveValuesToList(input)[[midslevels[i]]]
+        for (j in 1:length(elements)){
+          #get mappings for each element
+          valuesplit <- strsplit(elements[[j]], split = "\\\n")
+          mappings <- gsub("!", "", flatten_chr(strsplit(valuesplit[[1]][-1], "&")))
+          #don't use elements that have no mappings
+          if (!is_empty(mappings)){
+            x <- c(x, mappings)
+          }
+        }
+      }
+      return(x)
+      })
+    
+    ## convert outputs to usable filters for mids calc
+    midscalccrits <- reactive({x <- list()
+    for (i in 1:length(critinputs())){
+      for (j in 1:length(critinputs()[[i]])){
+        subcond <- critinputs()[[i]][[j]]
+        nasubconds <- list()
+        for (k in 1:length(subcond)){
+          #deal with !
+          if (grepl("!", subcond[k], fixed = TRUE)){
+            nasubcond <- paste0("is.na(", substring(subcond[k],2), ")")}
+          #deal with &
+          else if (grepl("&", subcond[k], fixed = TRUE)){
+            nasubcond <- "("
+            split <- strsplit(subcond[k], "&")[[1]]
+            for (l in 1:length(split)){
+              nasubcond <- paste0(nasubcond, "!is.na(", split[l], ") & ")
+            }
+            nasubcond <- paste0(substr(nasubcond, 1, nchar(nasubcond)-3), ")")
+          }
+          #others (no & or !):
+          else {nasubcond <- paste0("!is.na(", subcond[k], ")")}
+          #combine
+          nasubconds <- c(nasubconds, nasubcond)
+        }
+        #collapse subconditions
+        collsubcond <- paste(nasubconds, collapse = " | ")
+        #create list again
+        x[[names(critinputs())[i]]][[names(critinputs()[[i]][j])]] <- collsubcond
+      }
+    }
+    return(x)
+    })
     
     #show output
     output$results_3 <-
       renderPrint({
-        critlists()
+        midscalccrits()
       })
 
    
