@@ -255,16 +255,16 @@ InteractiveSchemaServer <- function(id, jsonschema) {
           }
           })
         })
-    #create observers for removing mappings of initial elements, and get mappings to be removed 
+    #create observers for removing mappings, and get mappings to be removed 
     removeMappings <- reactiveValues()
     observe(
-      for (i in 1:length(initialcritlists())){
+      for (i in 1:length(critlists())){
         local({
           #loop over MIDS elements
-          for (j in 1:length(initialcritlists()[[i]])){
+          for (j in 1:length(critlists()[[i]])){
             local({
-              elementname <- names(initialcritlists()[[i]][j])
-              mappings <- initialcritlists()[[i]][[j]]
+              elementname <- names(critlists()[[i]][j])
+              mappings <- critlists()[[i]][[j]]
                 for (mapping1 in mappings){
                 local({
                   mapping <- mapping1
