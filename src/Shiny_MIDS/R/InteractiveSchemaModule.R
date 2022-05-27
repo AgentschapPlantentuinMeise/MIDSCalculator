@@ -317,7 +317,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       for (i in 1:length(midslevels)){
         #get MIDS elements for a given mids level
         elements <- reactiveValuesToList(input)[[midslevels[i]]]
-        for (j in 1:length(elements)){
+        for (j in seq_along(elements)){
           #get mappings for each element
           valuesplit <- strsplit(elements[[j]], split = "\\\n")
           mappings <- gsub("!", "", flatten_chr(strsplit(valuesplit[[1]][-1], "&")))
