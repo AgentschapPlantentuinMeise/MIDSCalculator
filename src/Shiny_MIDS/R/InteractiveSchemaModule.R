@@ -88,9 +88,17 @@ InteractiveSchemaUI <- function(id) {
   )
 }
 
-InteractiveSchemaServer <- function(id, jsonschema, jsonUoM) {
+InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
+    
+    #enable/ disable view action button
+    observe(
+      if (disable() == TRUE){
+        shinyjs::disable("interactiveschema")
+      } else {
+        shinyjs::enable("interactiveschema")
+      })
     
     ## create initial list of elements and mappings from existing MIDS implementation schema
     initialcritlists <- reactive({v <- list()

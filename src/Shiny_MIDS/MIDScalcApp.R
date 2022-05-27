@@ -34,92 +34,17 @@ ui <-
                                        choiceValues = list("default", "custom")),
                           fileInput("customjsonfile", label = NULL,
                                     accept = ".json"),
-                          fluidRow(column(5, actionButton("interactiveschema", "Edit interactively")),
-                          column(7, ViewImplementationUI("viewcurrentschema")))))),
+                          checkboxInput("editschema", "Edit interactively", 
+                                        value = FALSE),
+                          fluidRow(column(5, 
+                                          InteractiveSchemaUI("interactive")
+                                          ),
+                          column(7, ViewImplementationUI("viewcurrentschema"))
+                          )))),
                           br(),br(),
                           actionButton("start", "Start MIDS score calculations"),
                           align="center")
-                          ),
-    #Interactive editing of MIDS implementation in modal window
-    bsModal("id", "title", "interactiveschema", 
-      tabsetPanel(type = "tabs",
-          tabPanel("Criteria",
-             fluidRow(
-               column(
-                 tags$h1("MIDS criteria"),
-                 width = 12,
-                 div(
-                   class = "bucket-list-container default-sortable",
-                   "To reach a given MIDS level all MIDS elements must be met (AND),
-                      and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
-                   br(),br(),
-                   fluidPage(fluidRow(
-                     column(6, textInput("newElement", "Enter a new MIDS element",
-                                         value = "Enter text..."),
-                            actionButton("addElement", "Add"))
-                   )),
-                   br(), br(),
-                   "Drag the MIDS elements to the desired MIDS level. Click the edit button to change the mappings of a MIDS element.",
-                   br(),
-                   div(
-                     class = "default-sortable bucket-list bucket-list-horizontal",
-                     uiOutput("crit")
-                   )
-                 )
-               )
-             ),
-             fluidRow(
-               column(
-                 width = 12,
-                 tags$b("Result"),
-                 column(
-                   width = 12,
-                   tags$p("input$midscriteria"),
-                   verbatimTextOutput("results_3")
-                 )
-               )
-             )
-          ),
-          tabPanel("Unknown or Missing values",
-             fluidRow(
-               column(
-                 tags$h1("MIDS unknown or missing values"),
-                 width = 12,
-                 div(
-                   class = "bucket-list-container default-sortable",
-                   "Drag the unknown or missing values to the desired properties",
-                   br(),br(),
-                   fluidPage(fluidRow(
-                     column(6, textInput("UoMnewvalue", "Enter a new value",
-                                         value = "Enter text...")),
-                     column(6, uiOutput("UoMnewprop"))
-                   )),
-                   fluidPage(fluidRow(
-                     column(6, actionButton("addUoM", "Add")),
-                     column(6, actionButton("addUoMprop", "Add"))
-                   )),
-                   div(
-                     class = "bucket-list-container default-sortable",
-                     uiOutput("UoMall"),
-                     uiOutput("UoMextra"),
-                     uiOutput("UoMunused")
-                   )
-                 )
-               )
-             ),
-             fluidRow(
-               column(
-                 width = 12,
-                 tags$b("Result"),
-                 column(
-                   width = 12,
-                   tags$p("input$midsUoM"),
-                   verbatimTextOutput("results_UoM")
-                 )
-               )
-             )
-          ))
-    )
+                          )
 ))
 
 # Define server logic ----
@@ -136,12 +61,14 @@ server <- function(input, output, session) {
   })
     
   #disable edit and view schema when custom upload is chosen but empty
-  disableviewschema <- reactiveVal(FALSE)  
+  disableviewschema <- reactiveVal(FALSE)
+  disableinteractive <- reactiveVal(FALSE)
   observe({
-    if (input$jsonfile == "custom" & is.null(input$customjsonfile)){
-      shinyjs::disable("interactiveschema")
-      disableviewschema(TRUE)
-    } else {shinyjs::enable("interactiveschema")
+    if ((input$jsonfile == "custom" & is.null(input$customjsonfile))|input$editschema == FALSE){
+      disableinteractive(TRUE)}
+    else if (input$jsonfile == "custom" & is.null(input$customjsonfile)) {
+      disableviewschema(TRUE)}
+    else {disableinteractive(FALSE)
       disableviewschema(FALSE)}
     #never disable the view button on results tabs
     if (grepl("Results", input$tabs))
@@ -152,11 +79,11 @@ server <- function(input, output, session) {
 
   #calculate mids levels and criteria
   gbif_dataset_mids <- eventReactive(input$start, {
-    if (input$interactiveschema == 0){
+    if (input$editschema == FALSE){
       withProgress(message = 'Calculating MIDS scores', value = 0, {
         calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())})
     }
-    else if (input$interactiveschema > 0){
+    else if (input$editschema == TRUE){
       withProgress(message = 'Calculating MIDS scores', value = 0, {
         calculate_mids(gbiffile = input$gbiffile$datapath, jsontype = "list", jsonlist = jsonlist())})
     }
@@ -188,7 +115,7 @@ server <- function(input, output, session) {
   #view MIDS implementation in modal window
   observe(
   #show schema from interactive
-  if (input$interactiveschema > 0){
+  if (input$editschema == TRUE){
     ViewImplementationServer("viewcurrentschema", jsonlist()[[1]], jsonlist()[[2]], disableviewschema)
   #show schema from file
   } else {
@@ -196,281 +123,11 @@ server <- function(input, output, session) {
   })
     
 
-# Edit JSON ---------------------------------------------------------------
 
-# Edit Unknown or Missing section -----------------------------------------
-  
-  ##update property selection
-  #only update choices when navigating to this tab
-  mcprops <- eventReactive(input$tabs == "2. Unknown or Missing",
-                {usedproperties()})
-  output$UoMnewprop <- renderUI({selectInput("UoMnewprop", label = "Enter a new property",
-                             choices = sort(mcprops()))})
-  
-  ## add UoM values and properties from existing JSON schema
-  UoMranklists <- reactive({v <- list()
-  for (i in 1:length(jsonUoM())){
-    v[[i]] <- rank_list(names(jsonUoM()[i]), jsonUoM()[[i]], paste0("UoM", names(jsonUoM()[i])), options = sortable_options(group = "midsUoM"))
-  }
-  return(v)
-  })
-  output$UoMall <- renderUI(UoMranklists())
-  
-  ## add UoM properties specified by user
-  #get new UoM property from text input field
-  newprop <- eventReactive(input$addUoMprop, {input$UoMnewprop})
-  ## also get previously submitted properties
-  newprops <- reactiveValues(prev_bins = NULL)
-  observeEvent(input$addUoMprop, {
-    newprops$prev_bins <- c(newprops$prev_bins, input$UoMnewprop)
-  })
-  #add rank list for each submitted property
-  UoMnewpropranklists <- reactive({v <- list()
-  for (i in 1:length(req(newprops$prev_bins))){
-    #get value inside property
-    value <- input[[paste0("UoM", newprops$prev_bins[i])]]
-    #add rank list for each property
-    v[[i]] <- rank_list(newprops$prev_bins[i], value, paste0("UoM", newprops$prev_bins[i]), options = sortable_options(group = "midsUoM"))
-  }
-  return(v)
-  })
-  output$UoMextra <- renderUI(UoMnewpropranklists())
-  
-  ## add UoM values specified by user (and keep existing values)
-  existing <- eventReactive(input$addUoM, {input$UoMunused}) 
-  new <- eventReactive(input$addUoM, {input$UoMnewvalue})
-  output$UoMunused <- renderUI(rank_list("Unused values", c(existing(), new()), "UoMunused", options = sortable_options(group = "midsUoM")))
-  
-  ## combine all UoM inputs
-  UoMinputs <- reactive({x <- list()
-  #get names of original properties from schema and of user specified properties
-  properties <- c(names(jsonUoM()), newprops$prev_bins)
-  #get values for each property
-  for (j in 1:length(properties)){
-    value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
-    #don't include empty properties
-    if (rlang::is_empty(value[[1]])){next}
-    x[[properties[j]]] <- value[[1]]
-  }
-  return(x)
-  })
-  
-  #show output
-  output$results_UoM <-
-    renderPrint(UoMinputs()
-      )
-  
-# Edit JSON ---------------------------------------------------------------
-  
-  
-# Edit criteria -----------------------------------------------------------
-  
-  ## create initial list of elements and mappings from existing MIDS implementation schema
-  initialcritlists <- reactive({v <- list()
-  for (i in 1:length(jsonschema())){
-    midslevel <- names(jsonschema()[i])
-    #loop over existing MIDS elements
-    for (j in 1:length(jsonschema()[[i]])){
-      midscritname <- names(jsonschema()[[i]][j])
-      props <- list()
-      subcond <- strsplit(jsonschema()[[i]][[j]], split = "\\|")
-      #loop over existing mappings
-      for (k in seq_along(subcond)){
-        props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
-        v[[midslevel]][[midscritname]] <- props
-      }
-    }
-  }
-  return(v)
-  })
-  
-  trigger <- reactiveValues(count=0)
-  ## get MIDS elements specified by user
-  newElements <- reactiveValues()
-  observeEvent(input$addElement, {
-    newElements$el <- c(newElements$el, input$newElement)
-    trigger$count <- trigger$count + 1
-  })
-  
-  ##create list of elements and mapping based on input and added elements
-  addedcritlists <- eventReactive(trigger$count, {
-    x <- list()
-    for (i in 1:length(jsonschema())){
-      midslevel <- names(jsonschema()[i])
-      #get MIDS elements for a given mids level
-      elements <- reactiveValuesToList(input)[[midslevel]]
-      for (j in 1:length(elements)){
-        #get mappings for each element
-        valuesplit <- strsplit(elements[[j]], split = "\\\n")
-        element <- trimws(valuesplit[[1]][1], "r")
-        mappings <- valuesplit[[1]][-1]
-        # #check if there are new mappings to be added
-        # if (!is.null(newMappings[[element]])){
-        #   mappings <- c(mappings, newMappings[[element]])
-        #   #remove mappings when used
-        #   newMappings[[element]] <- NULL
-        # }
-        # #check if there are mappings to be removed
-        # if (!is.null(removeMappings[[element]])){
-        #   mappings <- mappings[!mappings %in% removeMappings[[element]]]
-        #   #remove mappings when used
-        #   removeMappings[[element]] <- NULL
-        # }
-        x[[midslevel]][[element]] <- mappings
-        #if element in newElements, remove it
-        if (element %in% newElements$el){
-          newElements$el <- newElements$el[!newElements$el %in% element]}
-      }
-    }
-    #add newly added elements
-    for (newEl in newElements$el){
-      x[["unused elements"]][[newEl]] <- ""
-    }
-    return(x)
-  })
-  
-  ##use initial when nothing has been added yet, otherwise use added
-  critlists <- reactive({
-    if(trigger$count == 0){
-      return(initialcritlists())}
-    else {return(addedcritlists())}
-  })
+# Edit MIDS implementation interactively ----------------------------------
 
-  ## create ranklists
-  critranklists <- reactive({v <- list()
-  for (i in 1:length(critlists())){
-    midslevel <- names(critlists()[i])
-    labels <- list()
-    #loop over MIDS elements
-    for (j in 1:length(critlists()[[i]])){
-      elementname <- names(critlists()[[i]][j])
-      mappings <- critlists()[[i]][[j]]
-      #loop over mappings
-      htmlprops <- list()
-      for (k in seq_along(mappings)){
-        htmlprops <- list(htmlprops,htmltools::tags$li(mappings[[k]]))
-      }
-      labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname, 
-                        EditMappingsUI(paste0("edit", elementname)),
-                        htmlprops))
-      EditMappings <- EditMappingsServer(paste0("edit", elementname), elementname, mappings)
-    }
-    v[[i]] <- rank_list(toupper(midslevel), labels, midslevel,
-                        options = sortable_options(group = "midsElements"))
-  }
-  return(v)
-  })
-  output$crit <- renderUI(critranklists())
   
-
-  # ## get MIDS mappings specified by user
-  # removeMappings <- reactiveValues()
-  # observeEvent(input$removeinstitutionCode, {
-  #   removeMappings$Institution <- "institutionCode"
-  #   trigger$count <- trigger$count + 1
-  # })
-  
-  # ## get MIDS mappings specified by user
-  # newMappings <- reactiveValues()
-  # observeEvent(input$addMappingInstitution, {
-  #   newMappings$Institution <- paste(input$newMappingInstitution, collapse = "&")
-  #   trigger$count <- trigger$count + 1
-  # })
-
-  ## get inputs
-  critinputs <- reactive({x <- list()
-  #loop through mids levels
-  midslevels <- names(critlists())
-  for (i in 1:length(midslevels)){
-    if (midslevels[i] != "unused elements"){
-    #get MIDS elements for a given mids level
-    elements <- reactiveValuesToList(input)[[midslevels[i]]]
-    for (j in 1:length(elements)){
-      #get mappings for each element
-      valuesplit <- strsplit(elements[[j]], split = "\\\n")
-      element <- valuesplit[[1]][1]
-      mappings <- valuesplit[[1]][-1]
-      #don't use elements that have no mappings
-      if (!is_empty(mappings)){
-      x[[midslevels[i]]][[element]] <- mappings
-      }
-    }
-    }
-  }
-  return(x)
-  })
-  
-  ## get properties used in the schema
-  usedproperties <- reactive(
-  {x <- character()
-  #loop through mids levels
-  midslevels <- names(critlists())
-  for (i in 1:length(midslevels)){
-    #get MIDS elements for a given mids level
-    elements <- reactiveValuesToList(input)[[midslevels[i]]]
-    for (j in 1:length(elements)){
-      #get mappings for each element
-      valuesplit <- strsplit(elements[[j]], split = "\\\n")
-      mappings <- gsub("!", "", flatten_chr(strsplit(valuesplit[[1]][-1], "&")))
-      #don't use elements that have no mappings
-      if (!is_empty(mappings)){
-      x <- c(x, mappings)
-      }
-    }
-  }
-  return(x)
-  })
-  
-  ## convert outputs to usable filters for mids calc
-  midscalccrits <- reactive({x <- list()
-  for (i in 1:length(critinputs())){
-    for (j in 1:length(critinputs()[[i]])){
-      subcond <- critinputs()[[i]][[j]]
-      nasubconds <- list()
-      for (k in 1:length(subcond)){
-        #deal with !
-        if (grepl("!", subcond[k], fixed = TRUE)){
-          nasubcond <- paste0("is.na(", substring(subcond[k],2), ")")}
-        #deal with &
-        else if (grepl("&", subcond[k], fixed = TRUE)){
-          nasubcond <- "("
-          split <- strsplit(subcond[k], "&")[[1]]
-          for (l in 1:length(split)){
-            nasubcond <- paste0(nasubcond, "!is.na(", split[l], ") & ")
-            }
-          nasubcond <- paste0(substr(nasubcond, 1, nchar(nasubcond)-3), ")")
-        }
-        #others (no & or !):
-        else {nasubcond <- paste0("!is.na(", subcond[k], ")")}
-        #combine
-        nasubconds <- c(nasubconds, nasubcond)
-      }
-      #collapse subconditions
-      collsubcond <- paste(nasubconds, collapse = " | ")
-      #create list again
-      x[[names(critinputs())[i]]][[names(critinputs()[[i]][j])]] <- collsubcond
-      }
-  }
-  return(x)
-  })
-  
-  ## Combine interactive JSON section in 1 list
-  jsonlist <- reactive({
-    list <- list()
-    list[["criteria"]] <- midscalccrits()  
-    list[["UoM"]] <- UoMinputs()
-    #if UoM section wasn't visited, fill this with the UoM from file
-    if (is_empty(list[["UoM"]])){list[["UoM"]] <- jsonUoM()}
-    list[["properties"]] <- usedproperties() 
-    return(list)
-  })
-  
-
-  #show output
-  output$results_3 <-
-    renderPrint({
-      jsonlist()  
-    })
+  jsonlist <- InteractiveSchemaServer("interactive", jsonschema(), jsonUoM(), disableinteractive)
 
 
 # Allow multiple results tabs --------------------------------------------
@@ -489,7 +146,7 @@ server <- function(input, output, session) {
   #save all MIDS implementations
   allschemas <- reactiveValues(prev_bins = NULL)
   observeEvent(input$start, {
-    if (input$interactiveschema > 0){
+    if (input$editschema == TRUE){
       allschemas$prev_bins[[startcounter$countervalue]] <- jsonlist()[1:2]
     } else {
       allschemas$prev_bins[[startcounter$countervalue]] <- c(list("criteria" = jsonschema()), list("UoM" = jsonUoM()))
@@ -669,9 +326,9 @@ server <- function(input, output, session) {
   observe(
   output[[paste0("Used_MIDS_implementation", startcounter$countervalue)]] <-
     renderText(
-      if (isolate(input$jsonfile) == "default" & isolate(input$interactiveschema) == 0){
+      if (isolate(input$jsonfile) == "default" & isolate(input$editschema) == FALSE){
        return(paste("Default:", isolate(basename(jsonpath()))))}
-      else if (isolate(input$jsonfile) == "custom" & isolate(input$interactiveschema) == 0){
+      else if (isolate(input$jsonfile) == "custom" & isolate(input$editschema) == FALSE){
        return(paste("Custom:", isolate(input$customjsonfile[[1]])))}
       else {return("Interactive")}
     )
@@ -728,10 +385,6 @@ server <- function(input, output, session) {
     observe(
     CloseTabServer(paste0("close", as.integer(gsub("Results", "", input$tabs))), input$tabs, session)
     )
-  
-    #   #clear associated saved data
-    #   allmidscalc$prev_bins[[i]] <- ""
-    #   allschemas$prev_bins[[i]] <- ""
 
 }
 
