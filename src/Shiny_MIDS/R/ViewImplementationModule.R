@@ -18,7 +18,7 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
       for (n_level in seq_along(schema)){
         if (n_level == 1)
         {#print title
-          print(HTML(paste0("<div style='text-align: center; background-color: #2874A6;
+          print(HTML(paste0("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.8);
               font-size: 25px; color: white'>", "Criteria", "</div>")))
           #initialize grid
           print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px'>"))}
@@ -32,7 +32,7 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
         print(HTML(paste0("<div style='background-color: #E5E7E9; grid-column: ",
                           column, "; grid-row:", row, "'>")))
         #MIDS levels
-        print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
+        print(HTML("<div style='text-align: center;background-color: rgb(40, 116, 166, 0.8); color: white; font-size: 20px'"))
         print(h3(toupper(names(schema)[[n_level]])))
         print(HTML("</div>"))
         #MIDS elements
@@ -86,7 +86,7 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
       values <- UoM[[n_prop]]
       if (n_prop == 1)
       {#print title
-        print(HTML(paste0("<div style='text-align: center; background-color: #2874A6; 
+        print(HTML(paste0("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.8); 
               font-size: 25px; color: white'>",
                           "Unknown or missing values", "</div>")))
         #set up grid layout
@@ -101,7 +101,7 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
       print(HTML(paste0("<div style='background-color: #E5E7E9; grid-column: ",
                         column, "; grid-row:", row, "'>")))
       #Property
-      print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
+      print(HTML("<div style='text-align: center;background-color: rgb(40, 116, 166, 0.8); color: white; font-size: 20px'"))
       print(h3(prop))
       print(HTML("</div>"))
       #Unknown or missing values for that property

@@ -4,6 +4,7 @@ InteractiveSchemaUI <- function(id) {
   tagList(
     actionButton(ns("interactiveschema"), "Edit interactively"),
     #Interactive editing of MIDS implementation in modal window
+   
     bsModal(ns("id"), "Edit MIDS implementation interactively", ns("interactiveschema"), 
       tabsetPanel(type = "tabs",
         tabPanel("Criteria",
@@ -24,9 +25,26 @@ InteractiveSchemaUI <- function(id) {
                  br(), br(),
                  "Drag the MIDS elements to the desired MIDS level. Click the edit button to change the mappings of a MIDS element.",
                  br(),
-                 div(
-                   class = "default-sortable bucket-list bucket-list-horizontal",
-                   uiOutput(ns("crit"))
+                 div(class = "ranklists",
+                   uiOutput(ns("crit")),
+                   uiOutput(ns("crit2")),
+                   tags$style(
+                     HTML("
+                      .rank-list-container.custom-sortable {
+                        background-color: rgb(40, 116, 166, 0.8); color: white; font-size: 20px;
+                      }
+                      .custom-sortable .rank-list-item {
+                        background-color: #E5E7E9; color: #1A5276; font-size: 15px;
+                      }
+                      .ranklists {
+                        display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px;
+                      }
+                      .modal-dialog {
+                            width: 90%;
+                      }
+                         
+                    ")
+                   )
                  )
                )
              )
@@ -196,12 +214,18 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
                                                                 htmlprops))
       }
       v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
-                          options = sortable_options(group = "midsElements"))
+                          options = sortable_options(group = "midsElements"),
+                          class = c("default-sortable", "custom-sortable"))
     }
     return(v)
     })
 
-    output$crit <- renderUI(critranklists())
+    output$crit <- renderUI({
+      critranklists()[seq(1, length(critranklists()), 2)]
+      })
+    output$crit2 <- renderUI({
+      critranklists()[seq(2, length(critranklists()), 2)]
+    })
     
     #create "edit mappings" modal
     observe({
@@ -381,7 +405,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     ## add UoM values and properties from existing JSON schema
     UoMranklists <- reactive({v <- list()
     for (i in 1:length(jsonUoM)){
-      v[[i]] <- rank_list(names(jsonUoM[i]), jsonUoM[[i]], ns(paste0("UoM", names(jsonUoM[i]))), options = sortable_options(group = "midsUoM"))
+      v[[i]] <- rank_list(names(jsonUoM[i]), jsonUoM[[i]], ns(paste0("UoM", names(jsonUoM[i]))), options = sortable_options(group = "midsUoM"),
+                          class = c("default-sortable", "custom-sortable"))
     }
     return(v)
     })
@@ -401,7 +426,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       #get value inside property
       value <- input[[paste0("UoM", newprops$prev_bins[i])]]
       #add rank list for each property
-      v[[i]] <- rank_list(newprops$prev_bins[i], value, ns(paste0("UoM", newprops$prev_bins[i])), options = sortable_options(group = "midsUoM"))
+      v[[i]] <- rank_list(newprops$prev_bins[i], value, ns(paste0("UoM", newprops$prev_bins[i])), options = sortable_options(group = "midsUoM"),
+                          class = c("default-sortable", "custom-sortable"))
     }
     return(v)
     })
@@ -410,7 +436,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     ## add UoM values specified by user (and keep existing values)
     existing <- eventReactive(input$addUoM, {input$UoMunused}) 
     new <- eventReactive(input$addUoM, {input$UoMnewvalue})
-    output$UoMunused <- renderUI(rank_list("Unused values", c(existing(), new()), ns("UoMunused"), options = sortable_options(group = "midsUoM")))
+    output$UoMunused <- renderUI(rank_list("Unused values", c(existing(), new()), ns("UoMunused"), options = sortable_options(group = "midsUoM"),
+                                           class = c("default-sortable", "custom-sortable")))
     
     ## combine all UoM inputs
     UoMinputs <- reactive({x <- list()
