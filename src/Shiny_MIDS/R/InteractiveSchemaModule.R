@@ -16,7 +16,6 @@ InteractiveSchemaUI <- function(id) {
                  "To reach a given MIDS level all MIDS elements must be met (AND),
                   and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
                  br(),br(),
-                 #verbatimTextOutput(ns("test")),
                  fluidPage(fluidRow(
                    column(6, textInput(ns("newElement"), "Enter a new MIDS element",
                                        value = "Enter text..."),
@@ -54,13 +53,13 @@ InteractiveSchemaUI <- function(id) {
                  "Drag the unknown or missing values to the desired properties",
                  br(),br(),
                  fluidPage(fluidRow(
-                   column(6, textInput("UoMnewvalue", "Enter a new value",
+                   column(6, textInput(ns("UoMnewvalue"), "Enter a new value",
                                        value = "Enter text...")),
-                   column(6, uiOutput("UoMnewprop"))
+                   column(6, uiOutput(ns("UoMnewprop")))
                  )),
                  fluidPage(fluidRow(
-                   column(6, actionButton("addUoM", "Add")),
-                   column(6, actionButton("addUoMprop", "Add"))
+                   column(6, actionButton(ns("addUoM"), "Add")),
+                   column(6, actionButton(ns("addUoMprop"), "Add"))
                  )),
                  div(
                    class = "bucket-list-container default-sortable",
@@ -89,7 +88,7 @@ InteractiveSchemaUI <- function(id) {
   )
 }
 
-InteractiveSchemaServer <- function(id, jsonschema) {
+InteractiveSchemaServer <- function(id, jsonschema, jsonUoM) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
     
@@ -359,9 +358,83 @@ InteractiveSchemaServer <- function(id, jsonschema) {
     #show output
     output$results_3 <-
       renderPrint({
-        midscalccrits()
+        jsonlist()
       })
-
+    
+    # Edit Unknown or Missing section -----------------------------------------
+    
+    ##update property selection
+    #only update choices when navigating to this tab
+    mcprops <- eventReactive(input$tabs == "2. Unknown or Missing",
+                             {usedproperties()})
+    output$UoMnewprop <- renderUI({selectInput(ns("UoMnewprop"), label = "Enter a new property",
+                                               choices = sort(mcprops()))})
+    
+    ## add UoM values and properties from existing JSON schema
+    UoMranklists <- reactive({v <- list()
+    for (i in 1:length(jsonUoM)){
+      v[[i]] <- rank_list(names(jsonUoM[i]), jsonUoM[[i]], ns(paste0("UoM", names(jsonUoM[i]))), options = sortable_options(group = "midsUoM"))
+    }
+    return(v)
+    })
+    output$UoMall <- renderUI(UoMranklists())
+    
+    ## add UoM properties specified by user
+    #get new UoM property from text input field
+    newprop <- eventReactive(input$addUoMprop, {input$UoMnewprop})
+    ## also get previously submitted properties
+    newprops <- reactiveValues(prev_bins = NULL)
+    observeEvent(input$addUoMprop, {
+      newprops$prev_bins <- c(newprops$prev_bins, input$UoMnewprop)
+    })
+    #add rank list for each submitted property
+    UoMnewpropranklists <- reactive({v <- list()
+    for (i in 1:length(req(newprops$prev_bins))){
+      #get value inside property
+      value <- input[[paste0("UoM", newprops$prev_bins[i])]]
+      #add rank list for each property
+      v[[i]] <- rank_list(newprops$prev_bins[i], value, ns(paste0("UoM", newprops$prev_bins[i])), options = sortable_options(group = "midsUoM"))
+    }
+    return(v)
+    })
+    output$UoMextra <- renderUI(UoMnewpropranklists())
+    
+    ## add UoM values specified by user (and keep existing values)
+    existing <- eventReactive(input$addUoM, {input$UoMunused}) 
+    new <- eventReactive(input$addUoM, {input$UoMnewvalue})
+    output$UoMunused <- renderUI(rank_list("Unused values", c(existing(), new()), ns("UoMunused"), options = sortable_options(group = "midsUoM")))
+    
+    ## combine all UoM inputs
+    UoMinputs <- reactive({x <- list()
+    #get names of original properties from schema and of user specified properties
+    properties <- c(names(jsonUoM), newprops$prev_bins)
+    #get values for each property
+    for (j in 1:length(properties)){
+      value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
+      #don't include empty properties
+      if (rlang::is_empty(value[[1]])){next}
+      x[[properties[j]]] <- value[[1]]
+    }
+    return(x)
+    })
+    
+    #show output
+    output$results_UoM <-
+      renderPrint(
+        UoMinputs()
+      )
+    
+    ## Combine interactive JSON section in 1 list
+    jsonlist <- reactive({
+      list <- list()
+      list[["criteria"]] <- midscalccrits()
+      list[["UoM"]] <- UoMinputs()
+      #if UoM section wasn't visited, fill this with the UoM from file
+      if (is_empty(list[["UoM"]])){list[["UoM"]] <- jsonUoM}
+      list[["properties"]] <- usedproperties()
+      return(list)
+    })
+    
    
   })
 }
