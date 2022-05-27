@@ -144,6 +144,12 @@ InteractiveSchemaServer <- function(id, jsonschema) {
             #remove mappings when used
             newMappings[[element]] <- NULL
           }
+          #check if there are mappings to be removed
+          if (!is.null(removeMappings[[element]])){
+            mappings <- mappings[!mappings %in% removeMappings[[element]]]
+            # #remove mappings when used
+            # removeMappings[[element]] <- NULL
+          }
           x[[midslevel]][[element]] <- mappings
           #if element in newElements, remove it
           if (element %in% newElements$el){
@@ -190,6 +196,7 @@ InteractiveSchemaServer <- function(id, jsonschema) {
 
     output$crit <- renderUI(critranklists())
     
+    #create "edit mappings" modal
     observe({
       for (i in 1:length(critlists())){
         local({
@@ -206,12 +213,12 @@ InteractiveSchemaServer <- function(id, jsonschema) {
           )))
           output[[paste0("editmappings", elementname)]] <- renderUI({
             x <- list()
-            for (mapping in mappings){
-              x <- list(x, mapping, actionButton(ns(paste0("remove", mapping)),
-                                                 icon("trash"),
-                                                 style = "padding:5px; font-size:70%; border-style: none"),
-                        br())
-            }
+            x <- list(x, lapply(mappings, FUN = function(mapping) list(
+              mapping, actionButton(ns(paste0("remove", elementname, mapping)),
+                                              icon("trash"),
+                                              style = "padding:5px; font-size:70%; border-style: none"),
+                                              br()))
+            )
             x <- list(fluidRow(
               column(6, h4(paste0(elementname, ":")), x),
               column(6,
@@ -231,9 +238,8 @@ InteractiveSchemaServer <- function(id, jsonschema) {
       }
     })
   
-    #create observers for editing mappings of initial elements, and get new mappings  
+    #create observers for adding mappings of initial elements, and get new mappings  
     newMappings <- reactiveValues()
-    maptrigger <- reactiveValues(count=0)
     observe(
         for (i in 1:length(initialcritlists())){
           local({
@@ -249,6 +255,29 @@ InteractiveSchemaServer <- function(id, jsonschema) {
           }
           })
         })
+    #create observers for removing mappings of initial elements, and get mappings to be removed 
+    removeMappings <- reactiveValues()
+    observe(
+      for (i in 1:length(initialcritlists())){
+        local({
+          #loop over MIDS elements
+          for (j in 1:length(initialcritlists()[[i]])){
+            local({
+              elementname <- names(initialcritlists()[[i]][j])
+              mappings <- initialcritlists()[[i]][[j]]
+                for (mapping1 in mappings){
+                local({
+                  mapping <- mapping1
+                  observeEvent(input[[paste0("remove", elementname, mapping)]], {
+                    removeMappings[[elementname]] <- mapping
+                    trigger$count <- trigger$count + 1
+                  })
+                })
+              }
+            })
+          }
+        })
+      })
     
     
     #show output
