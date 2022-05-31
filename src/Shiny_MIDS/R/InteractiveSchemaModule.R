@@ -3,9 +3,27 @@ InteractiveSchemaUI <- function(id) {
   
   tagList(
     actionButton(ns("interactiveschema"), "Edit interactively"),
+    
+    #css
+    tags$style(
+      HTML("
+       .rank-list-container.custom-sortable {
+         background-color: rgb(40, 116, 166, 0.8); color: white; font-size: 20px;
+       }
+       .custom-sortable .rank-list-item {
+         background-color: #E5E7E9; color: #1A5276; font-size: 15px;
+       }
+       .ranklists {
+         display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px;
+       }",
+       paste0('#', ns("interactivemodal")),".modal-dialog{
+         width: 90%;
+       }
+     ")
+    ),
+    
     #Interactive editing of MIDS implementation in modal window
-   
-    bsModal(ns("id"), "Edit MIDS implementation interactively", ns("interactiveschema"), 
+    bsModal(ns("interactivemodal"), "Edit MIDS implementation interactively", ns("interactiveschema"), 
       tabsetPanel(type = "tabs",
         tabPanel("Criteria",
            fluidRow(
@@ -27,24 +45,7 @@ InteractiveSchemaUI <- function(id) {
                  br(),
                  div(class = "ranklists",
                    uiOutput(ns("crit")),
-                   uiOutput(ns("crit2")),
-                   tags$style(
-                     HTML("
-                      .rank-list-container.custom-sortable {
-                        background-color: rgb(40, 116, 166, 0.8); color: white; font-size: 20px;
-                      }
-                      .custom-sortable .rank-list-item {
-                        background-color: #E5E7E9; color: #1A5276; font-size: 15px;
-                      }
-                      .ranklists {
-                        display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px;
-                      }
-                      .modal-dialog {
-                            width: 90%;
-                      }
-                         
-                    ")
-                   )
+                   uiOutput(ns("crit2"))
                  )
                )
              )
@@ -101,8 +102,6 @@ InteractiveSchemaUI <- function(id) {
            )
         ))
     )
-    
-    
   )
 }
 
