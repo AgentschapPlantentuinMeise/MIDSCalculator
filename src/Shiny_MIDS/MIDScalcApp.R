@@ -19,6 +19,12 @@ ui <-
         .modal {
           overflow:auto
         }
+        .modal-backdrop {
+          visibility: hidden !important;
+        }
+        .modal.in {
+            background-color: rgba(0,0,0,0.5);
+        }
      ")
   ),
   navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
