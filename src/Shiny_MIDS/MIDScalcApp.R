@@ -76,19 +76,27 @@ server <- function(input, output, session) {
       shinyjs::disable("start")} else {shinyjs::enable("start")}
   })
     
-  #disable "Edit MIDS implementation" if schema doesn't need to be edited and when custom upload is chosen but empty 
-  #disable "View MIDS implementation" when custom upload is chosen but empty
+  #disable "View MIDS implementation" when custom upload is chosen but empty, and when edit schema is chosen but not visited
   disableviewschema <- reactiveVal(FALSE)
-  disableinteractive <- reactiveVal(FALSE)
   observe({
-    if ((input$jsonfile == "custom" & is.null(input$customjsonfile))|input$editschema == FALSE){
-      disableinteractive(TRUE)}
-    else if (input$jsonfile == "custom" & is.null(input$customjsonfile)) {
+    if (input$jsonfile == "custom" & is.null(input$customjsonfile) | 
+        (input$editschema == TRUE && jsonlist$visited() == FALSE)) {
       disableviewschema(TRUE)}
-    else {disableinteractive(FALSE)}
+    else {
+      disableviewschema(FALSE)}
     #never disable the view button on results tabs
     if (grepl("Results", input$tabs))
     {disableviewschema(FALSE)}
+  })
+  
+  #disable "Edit MIDS implementation" if schema doesn't need to be edited and when custom upload is chosen but empty 
+  disableinteractive <- reactiveVal(FALSE)
+  observe({
+    if ((input$jsonfile == "custom" & is.null(input$customjsonfile)) |
+        input$editschema == FALSE){
+      disableinteractive(TRUE)}
+    else {
+      disableinteractive(FALSE)}
   })
 
 
