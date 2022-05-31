@@ -502,6 +502,14 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       return(list)
     })
     
+    #check if the edit actionbutton was clicked
+    visited <- reactiveVal(FALSE)
+    observe(
+    if (input$interactiveschema > 0){visited(TRUE)}
+    )
+    
+    return(list(jsonlist = reactive({jsonlist()}), visited = reactive({visited()})))
+    
    
   })
 }

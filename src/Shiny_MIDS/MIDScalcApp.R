@@ -70,8 +70,8 @@ server <- function(input, output, session) {
     if (input$jsonfile == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
     #disable start when there is no input file, when interactive is chosen but not visited, or when custom upload is chosen but empty
-    if (is.null(input$gbiffile) | 
-        (input$editschema == TRUE && input$interactiveschema == 0) | 
+    if (is.null(input$gbiffile) |
+        (input$editschema == TRUE && jsonlist$visited() == FALSE) |
         (input$jsonfile == "custom" & is.null(input$customjsonfile))){
       shinyjs::disable("start")} else {shinyjs::enable("start")}
   })
@@ -91,20 +91,7 @@ server <- function(input, output, session) {
     {disableviewschema(FALSE)}
   })
 
-# Calculations ------------------------------------------------------------
 
-  #calculate mids levels and criteria
-  gbif_dataset_mids <- eventReactive(input$start, {
-    if (input$editschema == FALSE){
-      withProgress(message = 'Calculating MIDS scores', value = 0, {
-        calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())})
-    }
-    else if (input$editschema == TRUE){
-      withProgress(message = 'Calculating MIDS scores', value = 0, {
-        calculate_mids(gbiffile = input$gbiffile$datapath, jsontype = "list", jsonlist = jsonlist())})
-    }
-  })
-  
 # Initialize MIDS implementation ------------------------------------------
 
   #get path to json schema
@@ -125,27 +112,40 @@ server <- function(input, output, session) {
     read_json_unknownOrMissing(file = jsonpath())
   })
 
+  
 # Show current MIDS implementation ----------------------------------------
-
   
   #view MIDS implementation in modal window
   observe(
   #show schema from interactive
   if (input$editschema == TRUE){
-    ViewImplementationServer("viewcurrentschema", jsonlist()[[1]], jsonlist()[[2]], disableviewschema)
+    ViewImplementationServer("viewcurrentschema", jsonlist$jsonlist()[[1]], jsonlist$jsonlist()[[2]], disableviewschema)
   #show schema from file
   } else {
     ViewImplementationServer("viewcurrentschema", jsonschema(), jsonUoM(), disableviewschema)
   })
     
 
-
 # Edit MIDS implementation interactively ----------------------------------
-
   
   jsonlist <- InteractiveSchemaServer("interactive", jsonschema(), jsonUoM(), disableinteractive)
-
-
+  
+  
+# Calculations ------------------------------------------------------------
+  
+  #calculate mids levels and criteria
+  gbif_dataset_mids <- eventReactive(input$start, {
+    if (input$editschema == FALSE){
+      withProgress(message = 'Calculating MIDS scores', value = 0, {
+        calculate_mids(gbiffile = input$gbiffile$datapath, jsonfile = jsonpath())})
+    }
+    else if (input$editschema == TRUE){
+      withProgress(message = 'Calculating MIDS scores', value = 0, {
+        calculate_mids(gbiffile = input$gbiffile$datapath, jsontype = "list", jsonlist = jsonlist$jsonlist() )})
+    }
+  })
+  
+  
 # Allow multiple results tabs --------------------------------------------
 
   #count how many times start is clicked
@@ -163,7 +163,7 @@ server <- function(input, output, session) {
   allschemas <- reactiveValues(prev_bins = NULL)
   observeEvent(input$start, {
     if (input$editschema == TRUE){
-      allschemas$prev_bins[[paste0("res", startcounter$countervalue)]] <- jsonlist()[1:2]
+      allschemas$prev_bins[[paste0("res", startcounter$countervalue)]] <- jsonlist$jsonlist()[1:2]
     } else {
       allschemas$prev_bins[[paste0("res", startcounter$countervalue)]] <- c(list("criteria" = jsonschema()), list("UoM" = jsonUoM()))
     }
