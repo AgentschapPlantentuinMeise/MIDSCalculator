@@ -19,6 +19,9 @@ InteractiveSchemaUI <- function(id) {
        paste0('#', ns("interactivemodal")),".modal-dialog{
          width: 90%;
        }
+       .rank-list-container.custom-sortable.unused {
+         background-color: LightSlateGrey
+       }
      ")
     ),
     
@@ -211,9 +214,15 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
                                                                 actionButton(ns(paste0("edit", elementname)), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"), 
                                                                 htmlprops))
       }
-      v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
-                          options = sortable_options(group = "midsElements"),
-                          class = c("default-sortable", "custom-sortable"))
+      if (midslevel != "unused elements"){
+        v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
+                            options = sortable_options(group = "midsElements"),
+                            class = c("default-sortable", "custom-sortable"))
+      } else {
+        v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
+                            options = sortable_options(group = "midsElements"),
+                            class = c("default-sortable", "custom-sortable", "unused"))
+      }
     }
     return(v)
     })
@@ -433,7 +442,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     existing <- eventReactive(input$addUoM, {input$UoMunused}) 
     new <- eventReactive(input$addUoM, {input$UoMnewvalue})
     UoMunused <- reactive({rank_list("Unused values", c(existing(), new()), ns("UoMunused"), options = sortable_options(group = "midsUoM"),
-                                           class = c("default-sortable", "custom-sortable")) })
+                                           class = c("default-sortable", "custom-sortable", "unused")) })
     
     #combine all ranklists
     UoMranklists <- reactive({
