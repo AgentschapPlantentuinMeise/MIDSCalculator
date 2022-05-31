@@ -14,6 +14,13 @@ options(shiny.maxRequestSize = 5000*1024^2)
 ui <- 
   tagList(
   useShinyjs(),
+  tags$style(
+    HTML("
+        .modal {
+          overflow:auto
+        }
+     ")
+  ),
   navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
                  id = "tabs",
                  tabPanel("Submit data",
