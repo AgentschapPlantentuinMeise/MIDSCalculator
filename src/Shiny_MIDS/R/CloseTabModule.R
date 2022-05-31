@@ -23,12 +23,20 @@ CloseTabServer <- function(id, tab, parent.session) {
                actionButton(ns("closetab"), "Close")
              )
           ))
-        })
+        }, ignoreInit = TRUE)
+        
+        clear <- reactiveValues(value = NULL)
+
         observeEvent(input$closetab,{ 
           #close results tab
-          removeTab(session = parent.session, inputId="tabs", target=tab)
+          removeTab(session = parent.session, inputId="tabs", target=paste0("Results", tab))
           #close modal
           removeModal()
+          #set reactive
+          clear$value <- "clear"
         })
+        
+        return(reactive(clear))
+        
   })
 }

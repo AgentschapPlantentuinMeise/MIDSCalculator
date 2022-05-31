@@ -27,7 +27,8 @@ ui <-
         }
      ")
   ),
-  navbarPage(title=div(tags$img(height = 30, src = "Logo_MeiseBotanicGarden_rgb.jpg"), "Calculate MIDS scores"),
+  navbarPage(title=div(tags$img(style = "margin: 0px 25px 0px 0px", height = 20, 
+                      src = "Logo_klein_BotanicGardenMeise_cmyk.png"), "Calculate MIDS scores"),
                  id = "tabs",
                  tabPanel("Submit data",
                           div(
@@ -68,12 +69,15 @@ server <- function(input, output, session) {
     #hide schema upload when schema is default
     if (input$jsonfile == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
-    #disable start when there is no input file, or when custom upload is chosen but empty
-    if (is.null(input$gbiffile) | (input$jsonfile == "custom" & is.null(input$customjsonfile))){
+    #disable start when there is no input file, when interactive is chosen but not visited, or when custom upload is chosen but empty
+    if (is.null(input$gbiffile) | 
+        (input$editschema == TRUE && input$interactiveschema == 0) | 
+        (input$jsonfile == "custom" & is.null(input$customjsonfile))){
       shinyjs::disable("start")} else {shinyjs::enable("start")}
   })
     
-  #disable edit and view schema when custom upload is chosen but empty
+  #disable "Edit MIDS implementation" if schema doesn't need to be edited and when custom upload is chosen but empty 
+  #disable "View MIDS implementation" when custom upload is chosen but empty
   disableviewschema <- reactiveVal(FALSE)
   disableinteractive <- reactiveVal(FALSE)
   observe({
@@ -81,8 +85,7 @@ server <- function(input, output, session) {
       disableinteractive(TRUE)}
     else if (input$jsonfile == "custom" & is.null(input$customjsonfile)) {
       disableviewschema(TRUE)}
-    else {disableinteractive(FALSE)
-      disableviewschema(FALSE)}
+    else {disableinteractive(FALSE)}
     #never disable the view button on results tabs
     if (grepl("Results", input$tabs))
     {disableviewschema(FALSE)}
@@ -152,17 +155,17 @@ server <- function(input, output, session) {
   
   #save all MIDS calculations
   allmidscalc <- reactiveValues(prev_bins = NULL)
-  observe({
-    allmidscalc$prev_bins[[startcounter$countervalue]] <- gbif_dataset_mids()
+  observeEvent(input$start, {
+    allmidscalc$prev_bins[[paste0("res", startcounter$countervalue)]] <- gbif_dataset_mids()
   })
   
   #save all MIDS implementations
   allschemas <- reactiveValues(prev_bins = NULL)
   observeEvent(input$start, {
     if (input$editschema == TRUE){
-      allschemas$prev_bins[[startcounter$countervalue]] <- jsonlist()[1:2]
+      allschemas$prev_bins[[paste0("res", startcounter$countervalue)]] <- jsonlist()[1:2]
     } else {
-      allschemas$prev_bins[[startcounter$countervalue]] <- c(list("criteria" = jsonschema()), list("UoM" = jsonUoM()))
+      allschemas$prev_bins[[paste0("res", startcounter$countervalue)]] <- c(list("criteria" = jsonschema()), list("UoM" = jsonUoM()))
     }
   })
 
@@ -192,7 +195,7 @@ server <- function(input, output, session) {
       if (input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]] == "Select a rank first"){
         #update taxonomy filter with values from the dataset
         updateSelectInput(session, paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))), label = "Filter on taxonomy",
-            choices = sort(unique(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
+            choices = sort(unique(req(allmidscalc$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
       }
       #only show taxonomy filter when a rank is chosen
       shinyjs::show(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))
@@ -201,7 +204,7 @@ server <- function(input, output, session) {
   
   #apply filters if they are set
   gbif_dataset_mids_filtered <- reactive({
-    req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]]) %>%
+    req(allmidscalc$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]]) %>%
     {if (!is.null(input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]]) && input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]] != "All") {
         filter(., countryCode %in% input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]])} else {.}} %>%
     {if (req(input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][1]) != 0) {
@@ -327,6 +330,7 @@ server <- function(input, output, session) {
                )
               )
   )
+    
   })
   
   #show which dataset was used
@@ -350,8 +354,8 @@ server <- function(input, output, session) {
   #show complete MIDS implementation schema in modal window  
   observe(
   ViewImplementationServer(paste0("showschema", as.integer(gsub("Results", "", input$tabs))),
-                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["criteria"]],
-                           allschemas$prev_bins[[as.integer(gsub("Results", "", input$tabs))]][["UoM"]],
+                           allschemas$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]][["criteria"]],
+                           allschemas$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]][["UoM"]],
                            disableviewschema
   ))
 
@@ -378,7 +382,7 @@ server <- function(input, output, session) {
                 paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
               },
               content = function(file) {
-                write.csv(req(allmidscalc$prev_bins[[as.integer(gsub("Results", "", input$tabs))]]), file, row.names = FALSE)
+                write.csv(req(allmidscalc$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]]), file, row.names = FALSE)
               })
         output[[paste0("downloadDataFiltered", count)]] <- 
           downloadHandler(
@@ -393,10 +397,34 @@ server <- function(input, output, session) {
   )
   
 
+# Open results tab automatically when calculations are performed ----------
+
+  observeEvent(input$start, {
+    updateTabsetPanel(session, "tabs",
+                      selected = paste0("Results", startcounter$countervalue))
+  })
+
 # Close results tabs ------------------------------------------------------
 
+    #close tabs
+    clear <- reactiveValues()
+    observe({
+      if (grepl("Results", input$tabs)){
+        i <- gsub("Results", "", input$tabs)
+        clear[[paste0("res", i)]] <- CloseTabServer(paste0("close", i), i, session)
+      }
+    }
+    )
+    
+    #clear associated saved data
     observe(
-    CloseTabServer(paste0("close", as.integer(gsub("Results", "", input$tabs))), input$tabs, session)
+      if (grepl("Results", input$tabs)){
+      i <- gsub("Results", "", input$tabs)
+        if (req(clear[[paste0("res", i)]]()$value) == "clear"){
+          allmidscalc$prev_bins[[paste0("res", i)]] <- NULL
+          allschemas$prev_bins[[paste0("res", i)]] <- NULL
+        }
+      }
     )
 
 }
