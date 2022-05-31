@@ -31,25 +31,23 @@ InteractiveSchemaUI <- function(id) {
         tabPanel("Criteria",
            fluidRow(
              column(
-               tags$h1("MIDS criteria"),
+               tags$h1(tags$span("MIDS criteria",
+               actionButton(ns("info_criteria"), icon("info"),
+                            style = "padding:5px 5px 20px 5px; font-size:40%; border-style: none"))),
                width = 12,
-               div(
-                 class = "bucket-list-container default-sortable",
-                 "To reach a given MIDS level all MIDS elements must be met (AND),
-                  and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
-                 br(),br(),
-                 fluidPage(fluidRow(
-                   column(6, textInput(ns("newElement"), "Enter a new MIDS element",
-                                       value = "Enter text..."),
-                          actionButton(ns("addElement"), "Add"))
-                 )),
-                 br(), br(),
                  "Drag the MIDS elements to the desired MIDS level. Click the edit button to change the mappings of a MIDS element.",
                  br(),
                  div(class = "ranklists",
                    uiOutput(ns("crit")),
                    uiOutput(ns("crit2"))
-                 )
+                 ),
+               div(
+                 fluidPage(fluidRow(
+                   column(6, offset = 3, 
+                          textInput(ns("newElement"), "Enter a new MIDS element",
+                                       value = "Enter text..."),
+                          actionButton(ns("addElement"), "Add"))
+                 ))
                )
              )
            ),
@@ -68,37 +66,28 @@ InteractiveSchemaUI <- function(id) {
         tabPanel("Unknown or Missing values",
            fluidRow(
              column(
-               tags$h1("MIDS unknown or missing values"),
+               tags$span(tags$h1("MIDS unknown or missing values",
+               actionButton(ns("info_UoM"), icon("info"),
+                            style = "padding:5px 5px 20px 5px; font-size:40%; border-style: none"))),
                width = 12,
                div(
                  class = "bucket-list-container default-sortable",
                  "Drag the unknown or missing values to the desired properties",
-                 br(),br(),
-                 fluidPage(fluidRow(
-                   column(6, textInput(ns("UoMnewvalue"), "Enter a new value",
-                                       value = "Enter text...")),
-                   column(6, uiOutput(ns("UoMnewprop")))
-                 )),
-                 fluidPage(fluidRow(
-                   column(6, actionButton(ns("addUoM"), "Add")),
-                   column(6, actionButton(ns("addUoMprop"), "Add"))
-                 )),
+                 
                  div(
                    class = "ranklists",
                    uiOutput(ns("UoM")),
                    uiOutput(ns("UoM2"))
-                 )
-               )
-             )
-           ),
-           fluidRow(
-             column(
-               width = 12,
-               tags$b("Result"),
-               column(
-                 width = 12,
-                 tags$p("input$midsUoM"),
-                 verbatimTextOutput(ns("results_UoM"))
+                 ),
+                 fluidPage(fluidRow(
+                   column(6, uiOutput(ns("UoMnewprop"))),
+                   column(6, textInput(ns("UoMnewvalue"), "Enter a new value",
+                                       value = "Enter text..."))
+                 )),
+                 fluidPage(fluidRow(
+                   column(6, actionButton(ns("addUoMprop"), "Add")),
+                   column(6, actionButton(ns("addUoM"), "Add"))
+                 ))
                )
              )
            )
@@ -118,6 +107,34 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       } else {
         shinyjs::enable("interactiveschema")
       })
+    
+    #show information on MIDS criteria
+    observeEvent(input$info_criteria,{ 
+      #show modal
+      showModal(modalDialog(
+        title = "MIDS criteria",
+        "To reach a given MIDS level all MIDS elements must be met (AND),
+                  and to meet a MIDS element one of its mappings (composed of properties) must be met (OR).",
+        easyClose = TRUE,
+        footer = tagList(
+          modalButton("Cancel")
+        )
+      ))
+    })
+    
+    #show information on MIDS UoM
+    observeEvent(input$info_UoM,{ 
+      #show modal
+      showModal(modalDialog(
+        title = "MIDS unknown or missing values",
+        "Certain values are known to represent unknown or missing values, 
+        which should not count towards meeting a certain MIDS criterium.",
+        easyClose = TRUE,
+        footer = tagList(
+          modalButton("Cancel")
+        )
+      ))
+    })
     
     ## create initial list of elements and mappings from existing MIDS implementation schema
     initialcritlists <- reactive({v <- list()
@@ -473,12 +490,6 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     }
     return(x)
     })
-    
-    #show output
-    output$results_UoM <-
-      renderPrint(
-        UoMinputs()
-      )
     
     ## Combine interactive JSON section in 1 list
     jsonlist <- reactive({
