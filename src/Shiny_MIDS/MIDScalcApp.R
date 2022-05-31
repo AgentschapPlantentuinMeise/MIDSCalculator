@@ -196,31 +196,30 @@ server <- function(input, output, session) {
                       timeFormat = "%m/%d/%Y")
   })
   
+  resulttabnr <- reactive({if (grepl("Results", input$tabs)) {as.integer(gsub("Results", "", input$tabs))}})
+  
   #update taxonomy filter when a taxonomic rank is chosen
-  observeEvent(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]], {
-    if (input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]] != "None"){
-      #only update taxonomy when nothing has been selected yet
-      if (input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]] == "Select a rank first"){
-        #update taxonomy filter with values from the dataset
-        updateSelectInput(session, paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))), label = "Filter on taxonomy",
-            choices = sort(unique(req(allmidscalc$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]])[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]])))
-      }
+  observeEvent(input[[paste0("rank", resulttabnr())]], {
+    if (input[[paste0("rank", resulttabnr())]] != "None"){
+      #update taxonomy filter with values from the dataset
+      updateSelectInput(session, paste0("taxonomy", resulttabnr()), label = "Filter on taxonomy",
+          choices = sort(unique(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]])[[tolower(input[[paste0("rank", resulttabnr())]])]])))
       #only show taxonomy filter when a rank is chosen
-      shinyjs::show(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))
-    } else {shinyjs::hide(paste0("taxonomy", as.integer(gsub("Results", "", input$tabs))))}
+      shinyjs::show(paste0("taxonomy", resulttabnr()))
+    } else {shinyjs::hide(paste0("taxonomy", resulttabnr()))}
   })
   
   #apply filters if they are set
   gbif_dataset_mids_filtered <- reactive({
-    req(allmidscalc$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]]) %>%
-    {if (!is.null(input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]]) && input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]] != "All") {
-        filter(., countryCode %in% input[[paste0("country", as.integer(gsub("Results", "", input$tabs)))]])} else {.}} %>%
-    {if (req(input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][1]) != 0) {
-      filter(., eventDate >= input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][1])} else {.}} %>%
-    {if (req(input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][2]) != 100) {
-      filter(., eventDate <= input[[paste0("date", as.integer(gsub("Results", "", input$tabs)))]][2])} else {.}} %>%
-    {if (input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]] != "None" && !is.null(input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]]) && input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]] != "All"){
-        filter(., .data[[tolower(input[[paste0("rank", as.integer(gsub("Results", "", input$tabs)))]])]] %in% input[[paste0("taxonomy", as.integer(gsub("Results", "", input$tabs)))]])} else {.}}
+    req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]) %>%
+    {if (!is.null(input[[paste0("country", resulttabnr())]]) && input[[paste0("country", resulttabnr())]] != "All") {
+        filter(., countryCode %in% input[[paste0("country", resulttabnr())]])} else {.}} %>%
+    {if (req(input[[paste0("date", resulttabnr())]][1]) != 0) {
+      filter(., eventDate >= input[[paste0("date", resulttabnr())]][1])} else {.}} %>%
+    {if (req(input[[paste0("date", resulttabnr())]][2]) != 100) {
+      filter(., eventDate <= input[[paste0("date", resulttabnr())]][2])} else {.}} %>%
+    {if (input[[paste0("rank", resulttabnr())]] != "None" && !is.null(input[[paste0("taxonomy", resulttabnr())]]) && input[[paste0("taxonomy", resulttabnr())]] != "All"){
+        filter(., .data[[tolower(input[[paste0("rank", resulttabnr())]])]] %in% input[[paste0("taxonomy", resulttabnr())]])} else {.}}
   })
   
 
@@ -361,9 +360,9 @@ server <- function(input, output, session) {
   
   #show complete MIDS implementation schema in modal window  
   observe(
-  ViewImplementationServer(paste0("showschema", as.integer(gsub("Results", "", input$tabs))),
-                           allschemas$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]][["criteria"]],
-                           allschemas$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]][["UoM"]],
+  ViewImplementationServer(paste0("showschema", resulttabnr()),
+                           allschemas$prev_bins[[paste0("res", resulttabnr())]][["criteria"]],
+                           allschemas$prev_bins[[paste0("res", resulttabnr())]][["UoM"]],
                            disableviewschema
   ))
 
@@ -390,7 +389,7 @@ server <- function(input, output, session) {
                 paste0(tools::file_path_sans_ext(input$gbiffile), ".csv")
               },
               content = function(file) {
-                write.csv(req(allmidscalc$prev_bins[[paste0("res", as.integer(gsub("Results", "", input$tabs)))]]), file, row.names = FALSE)
+                write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE)
               })
         output[[paste0("downloadDataFiltered", count)]] <- 
           downloadHandler(
