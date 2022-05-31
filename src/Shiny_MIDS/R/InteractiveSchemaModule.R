@@ -11,7 +11,7 @@ InteractiveSchemaUI <- function(id) {
          background-color: rgb(40, 116, 166, 0.8); color: white; font-size: 20px;
        }
        .custom-sortable .rank-list-item {
-         background-color: #E5E7E9; color: #1A5276; font-size: 15px;
+         background-color: #f5faff; color: #1A5276; font-size: 15px;
        }
        .ranklists {
          display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px;
