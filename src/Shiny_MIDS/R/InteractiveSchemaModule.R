@@ -387,7 +387,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
         for (k in 1:length(subcond)){
           #deal with !
           if (grepl("!", subcond[k], fixed = TRUE)){
-            nasubcond <- paste0("is.na(", substring(subcond[k],2), ")")}
+            nasubcond <- paste0("!!is.na(", substring(subcond[k],2), ")")}
           #deal with &
           else if (grepl("&", subcond[k], fixed = TRUE)){
             nasubcond <- "("
