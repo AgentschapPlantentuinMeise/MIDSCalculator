@@ -29,7 +29,7 @@ CloseTabServer <- function(id, tab, parent.session) {
 
         observeEvent(input$closetab,{ 
           #close results tab
-          removeTab(session = parent.session, inputId="tabs", target=paste0("Results", tab))
+          removeTab(session = parent.session, inputId="tabs", target=paste0("start-Results", tab))
           #close modal
           removeModal()
           #set reactive
