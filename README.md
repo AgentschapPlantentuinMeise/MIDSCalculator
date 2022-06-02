@@ -42,7 +42,7 @@ secondschema_conditions_same_level.json
   * Apply "Unknown" in unknownOrMissing to all
   * Added empty string to unknownOrMissing
 
-###RInno
+## RInno
 * Follow instructions on https://github.com/ficonsulting/RInno
     * If Windows version not supported (64bit), install with installr following instructions here https://github.com/ficonsulting/RInno/issues/118#issuecomment-460094226
     * For R versions > 3, you have to edit two functions following https://github.com/ficonsulting/RInno/issues/152#issuecomment-681009752 or install the fork from github: brandonerose/RInno
