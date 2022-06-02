@@ -68,7 +68,7 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
         gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%  
           map(~{round((sum(.x, na.rm = TRUE) / nrow(gbif_dataset_mids_filtered()))*100)}) %>%
           as.numeric())  %>% 
-        set_colnames(c("MIDS_criteria", "Number_of_records","Percentage")) 
+        set_colnames(c("MIDS_elements", "Number_of_records","Percentage")) 
     })
     
 # Set up plots ------------------------------------------------------------
@@ -97,12 +97,15 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
                   vjust = -0.5, colour = "black") +
         labs(x = "MIDS level", y = "Percentage of records at specified MIDS level") +
         ggtitle("MIDS levels") +
-        theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
+        theme(plot.title = element_text(hjust = 0.5, size = 25) , 
+              plot.margin = margin(1, 1, 2, 2, "cm"),
+              axis.title = element_text(size = 15),
+              axis.text = element_text(size = 15)) 
     })
     
     #plot mids criteria
     midscritsplot<-reactive({
-      ggplot(midscrit(), aes(x= MIDS_criteria, y=Percentage, fill = factor(substr(MIDS_criteria, 5, 5)))) + 
+      ggplot(midscrit(), aes(x= MIDS_elements, y=Percentage, fill = factor(substr(MIDS_elements, 5, 5)))) + 
         geom_bar(stat = "identity") + 
         custom_colors2 +
         coord_flip() + 
@@ -110,9 +113,13 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
                   aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
         geom_text(data = subset(midscrit(), Percentage < 5), 
                   aes(y = Percentage, label = Percentage), hjust = -0.5, colour = "black") +
-        labs(x = "MIDS criteria", y = "Percentage of records that meet the criterium") +
-        ggtitle("MIDS criteria") +
-        theme(plot.title = element_text(hjust = 0.5) , plot.margin = margin(1, 1, 2, 2, "cm")) 
+        labs(x = "MIDS elements", y = "Percentage of records that meet the element") +
+        scale_x_discrete(labels = substr(midscrit()$MIDS_elements, 6, max(nchar(midscrit()$MIDS_elements)))) +
+        ggtitle("MIDS elements") +
+        theme(plot.title = element_text(hjust = 0.5, size = 25) , 
+              plot.margin = margin(1, 1, 2, 2, "cm"),
+              axis.title = element_text(size = 15),
+              axis.text = element_text(size = 15)) 
     })
     
     
