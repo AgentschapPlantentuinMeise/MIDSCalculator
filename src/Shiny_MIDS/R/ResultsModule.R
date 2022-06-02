@@ -73,10 +73,21 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     
 # Set up plots ------------------------------------------------------------
     
+    #define custom color scales
+    #MIDS levels
+    myColors <- brewer.pal(6, "Blues")[2:6]
+    names(myColors) <- c("-1", "0", "1", "2", "3")
+    custom_colors <- scale_fill_manual(name = "MIDS level", values = myColors)
+    #MIDS criteria
+    myColors2 <-  myColors[2:5]
+    names(myColors2) <- c("0", "1", "2", "3")
+    custom_colors2 <- scale_fill_manual(name = "MIDS level", values = myColors2)
+    
     #plot mids levels
     midsplot<-reactive({
-      ggplot(midssum(), aes(x=MIDS_level, y=Percentage)) + 
-        geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) +
+      ggplot(midssum(), aes(x=MIDS_level, y=Percentage, fill = factor(MIDS_level))) + 
+        geom_bar(stat = "identity") +
+        custom_colors +
         coord_cartesian(xlim = c(-1.5, 3.5)) +
         geom_text(data = subset(midssum(), Percentage >= 5), 
                   aes(y = Percentage , label = Percentage),
@@ -91,8 +102,9 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     
     #plot mids criteria
     midscritsplot<-reactive({
-      ggplot(midscrit(), aes(x= MIDS_criteria, y=Percentage)) + 
-        geom_bar(stat = "identity", fill = rgb(0.1,0.4,0.5)) + 
+      ggplot(midscrit(), aes(x= MIDS_criteria, y=Percentage, fill = factor(substr(MIDS_criteria, 5, 5)))) + 
+        geom_bar(stat = "identity") + 
+        custom_colors2 +
         coord_flip() + 
         geom_text(data = subset(midscrit(), Percentage >= 5), 
                   aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
