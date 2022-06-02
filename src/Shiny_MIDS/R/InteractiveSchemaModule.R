@@ -138,13 +138,13 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     ## create initial list of elements and mappings from existing MIDS implementation schema
     initialcritlists <- reactive({v <- list()
-    for (i in 1:length(jsonschema)){
-      midslevel <- names(jsonschema[i])
+    for (i in 1:length(jsonschema())){
+      midslevel <- names(jsonschema()[i])
       #loop over existing MIDS elements
-      for (j in 1:length(jsonschema[[i]])){
-        midscritname <- names(jsonschema[[i]][j])
+      for (j in 1:length(jsonschema()[[i]])){
+        midscritname <- names(jsonschema()[[i]][j])
         props <- list()
-        subcond <- strsplit(jsonschema[[i]][[j]], split = "\\|")
+        subcond <- strsplit(jsonschema()[[i]][[j]], split = "\\|")
         #loop over existing mappings
         for (k in seq_along(subcond)){
           props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
@@ -172,8 +172,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     ##create list of elements and mapping based on input and added elements
     addedcritlists <- eventReactive(trigger$count, {
       x <- list()
-      for (i in 1:length(jsonschema)){
-        midslevel <- names(jsonschema[i])
+      for (i in 1:length(jsonschema())){
+        midslevel <- names(jsonschema()[i])
         #get MIDS elements for a given mids level
         elements <- reactiveValuesToList(input)[[midslevel]]
         for (j in 1:length(elements)){
@@ -428,8 +428,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     ## get UoM values and properties from existing JSON schema
     UoMinitial <- reactive({v <- list()
-    for (i in 1:length(jsonUoM)){
-      v[[i]] <- rank_list(names(jsonUoM[i]), jsonUoM[[i]], ns(paste0("UoM", names(jsonUoM[i]))), options = sortable_options(group = "midsUoM"),
+    for (i in 1:length(jsonUoM())){
+      v[[i]] <- rank_list(names(jsonUoM()[i]), jsonUoM()[[i]], ns(paste0("UoM", names(jsonUoM()[i]))), options = sortable_options(group = "midsUoM"),
                           class = c("default-sortable", "custom-sortable"))
     }
     return(v)
@@ -480,7 +480,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     ## combine all UoM inputs
     UoMinputs <- reactive({x <- list()
     #get names of original properties from schema and of user specified properties
-    properties <- c(names(jsonUoM), newprops$prev_bins)
+    properties <- c(names(jsonUoM()), newprops$prev_bins)
     #get values for each property
     for (j in 1:length(properties)){
       value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
@@ -497,7 +497,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       list[["criteria"]] <- midscalccrits()
       list[["UoM"]] <- UoMinputs()
       #if UoM section wasn't visited, fill this with the UoM from file
-      if (is_empty(list[["UoM"]])){list[["UoM"]] <- jsonUoM}
+      if (is_empty(list[["UoM"]])){list[["UoM"]] <- jsonUoM()}
       list[["properties"]] <- usedproperties()
       return(list)
     })

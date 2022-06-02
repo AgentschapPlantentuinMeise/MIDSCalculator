@@ -15,7 +15,7 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
     
     #show criteria
     output$json <- renderPrint(
-      for (n_level in seq_along(schema)){
+      for (n_level in seq_along(schema())){
         if (n_level == 1)
         {#print title
           print(HTML(paste0("<div style='text-align: center; background-color: #2874A6;
@@ -35,10 +35,10 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
                           column, "; grid-row:", row, "'>")))
         #MIDS levels
         print(HTML("<div style='text-align: center;background-color: #2874A6; color: white; font-size: 20px'"))
-        print(h3(gsub("mids", "Level ", names(schema)[[n_level]])))
+        print(h3(gsub("mids", "Level ", names(schema())[[n_level]])))
         print(HTML("</div>"))
         #MIDS elements
-        mids_el <- schema[[n_level]]
+        mids_el <- schema()[[n_level]]
         for(n_element in seq_along(mids_el)){
           print(HTML("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.2); font-size: 18px; color: #1A5276'"))
           print(h4(names(mids_el)[[n_element]]))
@@ -60,16 +60,16 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
           }
         }
         print(HTML("</div>"))
-        if (n_level == length(schema))
+        if (n_level == length(schema()))
         {print(HTML("</div>"))}
       }
     )
     
     #show unknown or missing
     output$jsonUoM <- renderPrint(
-      for (n_prop in seq_along(UoM))
-      {prop <- names(UoM)[[n_prop]]
-      values <- UoM[[n_prop]]
+      for (n_prop in seq_along(UoM()))
+      {prop <- names(UoM())[[n_prop]]
+      values <- UoM()[[n_prop]]
       if (n_prop == 1)
       {#print title
         print(HTML(paste0("<div style='text-align: center; background-color: rgb(40, 116, 166, 0.8); 
@@ -95,7 +95,7 @@ ViewImplementationServer <- function(id, schema, UoM, disable) {
         print(div(value))
       }
       print(HTML("</div>"))
-      if (n_prop == length(UoM))
+      if (n_prop == length(UoM()))
       {print(HTML("</div>"))}
       }
     )

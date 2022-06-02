@@ -104,7 +104,7 @@ server <- function(input, output, session) {
 
   #get path to json schema
   jsonpath <- reactive({
-    if (input$jsonfile == "default"){
+    if (input$jsonfile == "default" | is.null(input$customjsonfile$datapath)){
       return("../../data/schemas/secondschema_conditions_same_level.json")}
     if (input$jsonfile == "custom"){
       return(input$customjsonfile$datapath)}
@@ -127,16 +127,16 @@ server <- function(input, output, session) {
   observe(
   #show schema from interactive
   if (input$editschema == TRUE){
-    ViewImplementationServer("viewcurrentschema", jsonlist$jsonlist()[[1]], jsonlist$jsonlist()[[2]], disableviewschema)
+    ViewImplementationServer("viewcurrentschema", reactive(jsonlist$jsonlist()[[1]]), reactive(jsonlist$jsonlist()[[2]]), disableviewschema)
   #show schema from file
   } else {
-    ViewImplementationServer("viewcurrentschema", jsonschema(), jsonUoM(), disableviewschema)
+    ViewImplementationServer("viewcurrentschema", jsonschema, jsonUoM, disableviewschema)
   })
     
 
 # Edit MIDS implementation interactively ----------------------------------
   
-  jsonlist <- InteractiveSchemaServer("interactive", jsonschema(), jsonUoM(), disableinteractive)
+  jsonlist <- InteractiveSchemaServer("interactive", jsonschema, jsonUoM, disableinteractive)
   
   
 # Calculations ------------------------------------------------------------
