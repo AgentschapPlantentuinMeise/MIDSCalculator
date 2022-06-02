@@ -361,8 +361,8 @@ server <- function(input, output, session) {
   #show complete MIDS implementation schema in modal window  
   observe(
   ViewImplementationServer(paste0("showschema", resulttabnr()),
-                           allschemas$prev_bins[[paste0("res", resulttabnr())]][["criteria"]],
-                           allschemas$prev_bins[[paste0("res", resulttabnr())]][["UoM"]],
+                           reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]][["criteria"]]),
+                           reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]][["UoM"]]),
                            disableviewschema
   ))
 
