@@ -341,7 +341,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     for (i in 1:length(midslevels)){
       if (midslevels[i] != "unused elements"){
         #get MIDS elements for a given mids level
-        elements <- reactiveValuesToList(input)[[midslevels[i]]]
+        elements <- req(reactiveValuesToList(input)[[midslevels[i]]])
         for (j in 1:length(elements)){
           #get mappings for each element
           valuesplit <- strsplit(elements[[j]], split = "\\\n")
