@@ -67,3 +67,19 @@ rsconnect/
 occurrence*
 #ignore output file
 *output*
+
+#Rinno
+src/bin
+src/nativefier-app
+src/RInno_installer
+src/utils
+src/www/default.ico
+src/.Rhistory
+src/default.ico
+src/infoafter.txt
+src/infobefore.txt
+src/LICENSE
+src/MIDSCalculator.bat
+src/MIDSCalculator.iss
+src/R-*.exe
+src/setup.ico

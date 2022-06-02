@@ -5,8 +5,8 @@ library(DT)
 library(shinyjs)
 library(sortable)
 library(RColorBrewer)
-source(file = "../parse_json_schema.R")
-source(file = "../MIDS-calc.R")
+source(file = "parse_json_schema.R")
+source(file = "MIDS-calc.R")
 
 #Increase upload limit to 5GB
 options(shiny.maxRequestSize = 5000*1024^2)
@@ -65,6 +65,13 @@ ui <-
 # Define server logic ----
 server <- function(input, output, session) {
   
+  if (!interactive()) {
+    session$onSessionEnded(function() {
+      stopApp()
+      q("no")
+    })
+  }
+  
   #hide schema upload when schema is default
   observe({
     if (input$jsonfile == "default"){
@@ -108,7 +115,7 @@ server <- function(input, output, session) {
   #get path to json schema
   jsonpath <- reactive({
     if (input$jsonfile == "default" | is.null(input$customjsonfile$datapath)){
-      return("../../data/schemas/secondschema_conditions_same_level.json")}
+      return("schemas/secondschema_conditions_same_level.json")}
     if (input$jsonfile == "custom"){
       return(input$customjsonfile$datapath)}
   })

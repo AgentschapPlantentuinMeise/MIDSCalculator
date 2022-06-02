@@ -41,3 +41,19 @@ secondschema_conditions_same_level.json
   * Removed verbatimCoordinates
   * Apply "Unknown" in unknownOrMissing to all
   * Added empty string to unknownOrMissing
+
+###RInno
+* Follow instructions on https://github.com/ficonsulting/RInno
+    * If Windows version not supported (64bit), install with installr following instructions here https://github.com/ficonsulting/RInno/issues/118#issuecomment-460094226
+    * For R versions > 3, you have to edit two functions following https://github.com/ficonsulting/RInno/issues/152#issuecomment-681009752 or install the fork from github: brandonerose/RInno
+* So to create the installer:
+```
+setwd("#repopath/src")
+require(RInno)
+trace(RInno::code_section,edit=T) #replace 1-3 with 1-4
+trace(get_R,edit=T) #replace 1-3 with 1-4
+create_app(app_name = "MIDSCalculator",pkgs = c("shiny","shinyBS","ggplot2","DT","shinyjs","sortable","dplyr","data.table","purrr","magrittr","jsonlite"),include_R = T)
+#depending on the versions of your installed packages, an update may be requested
+compile_iss()
+```
+* Then launch the .exe in the default dir of RInno_installer (probably as admin is required)
