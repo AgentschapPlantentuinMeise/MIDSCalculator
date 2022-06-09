@@ -166,21 +166,22 @@ pre code {
 
 <h1 class="title toc-ignore">Dataset testing</h1>
 <h4 class="author">Lynn</h4>
-<h4 class="date">3/15/2022</h4>
+<h4 class="date">3/23/2022</h4>
 
 </div>
 
 
-<div id="zenodo-dataset" class="section level2">
-<h2>Zenodo dataset</h2>
-<pre class="r"><code>zippath &lt;- &quot;data/0176996-210914110416597.zip&quot;</code></pre>
+<div id="zenodo-dataset-a-benchmark-dataset-of-herbarium-specimen-images-with-label-data" class="section level2">
+<h2>Zenodo dataset: A benchmark dataset of herbarium specimen images with label data</h2>
+<p><a href="https://doi.org/10.5281/zenodo.3697797" class="uri">https://doi.org/10.5281/zenodo.3697797</a></p>
+<p>Downloaded from GBIF using occ_download() based on occurrenceID or catalogNumber.</p>
 <pre><code>## # A tibble: 4 x 3
-##   mids_level     n  perc
+##   MIDS_level     n  perc
 ##        &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt;
-## 1          0  1163 66.1 
-## 2          1   299 17.0 
-## 3          2    95  5.40
-## 4         NA   203 11.5</code></pre>
+## 1         -1   203 11.5 
+## 2          0  1163 66.1 
+## 3          1   299 17.0 
+## 4          2    95  5.40</code></pre>
 <pre><code>##    mids0Modified mids0PhysicalSpecimenID mids0Institution mids1Name
 ## 1:      88.63636                     100         99.82955       100
 ##    mids1MaterialType mids2Location mids2CollectorName mids2CollectorNumber
@@ -191,23 +192,14 @@ pre code {
 ## 1:            92.89773</code></pre>
 <pre><code>## Number of records: 1760</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;1.17 sec elapsed&quot;</code></pre>
+## [1] &quot;1.56 sec elapsed&quot;</code></pre>
 </div>
 <div id="bgm-dataset" class="section level2">
 <h2>BGM dataset</h2>
-<pre class="r"><code>zippath &lt;- &quot;data/0165952-210914110416597.zip&quot;</code></pre>
-<pre><code>## Warning in fread(unzip(zippath, &quot;occurrence.txt&quot;), encoding = &quot;UTF-8&quot;,
-## na.strings = list_UoM$all, : Found and resolved improper quoting out-of-sample.
-## First healed line 51825: &lt;&lt;1840540026 http://www.botanicalcollections.be/
-## specimen/BR0000025790719V CC_BY_4_0 2021-11-09T00:00:00Z Meise Botanic
-## Garden http://www.botanicalcollections.be/specimen/BR0000025790719V Meise
-## Botanic Garden PhysicalObject http://biocol.org/urn:lsid:biocol.org:col:15605
-## BR Meise Botanic Garden Herbarium (BR) PRESERVED_SPECIMEN http://
-## www.botanicalcollections.be/specimen/BR0000025790719V BR0000025790719V 11257
-## Symoens J. http://viaf.org/viaf/24&gt;&gt;. If the fields are not quoted (e.g. field
-## separator does not appear within any field), try quote=&quot;&quot; to avoid this warning.</code></pre>
+<p>All specimens from the Meise Botanic Garden Herbarium (BR) on GBIF</p>
+<p><a href="https://doi.org/10.15468/dl.4bstmp" class="uri">https://doi.org/10.15468/dl.4bstmp</a></p>
 <pre><code>## # A tibble: 4 x 3
-##   mids_level       n    perc
+##   MIDS_level       n    perc
 ##        &lt;dbl&gt;   &lt;int&gt;   &lt;dbl&gt;
 ## 1          0    5768  0.316 
 ## 2          1 1765856 96.6   
@@ -223,17 +215,15 @@ pre code {
 ## 1:            77.42874</code></pre>
 <pre><code>## Number of records: 1827944</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;51.08 sec elapsed&quot;</code></pre>
+## [1] &quot;56.91 sec elapsed&quot;</code></pre>
 </div>
 <div id="university-of-vienna-institute-for-botany---herbarium-wu" class="section level2">
 <h2>University of Vienna, Institute for Botany - Herbarium WU</h2>
-<pre class="r"><code>zippath &lt;- &quot;data/0191699-210914110416597.zip&quot;
-print(&quot;https://doi.org/10.15468/dl.pesgcz&quot;)</code></pre>
-<pre><code>## [1] &quot;https://doi.org/10.15468/dl.pesgcz&quot;</code></pre>
+<p><a href="https://doi.org/10.15468/dl.pesgcz" class="uri">https://doi.org/10.15468/dl.pesgcz</a></p>
 <pre><code>## # A tibble: 1 x 3
-##   mids_level     n  perc
+##   MIDS_level     n  perc
 ##        &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt;
-## 1         NA 85576   100</code></pre>
+## 1         -1 85576   100</code></pre>
 <pre><code>##    mids0Modified mids0PhysicalSpecimenID mids0Institution mids1Name
 ## 1:             0                     100              100       100
 ##    mids1MaterialType mids2Location mids2CollectorName mids2CollectorNumber
@@ -244,15 +234,14 @@ print(&quot;https://doi.org/10.15468/dl.pesgcz&quot;)</code></pre>
 ## 1:            70.24516</code></pre>
 <pre><code>## Number of records: 85576</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;2.25 sec elapsed&quot;</code></pre>
+## [1] &quot;2.75 sec elapsed&quot;</code></pre>
 </div>
 <div id="royal-belgian-institute-of-natural-sciences-bird-collection-fish-collection-mammal-collection" class="section level2">
 <h2>Royal Belgian Institute of Natural Sciences Bird collection + Fish collection + Mammal collection</h2>
-<pre class="r"><code>zippath &lt;- &quot;data/0191702-210914110416597.zip&quot;
-print(&quot;https://doi.org/10.15468/dl.uja7fq&quot;)</code></pre>
-<pre><code>## [1] &quot;https://doi.org/10.15468/dl.uja7fq&quot;</code></pre>
+<p>Royal Belgian Institute of Natural Sciences Bird collection Royal Belgian Institute of Natural Sciences Fish collection Royal Belgian Institute of Natural Sciences Mammal collection</p>
+<p><a href="https://doi.org/10.15468/dl.uja7fq" class="uri">https://doi.org/10.15468/dl.uja7fq</a></p>
 <pre><code>## # A tibble: 2 x 3
-##   mids_level      n   perc
+##   MIDS_level      n   perc
 ##        &lt;dbl&gt;  &lt;int&gt;  &lt;dbl&gt;
 ## 1          1 185340 99.7  
 ## 2          2    519  0.279</code></pre>
@@ -266,24 +255,13 @@ print(&quot;https://doi.org/10.15468/dl.uja7fq&quot;)</code></pre>
 ## 1:                   0</code></pre>
 <pre><code>## Number of records: 185859</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;4.91 sec elapsed&quot;</code></pre>
+## [1] &quot;5.57 sec elapsed&quot;</code></pre>
 </div>
 <div id="naturalis-biodiversity-center-nl---paleontology" class="section level2">
 <h2>Naturalis Biodiversity Center (NL) - Paleontology</h2>
-<pre class="r"><code>zippath &lt;- &quot;data/0191708-210914110416597.zip&quot;
-print(&quot;https://doi.org/10.15468/dl.n36rpw&quot;)</code></pre>
-<pre><code>## [1] &quot;https://doi.org/10.15468/dl.n36rpw&quot;</code></pre>
-<pre><code>## Warning in fread(unzip(zippath, &quot;occurrence.txt&quot;), encoding = &quot;UTF-8&quot;,
-## na.strings = list_UoM$all, : Found and resolved improper quoting out-of-sample.
-## First healed line 3271: &lt;&lt;3322066570 RGM.177280@CRS CC0_1_0 2017-06-29T00:00:00Z
-## Naturalis Biodiversity Center Naturalis Biodiversity Center Naturalis
-## Biodiversity Center Micro Vertebrates Naturalis Biodiversity Center (NL)
-## - Paleontology FOSSIL_SPECIMEN https://data.biodiversitydata.nl/naturalis/
-## specimen/RGM.177280 RGM.177280 PRESENT fossilized BE Ruisbroek, bouwput
-## Rupeltunnel, Z-tracÃ© &gt;&gt;. If the fields are not quoted (e.g. field separator
-## does not appear within any field), try quote=&quot;&quot; to avoid this warning.</code></pre>
+<p><a href="https://doi.org/10.15468/dl.n36rpw" class="uri">https://doi.org/10.15468/dl.n36rpw</a></p>
 <pre><code>## # A tibble: 1 x 3
-##   mids_level      n  perc
+##   MIDS_level      n  perc
 ##        &lt;dbl&gt;  &lt;int&gt; &lt;dbl&gt;
 ## 1          0 511825   100</code></pre>
 <pre><code>##    mids0Modified mids0PhysicalSpecimenID mids0Institution mids1Name
@@ -296,23 +274,13 @@ print(&quot;https://doi.org/10.15468/dl.n36rpw&quot;)</code></pre>
 ## 1:          0.05079861</code></pre>
 <pre><code>## Number of records: 511825</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;10.47 sec elapsed&quot;</code></pre>
+## [1] &quot;10.25 sec elapsed&quot;</code></pre>
 </div>
 <div id="natural-history-museum-london-collection-specimens" class="section level2">
 <h2>Natural History Museum (London) Collection Specimens</h2>
-<pre class="r"><code>zippath &lt;- &quot;data/0184293-210914110416597.zip&quot;</code></pre>
-<pre><code>## Warning in fread(unzip(zippath, &quot;occurrence.txt&quot;), encoding = &quot;UTF-8&quot;,
-## na.strings = list_UoM$all, : Found and resolved improper quoting out-of-sample.
-## First healed line 17542: &lt;&lt;1055601588 2053101 CC0_1_0 Natural History Museum
-## NHMUK PAL Natural History Museum (London) Collection Specimens FOSSIL_SPECIMEN
-## {&quot;chronostratigraphy&quot;: &quot;Cretaceous, Late Cretaceous, Turonian&quot;, &quot;gbifissue&quot;:
-## [&quot;TAXON_MATCH_HIGHERRANK&quot;], &quot;created&quot;: 813279600000, &quot;gbifid&quot;: 1055601588,
-## &quot;determinationnames&quot;: [&quot;Meliceritites foricula d&#39;Orbigny, 1853&quot;, &quot;Meliceritites
-## foricula d&#39;Orbigny, 1853&quot;, &quot;Meliceritites sp. Taylor MS&quot;], &quot;subdepartment&quot;: &quot;ES
-## B&gt;&gt;. If the fields are not quoted (e.g. field separator does not appear within
-## any field), try quote=&quot;&quot; to avoid this warning.</code></pre>
+<p><a href="https://doi.org/10.15468/dl.esgdht" class="uri">https://doi.org/10.15468/dl.esgdht</a></p>
 <pre><code>## # A tibble: 1 x 3
-##   mids_level       n  perc
+##   MIDS_level       n  perc
 ##        &lt;dbl&gt;   &lt;int&gt; &lt;dbl&gt;
 ## 1          0 4698830   100</code></pre>
 <pre><code>##    mids0Modified mids0PhysicalSpecimenID mids0Institution mids1Name
@@ -325,7 +293,27 @@ print(&quot;https://doi.org/10.15468/dl.n36rpw&quot;)</code></pre>
 ## 1:            58.30645</code></pre>
 <pre><code>## Number of records: 4698830</code></pre>
 <pre><code>## [[1]]
-## [1] &quot;142.35 sec elapsed&quot;</code></pre>
+## [1] &quot;132.86 sec elapsed&quot;</code></pre>
+</div>
+<div id="remarks" class="section level2">
+<h2>Remarks</h2>
+<p>Certain MIDS elements included in our current MIDS interpretation seem to give recurring problems, with large numbers of specimens not meeting them:</p>
+<div id="modified" class="section level3">
+<h3>Modified</h3>
+<p>Despite looking in the metadata for a modified date, there are still datasets that don’t meet the “modified” MIDS element, and thus don’t reach the MIDS level 0.</p>
+</div>
+<div id="materialtype" class="section level3">
+<h3>MaterialType</h3>
+<p>Checks for 3 properties, which must all be true. “preparations” and “type” both seem to be absent quite often.</p>
+</div>
+<div id="typestatus" class="section level3">
+<h3>TypeStatus</h3>
+<p>Current consensus is to leave this field empty when a specimen is not a type. But since in our implemenation type status is required to reach MIDS level 2, all non type specimens get stuck at MIDS level 1. Perhaps MIDS should make a recommendation on what information to put here if type status was checked, but the specimen is not a type.</p>
+</div>
+<div id="quality-assertations" class="section level3">
+<h3>Quality Assertations</h3>
+<p>Is almost never met. GBIF checks such a wide range of issues, that almost always something is found. Not all issues are equally important however. Perhaps we could check against a subset of issues instead of against all possible issues.</p>
+</div>
 </div>
 
 

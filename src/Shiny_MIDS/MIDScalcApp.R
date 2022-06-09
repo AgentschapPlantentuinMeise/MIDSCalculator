@@ -155,7 +155,7 @@ server <- function(input, output, session) {
 
 # Calculate and show results ----------------------------------------------
 
- ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
+  ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
                 reactive(input$tabs), disablestart)
  
 }

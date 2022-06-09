@@ -1,12 +1,12 @@
 ---
 title: "Dataset testing"
 author: "Lynn"
-date: "3/15/2022"
+date: "3/23/2022"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 ```
 ```{r, include=FALSE}
 #Load libraries and functions
@@ -14,22 +14,24 @@ library(dplyr)
 library(data.table)
 library(purrr)
 library(magrittr)
-source(file = "src/parse_json_schema.R")
-source(file = "src/MIDS-calc.R")
+source(file = "../src/parse_json_schema.R")
+source(file = "../src/MIDS-calc.R")
 ```
 
-## Zenodo dataset
+## Zenodo dataset: A benchmark dataset of herbarium specimen images with label data
 
-```{r, echo = TRUE}
-zippath <- "data/0176996-210914110416597.zip"
-```
+https://doi.org/10.5281/zenodo.3697797
+
+Downloaded from GBIF using occ_download() based on occurrenceID or catalogNumber.
+
 ```{r}
+zippath <- "../data/0176996-210914110416597.zip"
 tictoc::tic()
-gbif_dataset_mids <- calculate_mids()
+gbif_dataset_mids <- calculate_mids(gbiffile = zippath, jsonfile = "../data/schemas/secondschema_conditions_same_level.json")
 
 #MIDS levels
 gbif_dataset_mids %>%
-  group_by(mids_level) %>%
+  group_by(MIDS_level) %>%
   tally()  %>%
   mutate(perc = n / sum(n) *100)
 
@@ -46,17 +48,18 @@ tictoc::tic.clearlog()
 ```
 
 ## BGM dataset
+All specimens from the Meise Botanic Garden Herbarium (BR) on GBIF
 
-```{r, echo = TRUE}
-zippath <- "data/0165952-210914110416597.zip"
-```
+https://doi.org/10.15468/dl.4bstmp
+
 ```{r}
+zippath <- "../data/0165952-210914110416597.zip"
 tictoc::tic()
-gbif_dataset_mids <- calculate_mids()
+gbif_dataset_mids <- calculate_mids(gbiffile = zippath, jsonfile = "../data/schemas/secondschema_conditions_same_level.json")
 
 #MIDS levels
 gbif_dataset_mids %>%
-  group_by(mids_level) %>%
+  group_by(MIDS_level) %>%
   tally()  %>%
   mutate(perc = n / sum(n) *100)
 
@@ -74,17 +77,16 @@ tictoc::tic.clearlog()
 
 ## University of Vienna, Institute for Botany - Herbarium WU
 
-```{r, echo = TRUE}
-zippath <- "data/0191699-210914110416597.zip"
-print("https://doi.org/10.15468/dl.pesgcz")
-```
+https://doi.org/10.15468/dl.pesgcz
+
 ```{r}
+zippath <- "../data/0191699-210914110416597.zip"
 tictoc::tic()
-gbif_dataset_mids <- calculate_mids()
+gbif_dataset_mids <- calculate_mids(gbiffile = zippath, jsonfile = "../data/schemas/secondschema_conditions_same_level.json")
 
 #MIDS levels
 gbif_dataset_mids %>%
-  group_by(mids_level) %>%
+  group_by(MIDS_level) %>%
   tally()  %>%
   mutate(perc = n / sum(n) *100)
 
@@ -100,18 +102,18 @@ print(tictoc::tic.log(format = TRUE))
 tictoc::tic.clearlog()
 ```
 ## Royal Belgian Institute of Natural Sciences Bird collection + Fish collection + Mammal collection
+Royal Belgian Institute of Natural Sciences Bird collection Royal Belgian Institute of Natural Sciences Fish collection Royal Belgian Institute of Natural Sciences Mammal collection
 
-```{r, echo = TRUE}
-zippath <- "data/0191702-210914110416597.zip"
-print("https://doi.org/10.15468/dl.uja7fq")
-```
+https://doi.org/10.15468/dl.uja7fq
+
 ```{r}
+zippath <- "../data/0191702-210914110416597.zip"
 tictoc::tic()
-gbif_dataset_mids <- calculate_mids()
+gbif_dataset_mids <- calculate_mids(gbiffile = zippath, jsonfile = "../data/schemas/secondschema_conditions_same_level.json")
 
 #MIDS levels
 gbif_dataset_mids %>%
-  group_by(mids_level) %>%
+  group_by(MIDS_level) %>%
   tally()  %>%
   mutate(perc = n / sum(n) *100)
 
@@ -128,17 +130,16 @@ tictoc::tic.clearlog()
 ```
 ## Naturalis Biodiversity Center (NL) - Paleontology
 
-```{r, echo = TRUE}
-zippath <- "data/0191708-210914110416597.zip"
-print("https://doi.org/10.15468/dl.n36rpw")
-```
+https://doi.org/10.15468/dl.n36rpw
+
 ```{r}
+zippath <- "../data/0191708-210914110416597.zip"
 tictoc::tic()
-gbif_dataset_mids <- calculate_mids()
+gbif_dataset_mids <- calculate_mids(gbiffile = zippath, jsonfile = "../data/schemas/secondschema_conditions_same_level.json")
 
 #MIDS levels
 gbif_dataset_mids %>%
-  group_by(mids_level) %>%
+  group_by(MIDS_level) %>%
   tally()  %>%
   mutate(perc = n / sum(n) *100)
 
@@ -156,16 +157,16 @@ tictoc::tic.clearlog()
 
 ##  Natural History Museum (London) Collection Specimens
 
-```{r, echo = TRUE}
-zippath <- "data/0184293-210914110416597.zip"
-```
+https://doi.org/10.15468/dl.esgdht
+
 ```{r}
+zippath <- "../data/0184293-210914110416597.zip"
 tictoc::tic()
-gbif_dataset_mids <- calculate_mids()
+gbif_dataset_mids <- calculate_mids(gbiffile = zippath, jsonfile = "../data/schemas/secondschema_conditions_same_level.json")
 
 #MIDS levels
 gbif_dataset_mids %>%
-  group_by(mids_level) %>%
+  group_by(MIDS_level) %>%
   tally()  %>%
   mutate(perc = n / sum(n) *100)
 
@@ -181,5 +182,17 @@ print(tictoc::tic.log(format = TRUE))
 tictoc::tic.clearlog()
 ```
 
+## Remarks
+Certain MIDS elements included in our current MIDS interpretation seem to give recurring problems, with large numbers of specimens not meeting them:
 
+### Modified
+Despite looking in the metadata for a modified date, there are still datasets that don't meet the "modified" MIDS     element, and thus don't reach the MIDS level 0.
 
+### MaterialType
+Checks for 3 properties, which must all be true. "preparations" and "type" both seem to be absent quite often.
+
+### TypeStatus
+Current consensus is to leave this field empty when a specimen is not a type. But since in our implemenation type status is required to reach MIDS level 2, all non type specimens get stuck at MIDS level 1. Perhaps MIDS should make a recommendation on what information to put here if type status was checked, but the specimen is not a type.  
+
+### Quality Assertations
+Is almost never met. GBIF checks such a wide range of issues, that almost always something is found. Not all issues are equally important however. Perhaps we could check against a subset of issues instead of against all possible issues.
