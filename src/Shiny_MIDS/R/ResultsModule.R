@@ -7,12 +7,14 @@ ResultsUI <- function(id) {
 }
 
 ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit, 
-                          jsonpath, customjsonname, jsonlist, jsonschema, jsonUoM, jsonfile, 
+                          jsonpath, customjsonname, jsonschema, jsonfile, 
                           tabs, disableviewschema, disablestart) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
     
-    #enable/ disable start action button
+
+# Enable/ disable start action button -------------------------------------
+
     observe(
       if (disablestart() == TRUE){
         shinyjs::disable("start")
@@ -30,7 +32,7 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
       }
       else if (edit() == TRUE){
         withProgress(message = 'Calculating MIDS scores', value = 0, {
-          calculate_mids(gbiffile = gbiffile(), jsontype = "list", jsonlist = jsonlist() )})
+          calculate_mids(gbiffile = gbiffile(), jsontype = "list", jsonlist = jsonschema() )})
       }
     })
     
@@ -45,19 +47,67 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     #save all MIDS implementations
     allschemas <- reactiveValues(prev_bins = NULL)
     observeEvent(input$start, {
-      if (edit() == TRUE){
-        allschemas$prev_bins[[paste0("res", input$start)]] <- jsonlist()[1:2]
-      } else {
-        allschemas$prev_bins[[paste0("res", input$start)]] <- c(list("criteria" = jsonschema()), list("UoM" = jsonUoM()))
+      allschemas$prev_bins[[paste0("res", input$start)]] <- jsonschema()[1:2]
+    })
+    
+    #get which result tab is active
+    resulttabnr <- reactive({
+      if (grepl("Results", tabs())){
+        as.integer(gsub("start-Results", "", tabs()))
       }
+    })
+    
+# Filters -----------------------------------------------------------------
+    
+    #Initialize filters when new analysis is started
+    observeEvent(input$start, {
+      #reset rank filter when new dataset is provided
+      updateSelectInput(parent.session, ns(paste0("rank", input$start)),
+                        selected = "None")
+      #update country filter with countries from the dataset
+      updateSelectInput(parent.session, ns(paste0("country", input$start)), label = "Filter on countrycode",
+                        choices = sort(unique(gbif_dataset_mids()$countryCode)))
+      #update date filter with dates from the dataset
+      updateSliderInput(parent.session, ns(paste0("date", input$start)), label = "Filter on collection date",
+                        min = min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
+                        max = max(gbif_dataset_mids()$eventDate, na.rm = TRUE),
+                        value = c(min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
+                                  max(gbif_dataset_mids()$eventDate, na.rm = TRUE)),
+                        timeFormat = "%m/%d/%Y")
+    })
+    
+    #update taxonomy filter when a taxonomic rank is chosen
+    observeEvent(input[[paste0("rank", resulttabnr())]], {
+      if (input[[paste0("rank", resulttabnr())]] != "None"){
+        #update taxonomy filter with values from the dataset
+        updateSelectInput(parent.session, ns(paste0("taxonomy", resulttabnr())), label = "Filter on taxonomy",
+                          choices = sort(unique(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]])[[tolower(input[[paste0("rank", resulttabnr())]])]])))
+        #only show taxonomy filter when a rank is chosen
+        shinyjs::show(paste0("taxonomy", resulttabnr()))
+      } else {shinyjs::hide(paste0("taxonomy", resulttabnr()))}
+    })
+    
+    #apply filters if they are set
+    gbif_dataset_mids_filtered <- reactive({
+      req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]) %>%
+        {if (!is.null(input[[paste0("country", resulttabnr())]]) && input[[paste0("country", resulttabnr())]] != "All") {
+          filter(., countryCode %in% input[[paste0("country", resulttabnr())]])} else {.}} %>%
+        {if (req(input[[paste0("date", resulttabnr())]][1]) != 0) {
+          filter(., eventDate >= input[[paste0("date", resulttabnr())]][1])} else {.}} %>%
+        {if (req(input[[paste0("date", resulttabnr())]][2]) != 100) {
+          filter(., eventDate <= input[[paste0("date", resulttabnr())]][2])} else {.}} %>%
+        {if (input[[paste0("rank", resulttabnr())]] != "None" && !is.null(input[[paste0("taxonomy", resulttabnr())]]) && input[[paste0("taxonomy", resulttabnr())]] != "All"){
+          filter(., .data[[tolower(input[[paste0("rank", resulttabnr())]])]] %in% input[[paste0("taxonomy", resulttabnr())]])} else {.}}
     })
     
 # Calculate summarized results --------------------------------------------
     
     #create summary of MIDS levels
     midssum <- reactive({
-      gbif_dataset_mids_filtered() %>% group_by(MIDS_level) %>% summarise(Number_of_records = n(), Percentage = round(n()/nrow(.)*100))
+      gbif_dataset_mids_filtered() %>% group_by(MIDS_level) %>% 
+        summarise(Number_of_records = n(), Percentage = round(n()/nrow(.)*100))
     })
+    
     #create summary of MIDS criteria
     midscrit <- reactive({
       cbind.data.frame(
@@ -123,112 +173,67 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     })
     
     
-# Filters -----------------------------------------------------------------
-    
-    #Setting filters when new analysis is started
-    observeEvent(input$start, {
-      #reset rank filter when new dataset is provided
-      updateSelectInput(parent.session, ns(paste0("rank", input$start)),
-                        selected = "None")
-      #update country filter with countries from the dataset
-      updateSelectInput(parent.session, ns(paste0("country", input$start)), label = "Filter on countrycode",
-                        choices = sort(unique(gbif_dataset_mids()$countryCode)))
-      #update date filter with dates from the dataset
-      updateSliderInput(parent.session, ns(paste0("date", input$start)), label = "Filter on collection date",
-                        min = min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
-                        max = max(gbif_dataset_mids()$eventDate, na.rm = TRUE),
-                        value = c(min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
-                                  max(gbif_dataset_mids()$eventDate, na.rm = TRUE)),
-                        timeFormat = "%m/%d/%Y")
-    })
-
-    resulttabnr <- reactive({if (grepl("Results", tabs())) {as.integer(gsub("start-Results", "", tabs()))}})
-
-    #update taxonomy filter when a taxonomic rank is chosen
-    observeEvent(input[[paste0("rank", resulttabnr())]], {
-      if (input[[paste0("rank", resulttabnr())]] != "None"){
-        #update taxonomy filter with values from the dataset
-        updateSelectInput(parent.session, ns(paste0("taxonomy", resulttabnr())), label = "Filter on taxonomy",
-                          choices = sort(unique(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]])[[tolower(input[[paste0("rank", resulttabnr())]])]])))
-        #only show taxonomy filter when a rank is chosen
-        shinyjs::show(paste0("taxonomy", resulttabnr()))
-      } else {shinyjs::hide(paste0("taxonomy", resulttabnr()))}
-    })
-    
-    #apply filters if they are set
-    gbif_dataset_mids_filtered <- reactive({
-      req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]) %>%
-        {if (!is.null(input[[paste0("country", resulttabnr())]]) && input[[paste0("country", resulttabnr())]] != "All") {
-          filter(., countryCode %in% input[[paste0("country", resulttabnr())]])} else {.}} %>%
-        {if (req(input[[paste0("date", resulttabnr())]][1]) != 0) {
-          filter(., eventDate >= input[[paste0("date", resulttabnr())]][1])} else {.}} %>%
-        {if (req(input[[paste0("date", resulttabnr())]][2]) != 100) {
-          filter(., eventDate <= input[[paste0("date", resulttabnr())]][2])} else {.}} %>%
-        {if (input[[paste0("rank", resulttabnr())]] != "None" && !is.null(input[[paste0("taxonomy", resulttabnr())]]) && input[[paste0("taxonomy", resulttabnr())]] != "All"){
-          filter(., .data[[tolower(input[[paste0("rank", resulttabnr())]])]] %in% input[[paste0("taxonomy", resulttabnr())]])} else {.}}
-    })
-    
 # Create Results tabs -----------------------------------------------------
     
     #add new tab for each analysis
     observeEvent(input$start, {appendTab(
        session = parent.session, "tabs", 
-       tabPanel(title = tags$span(paste0("Results", input$start, "    "),
-                                  CloseTabUI(ns(paste0("close", input$start)))
-       ), 
-       value = ns(paste0("Results", input$start)), 
-       sidebarLayout(
-         sidebarPanel(
-           helpText("Filter to view MIDS scores for part of the dataset"),
-           sliderInput(ns(paste0("date", input$start)), 
-                       label = "Filter on collection date:",
-                       min = 0, max = 100, value = c(0, 100)),
-           selectizeInput(ns(paste0("country", input$start)), 
-                          label = "Filter on countrycode",  
-                          choices = "Nothing yet",
-                          multiple = TRUE),
-           selectInput(ns(paste0("rank", input$start)), 
-                       label = "Filter on the following taxonomic rank",
-                       choices = c("None", "Class", "Order", "Family", "Subfamily", "Genus")),
-           selectizeInput(ns(paste0("taxonomy", input$start)), 
-                          label = "Filter on taxonomy", 
-                          choices = "Select a rank first",
-                          selected = "Select a rank first",
-                          multiple = TRUE)
-         ),
-         mainPanel(
-           tabsetPanel(type = "tabs",
-                       tabPanel("Plots",
-                                plotOutput(ns(paste0("midsplot_prev", input$start))),
-                                plotOutput(ns(paste0("midscritsplot", input$start)))),
-                       tabPanel("Summary tables", 
-                                DT::dataTableOutput(ns(paste0("summary", input$start))), 
-                                br(),
-                                DT::dataTableOutput(ns(paste0("summarycrit", input$start)))),
-                       tabPanel("Record table", 
-                                DT::dataTableOutput(ns(paste0("table", input$start)))),
-                       tabPanel("Export csv",
-                                br(), br(),
-                                downloadButton(ns(paste0("downloadData", input$start)), "Download all"),
-                                br(), br(),
-                                downloadButton(ns(paste0("downloadDataFiltered", input$start)), "Download filtered dataset"))
+       tabPanel(
+         title = tags$span(paste0("Results", input$start, "    "),
+                          CloseTabUI(ns(paste0("close", input$start)))), 
+         value = ns(paste0("Results", input$start)), 
+         sidebarLayout(
+           sidebarPanel(
+             helpText("Filter to view MIDS scores for part of the dataset"),
+             sliderInput(ns(paste0("date", input$start)), 
+                         label = "Filter on collection date:",
+                         min = 0, max = 100, value = c(0, 100)),
+             selectizeInput(ns(paste0("country", input$start)), 
+                            label = "Filter on countrycode",  
+                            choices = "Nothing yet",
+                            multiple = TRUE),
+             selectInput(ns(paste0("rank", input$start)), 
+                         label = "Filter on the following taxonomic rank",
+                         choices = c("None", "Class", "Order", "Family", "Subfamily", "Genus")),
+             selectizeInput(ns(paste0("taxonomy", input$start)), 
+                            label = "Filter on taxonomy", 
+                            choices = "Select a rank first",
+                            selected = "Select a rank first",
+                            multiple = TRUE)
            ),
-           br(),
-           wellPanel(
-             fluidRow(
-               column(6,
-                      helpText("Dataset:"),
-                      verbatimTextOutput(ns(paste0("Used_dataset", input$start)))
-               ),
-               column(6,
-                      helpText("MIDS implementation:"),
-                      verbatimTextOutput(ns(paste0("Used_MIDS_implementation", input$start))),
-                      ViewImplementationUI(ns(paste0("showschema", input$start)))
-               )
-             ))
+           mainPanel(
+            tabsetPanel(type = "tabs",
+             tabPanel("Plots",
+                      plotOutput(ns(paste0("midsplot_prev", input$start))),
+                      plotOutput(ns(paste0("midscritsplot", input$start)))),
+             tabPanel("Summary tables", 
+                      DT::dataTableOutput(ns(paste0("summary", input$start))), 
+                      br(),
+                      DT::dataTableOutput(ns(paste0("summarycrit", input$start)))),
+             tabPanel("Record table", 
+                      DT::dataTableOutput(ns(paste0("table", input$start)))),
+             tabPanel("Export csv",
+                      br(), br(),
+                      downloadButton(ns(paste0("downloadData", input$start)), "Download all"),
+                      br(), br(),
+                      downloadButton(ns(paste0("downloadDataFiltered", input$start)), "Download filtered dataset"))
+             ),
+             br(),
+             wellPanel(
+               fluidRow(
+                 column(6,
+                        helpText("Dataset:"),
+                        verbatimTextOutput(ns(paste0("Used_dataset", input$start)))
+                 ),
+                 column(6,
+                        helpText("MIDS implementation:"),
+                        verbatimTextOutput(ns(paste0("Used_MIDS_implementation", input$start))),
+                        ViewImplementationUI(ns(paste0("showschema", input$start)))
+                 )
+               ))
+           )
          )
-       )
-       )
+         )
     )
       
 
@@ -292,9 +297,9 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     #show complete MIDS implementation schema in modal window
     observe(
       ViewImplementationServer(paste0("showschema", resulttabnr()),
-                               reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]][["criteria"]]),
-                               reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]][["UoM"]]),
-                               disableviewschema
+         reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]][["criteria"]]),
+         reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]][["UoM"]]),
+         disableviewschema
       ))
     
 # Open results tab automatically when calculations are performed ----------
