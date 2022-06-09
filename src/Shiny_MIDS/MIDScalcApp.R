@@ -130,7 +130,16 @@ server <- function(input, output, session) {
       return(interactiveschema$jsonlist())
     } else {
       #get schema from file
-      return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile())))
+      #get filename
+      if (input$jsonfile == "custom"){
+        filename <- paste("Custom:", input$customjsonfile$name)
+      } else {
+        filename <- paste("Default:", basename(jsonpath()))
+      }
+      #return schema
+      return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
+        list("properties" = read_json_mids_criteria(file = jsonpath(), out = "properties")),
+        list("filename"= filename)))
     }
   })
   
@@ -151,9 +160,8 @@ server <- function(input, output, session) {
 
 # Calculate and show results ----------------------------------------------
 
- ResultsServer("start", session, reactive(input$gbiffile), reactive(input$editschema), 
-                jsonpath, reactive(input$customjsonfile$name), jsonschemafinal,
-                reactive(input$jsonfile), reactive(input$tabs), disableviewschema, disablestart)
+ ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
+                reactive(input$tabs), disableviewschema, disablestart)
  
 }
 # Run the app ----

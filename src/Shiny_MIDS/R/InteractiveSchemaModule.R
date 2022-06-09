@@ -51,17 +51,6 @@ InteractiveSchemaUI <- function(id) {
                )
              )
            ),
-           fluidRow(
-             column(
-               width = 12,
-               tags$b("Result"),
-               column(
-                 width = 12,
-                 tags$p("input$midscriteria"),
-                 verbatimTextOutput(ns("results_3"))
-               )
-             )
-           )
         ),
         tabPanel("Unknown or Missing values",
            fluidRow(
@@ -410,12 +399,6 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     }
     return(x)
     })
-    
-    #show output
-    output$results_3 <-
-      renderPrint({
-        jsonlist()
-      })
     
     # Edit Unknown or Missing section -----------------------------------------
     

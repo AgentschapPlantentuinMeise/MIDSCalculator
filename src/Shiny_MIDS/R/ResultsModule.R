@@ -6,9 +6,8 @@ ResultsUI <- function(id) {
   )
 }
 
-ResultsServer <- function(id, parent.session, gbiffile, edit, 
-                          jsonpath, customjsonname, jsonschema, jsonfiletype, 
-                          tabs, disableviewschema, disablestart) {
+ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
+                          tab, disableviewschema, disablestart) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
     
@@ -26,14 +25,9 @@ ResultsServer <- function(id, parent.session, gbiffile, edit,
     
     #calculate mids levels and criteria
     gbif_dataset_mids <- eventReactive(input$start, {
-      if (edit() == FALSE){
-        withProgress(message = 'Calculating MIDS scores', value = 0, {
-          calculate_mids(gbiffile = gbiffile()$datapath, jsonfile = jsonpath())})
-      }
-      else if (edit() == TRUE){
-        withProgress(message = 'Calculating MIDS scores', value = 0, {
-          calculate_mids(gbiffile = gbiffile()$datapath, jsontype = "list", jsonlist = jsonschema() )})
-      }
+      withProgress(message = 'Calculating MIDS scores', value = 0, {
+        calculate_mids(gbiffile = gbiffile()$datapath, jsontype = "list", jsonlist = jsonschema())
+      })
     })
     
 # Allow multiple results tabs --------------------------------------------
@@ -58,8 +52,8 @@ ResultsServer <- function(id, parent.session, gbiffile, edit,
     
     #get which result tab is active
     resulttabnr <- reactive({
-      if (grepl("Results", tabs())){
-        as.integer(gsub("start-Results", "", tabs()))
+      if (grepl("Results", tab())){
+        as.integer(gsub("start-Results", "", tab()))
       }
     })
     
@@ -245,38 +239,37 @@ ResultsServer <- function(id, parent.session, gbiffile, edit,
 
 # Render outputs ----------------------------------------------------------
 
-
-      #render plots
-      output[[paste0("midsplot_prev", input$start)]] <- renderPlot(midsplot())
-      output[[paste0("midscritsplot", input$start)]] <- renderPlot(midscritsplot())
-      #render summaries
-      output[[paste0("summary", input$start)]] <- 
-        DT::renderDataTable(midssum(), rownames = FALSE, options = list(dom = 't'))
-      output[[paste0("summarycrit", input$start)]] <- 
-        DT::renderDataTable(midscrit(), rownames = FALSE, options = list(dom = 't'))
-      #render table
-      output[[paste0("table", input$start)]] <- 
-        DT::renderDataTable(gbif_dataset_mids_filtered())
-      #downloads
-      output[[paste0("downloadData", input$start)]] <- 
-        downloadHandler(
-          filename = function() {
-            paste0(tools::file_path_sans_ext(alldatasetnames$prev_bins[[paste0("res", resulttabnr())]]),
-                   "_MIDS.csv")
-          },
-          content = function(file) {
-            write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE)
-          })
-      output[[paste0("downloadDataFiltered", input$start)]] <- 
-        downloadHandler(
-          filename = function() {
-            paste0(tools::file_path_sans_ext(alldatasetnames$prev_bins[[paste0("res", resulttabnr())]]), 
-                   "_MIDS_filtered.csv")
-          },
-          content = function(file) {
-            write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
-          })
-      
+    #render plots
+    output[[paste0("midsplot_prev", input$start)]] <- renderPlot(midsplot())
+    output[[paste0("midscritsplot", input$start)]] <- renderPlot(midscritsplot())
+    #render summaries
+    output[[paste0("summary", input$start)]] <- 
+      DT::renderDataTable(midssum(), rownames = FALSE, options = list(dom = 't'))
+    output[[paste0("summarycrit", input$start)]] <- 
+      DT::renderDataTable(midscrit(), rownames = FALSE, options = list(dom = 't'))
+    #render table
+    output[[paste0("table", input$start)]] <- 
+      DT::renderDataTable(gbif_dataset_mids_filtered())
+    #downloads
+    output[[paste0("downloadData", input$start)]] <- 
+      downloadHandler(
+        filename = function() {
+          paste0(tools::file_path_sans_ext(alldatasetnames$prev_bins[[paste0("res", resulttabnr())]]),
+                 "_MIDS.csv")
+        },
+        content = function(file) {
+          write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE)
+        })
+    output[[paste0("downloadDataFiltered", input$start)]] <- 
+      downloadHandler(
+        filename = function() {
+          paste0(tools::file_path_sans_ext(alldatasetnames$prev_bins[[paste0("res", resulttabnr())]]), 
+                 "_MIDS_filtered.csv")
+        },
+        content = function(file) {
+          write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
+        })
+    
     })
     
 
@@ -292,10 +285,8 @@ ResultsServer <- function(id, parent.session, gbiffile, edit,
     observe(
       output[[paste0("Used_MIDS_implementation", input$start)]] <-
         renderText(
-          if (isolate(jsonfiletype()) == "default" & isolate(edit()) == FALSE){
-            return(paste("Default:", isolate(basename(jsonpath()))))}
-          else if (isolate(jsonfiletype()) == "custom" & isolate(edit()) == FALSE){
-            return(paste("Custom:", isolate(basename(customjsonname()))))}
+          if (!is.null(isolate(jsonschema()$filename))){
+            return(isolate(jsonschema()$filename))}
           else {return("Interactive")}
         )
     )
@@ -320,8 +311,8 @@ ResultsServer <- function(id, parent.session, gbiffile, edit,
     #close tabs
     clear <- reactiveValues()
     observe({
-      if (grepl("Results", tabs())){
-        i <- gsub("start-Results", "", tabs())
+      if (grepl("Results", tab())){
+        i <- gsub("start-Results", "", tab())
         clear[[paste0("res", i)]] <- CloseTabServer(paste0("close", i), i, parent.session)
       }
     }
@@ -329,11 +320,12 @@ ResultsServer <- function(id, parent.session, gbiffile, edit,
 
     #clear associated saved data
     observe(
-      if (grepl("Results", tabs())){
-        i <- gsub("start-Results", "", tabs())
+      if (grepl("Results", tab())){
+        i <- gsub("start-Results", "", tab())
         if (req(clear[[paste0("res", i)]]()$value) == "clear"){
           allmidscalc$prev_bins[[paste0("res", i)]] <- NULL
           allschemas$prev_bins[[paste0("res", i)]] <- NULL
+          alldatasetnames$prev_bins[[paste0("res", i)]] <- NULL
         }
       }
     )
