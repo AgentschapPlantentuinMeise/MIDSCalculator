@@ -310,26 +310,19 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
 
     #close tabs
     clear <- reactiveValues()
-    observe({
-      if (grepl("Results", tab())){
-        i <- gsub("start-Results", "", tab())
-        clear[[paste0("res", i)]] <- CloseTabServer(paste0("close", i), i, parent.session)
-      }
-    }
+    observe(
+      clear[[paste0("res", resulttabnr())]] <- CloseTabServer(paste0("close", resulttabnr()), resulttabnr(), parent.session)
     )
 
     #clear associated saved data
     observe(
-      if (grepl("Results", tab())){
-        i <- gsub("start-Results", "", tab())
-        if (req(clear[[paste0("res", i)]]()$value) == "clear"){
-          allmidscalc$prev_bins[[paste0("res", i)]] <- NULL
-          allschemas$prev_bins[[paste0("res", i)]] <- NULL
-          alldatasetnames$prev_bins[[paste0("res", i)]] <- NULL
-        }
+      if (req(clear[[paste0("res", resulttabnr())]]()$value) == "clear"){
+        allmidscalc$prev_bins[[paste0("res", resulttabnr())]] <- NULL
+        allschemas$prev_bins[[paste0("res", resulttabnr())]] <- NULL
+        alldatasetnames$prev_bins[[paste0("res", resulttabnr())]] <- NULL
       }
     )
     
-
+    
   })
 }

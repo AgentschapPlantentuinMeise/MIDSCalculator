@@ -47,7 +47,7 @@ ui <-
             fluidRow(column(width = 6, offset = 3,
             wellPanel(
             h4("Specify MIDS implementation"), br(),
-            radioButtons("jsonfile", label = NULL, 
+            radioButtons("jsonfiletype", label = NULL, 
                          choiceNames = list("Use default", 
                                             "Upload custom"),
                          choiceValues = list("default", "custom")),
@@ -70,7 +70,7 @@ server <- function(input, output, session) {
 
   #hide schema upload when schema is default
   observe({
-    if (input$jsonfile == "default"){
+    if (input$jsonfiletype == "default"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
   })
   
@@ -79,14 +79,14 @@ server <- function(input, output, session) {
   observe({
     if (is.null(input$gbiffile) |
         (input$editschema == TRUE && interactiveschema$visited() == FALSE) |
-        (input$jsonfile == "custom" & is.null(input$customjsonfile))){
+        (input$jsonfiletype == "custom" & is.null(input$customjsonfile))){
       disablestart(TRUE)} else {disablestart(FALSE)}
   })
     
   #disable "View MIDS implementation" when custom upload is chosen but empty, and when edit schema is chosen but not visited
   disableviewschema <- reactiveVal(FALSE)
   observe({
-    if (input$jsonfile == "custom" & is.null(input$customjsonfile) | 
+    if (input$jsonfiletype == "custom" & is.null(input$customjsonfile) | 
         (input$editschema == TRUE && interactiveschema$visited() == FALSE)) {
       disableviewschema(TRUE)} else {disableviewschema(FALSE)}
   })
@@ -94,7 +94,7 @@ server <- function(input, output, session) {
   #disable "Edit MIDS implementation" if schema doesn't need to be edited and when custom upload is chosen but empty 
   disableinteractive <- reactiveVal(FALSE)
   observe({
-    if ((input$jsonfile == "custom" & is.null(input$customjsonfile)) |
+    if ((input$jsonfiletype == "custom" & is.null(input$customjsonfile)) |
         input$editschema == FALSE){
       disableinteractive(TRUE)} else {disableinteractive(FALSE)}
   })
@@ -104,9 +104,9 @@ server <- function(input, output, session) {
 
   #get path to json schema
   jsonpath <- reactive({
-    if (input$jsonfile == "default" | is.null(input$customjsonfile$datapath)){
+    if (input$jsonfiletype == "default" | is.null(input$customjsonfile$datapath)){
       return("../../data/schemas/secondschema_conditions_same_level.json")}
-    if (input$jsonfile == "custom"){
+    if (input$jsonfiletype == "custom"){
       return(input$customjsonfile$datapath)}
   })
   
@@ -120,7 +120,7 @@ server <- function(input, output, session) {
     read_json_unknownOrMissing(file = jsonpath())
   })
   
-  #get final json schema
+  #get final MIDS implementation schema (either from file or from interactive editing)
   jsonschemafinal <- reactive({ 
     if (input$editschema == TRUE){
       # get interactive schema
@@ -128,7 +128,7 @@ server <- function(input, output, session) {
     } else {
       #get schema from file
       #get filename
-      if (input$jsonfile == "custom"){
+      if (input$jsonfiletype == "custom"){
         filename <- paste("Custom:", input$customjsonfile$name)
       } else {
         filename <- paste("Default:", basename(jsonpath()))
@@ -144,15 +144,13 @@ server <- function(input, output, session) {
 # Show current MIDS implementation ----------------------------------------
   
   #view MIDS implementation in modal window
-  observe({
-    ViewImplementationServer("viewcurrentschema", reactive(jsonschemafinal()), 
-                              disableviewschema)
-  })
+  ViewImplementationServer("viewcurrentschema", jsonschemafinal, disableviewschema)
     
 
 # Edit MIDS implementation interactively ----------------------------------
   
-  interactiveschema <- InteractiveSchemaServer("interactive", jsonschemafile, jsonUoMfile, disableinteractive)
+  interactiveschema <- InteractiveSchemaServer("interactive", jsonschemafile, 
+                                               jsonUoMfile, disableinteractive)
   
 
 # Calculate and show results ----------------------------------------------

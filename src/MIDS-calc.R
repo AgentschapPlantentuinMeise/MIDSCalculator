@@ -3,20 +3,9 @@ library(data.table)
 library(purrr)
 library(magrittr)
 
-# Parameters --------------------------------------------------------------
-# zippath <- "data/0176996-210914110416597.zip"
-# jsonpath <- "data/schemas/secondschema_conditions_same_level.json"
-# occpath <- "data/occurrence.txt"
-
-# Load functions ----------------------------------------------------------
-# source(file = "src/parse_json_schema.R")
-
-calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath, jsontype = "file", jsonlist = NULL) {
+calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NULL) {
 
   # Get data ----------------------------------------------------------------
-  
-  #from occurence.txt file
-  # gbif_dataset <- fread(occpath, encoding = "UTF-8", colClasses = "character")
   
   #get unknown or missing values
   if (jsontype == "file"){
@@ -33,7 +22,6 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath, jsontype = "
   else if (jsontype == "list"){
     list_props <- jsonlist[["properties"]]
   }
-  
   
   #add other needed/interesting properties
   list_props <- c(list_props, "datasetKey", "countryCode", "class", "order", "family", "subfamily", "genus")
@@ -112,10 +100,10 @@ calculate_mids <- function(gbiffile = zippath, jsonfile = jsonpath, jsontype = "
   #For each MIDS condition in the list, check if the criteria for that condition 
   #are TRUE or FALSE and add the results in a new column
   for (j in 1:length(list_criteria)){
-    midsname <- names(list_criteria[j])
+    midslevel <- names(list_criteria[j])
     midscrit <- list_criteria[[j]]
     for (i in 1:length(midscrit)){
-      columnname = paste0(midsname,  names(midscrit[i]))
+      columnname = paste0(midslevel,  names(midscrit[i]))
       gbif_dataset_mids %<>%
         mutate("{columnname}" := !!rlang::parse_expr(midscrit[[i]]))
     }

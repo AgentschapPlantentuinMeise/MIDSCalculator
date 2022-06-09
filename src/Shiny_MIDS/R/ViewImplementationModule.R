@@ -16,14 +16,15 @@ ViewImplementationServer <- function(id, schema, disable) {
     #show criteria
     output$json <- renderPrint(
       for (n_level in seq_along(schema()$criteria)){
-        if (n_level == 1)
-        {#print title
+        if (n_level == 1){
+          #print title
           print(HTML(paste0("<div style='text-align: center; background-color: #2874A6;
               font-size: 25px; color: white'>", "MIDS criteria", "</div>")))
           print(HTML("<div style='text-align: center'> To reach a MIDS level, all of its elements must be met. </div>"))
           print(HTML("<div style='text-align: center'> To meet a MIDS element, one of its mappings must be present. </div>"))
           #initialize grid
-          print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px'>"))}
+          print(HTML("<div style='display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px'>"))
+        }
         #determine position of element in grid
         if (n_level %% 2 == 0){
           column <- 2

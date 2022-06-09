@@ -26,13 +26,14 @@ CloseTabServer <- function(id, tab, parent.session) {
         }, ignoreInit = TRUE)
         
         clear <- reactiveValues(value = NULL)
-
+        
+        #if confirmation to close is given:
         observeEvent(input$closetab,{ 
           #close results tab
           removeTab(session = parent.session, inputId="tabs", target=paste0("start-Results", tab))
           #close modal
           removeModal()
-          #set reactive
+          #set reactive to clear data
           clear$value <- "clear"
         })
         
