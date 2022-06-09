@@ -89,9 +89,6 @@ server <- function(input, output, session) {
     if (input$jsonfile == "custom" & is.null(input$customjsonfile) | 
         (input$editschema == TRUE && interactiveschema$visited() == FALSE)) {
       disableviewschema(TRUE)} else {disableviewschema(FALSE)}
-    #never disable the view button on results tabs
-    if (grepl("Results", input$tabs)) {
-      disableviewschema(FALSE)}
   })
   
   #disable "Edit MIDS implementation" if schema doesn't need to be edited and when custom upload is chosen but empty 
@@ -148,8 +145,8 @@ server <- function(input, output, session) {
   
   #view MIDS implementation in modal window
   observe({
-    ViewImplementationServer("viewcurrentschema", reactive(jsonschemafinal()[[1]]), 
-                             reactive(jsonschemafinal()[[2]]), disableviewschema)
+    ViewImplementationServer("viewcurrentschema", reactive(jsonschemafinal()), 
+                              disableviewschema)
   })
     
 
@@ -161,7 +158,7 @@ server <- function(input, output, session) {
 # Calculate and show results ----------------------------------------------
 
  ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
-                reactive(input$tabs), disableviewschema, disablestart)
+                reactive(input$tabs), disablestart)
  
 }
 # Run the app ----
