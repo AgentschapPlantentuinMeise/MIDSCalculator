@@ -6,8 +6,8 @@ ResultsUI <- function(id) {
   )
 }
 
-ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit, 
-                          jsonpath, customjsonname, jsonschema, jsonfile, 
+ResultsServer <- function(id, parent.session, gbiffile, edit, 
+                          jsonpath, customjsonname, jsonschema, jsonfiletype, 
                           tabs, disableviewschema, disablestart) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
@@ -28,11 +28,11 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     gbif_dataset_mids <- eventReactive(input$start, {
       if (edit() == FALSE){
         withProgress(message = 'Calculating MIDS scores', value = 0, {
-          calculate_mids(gbiffile = gbiffile(), jsonfile = jsonpath())})
+          calculate_mids(gbiffile = gbiffile()$datapath, jsonfile = jsonpath())})
       }
       else if (edit() == TRUE){
         withProgress(message = 'Calculating MIDS scores', value = 0, {
-          calculate_mids(gbiffile = gbiffile(), jsontype = "list", jsonlist = jsonschema() )})
+          calculate_mids(gbiffile = gbiffile()$datapath, jsontype = "list", jsonlist = jsonschema() )})
       }
     })
     
@@ -48,6 +48,12 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     allschemas <- reactiveValues(prev_bins = NULL)
     observeEvent(input$start, {
       allschemas$prev_bins[[paste0("res", input$start)]] <- jsonschema()[1:2]
+    })
+    
+    #save names of datasets
+    alldatasetnames <- reactiveValues(prev_bins = NULL)
+    observeEvent(input$start, {
+      alldatasetnames$prev_bins[[paste0("res", input$start)]] <- gbiffile()$name
     })
     
     #get which result tab is active
@@ -255,8 +261,8 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
       output[[paste0("downloadData", input$start)]] <- 
         downloadHandler(
           filename = function() {
-            paste0("download", ".csv")
-            #paste0(tools::file_path_sans_ext(gbiffilename()), ".csv")
+            paste0(tools::file_path_sans_ext(alldatasetnames$prev_bins[[paste0("res", resulttabnr())]]),
+                   "_MIDS.csv")
           },
           content = function(file) {
             write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE)
@@ -264,8 +270,8 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
       output[[paste0("downloadDataFiltered", input$start)]] <- 
         downloadHandler(
           filename = function() {
-            paste0("download", ".csv")
-            #paste0(tools::file_path_sans_ext(gbiffilename()), ".csv")
+            paste0(tools::file_path_sans_ext(alldatasetnames$prev_bins[[paste0("res", resulttabnr())]]), 
+                   "_MIDS_filtered.csv")
           },
           content = function(file) {
             write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
@@ -279,16 +285,16 @@ ResultsServer <- function(id, parent.session, gbiffile, gbiffilename, edit,
     #show which dataset was used
     observe(
       output[[paste0("Used_dataset", input$start)]] <-
-        renderText(tools::file_path_sans_ext(isolate(gbiffilename())))
+        renderText(tools::file_path_sans_ext(isolate(gbiffile()$name)))
     )
     
     #show basic info on which MIDS implementation was used
     observe(
       output[[paste0("Used_MIDS_implementation", input$start)]] <-
         renderText(
-          if (isolate(jsonfile()) == "default" & isolate(edit()) == FALSE){
+          if (isolate(jsonfiletype()) == "default" & isolate(edit()) == FALSE){
             return(paste("Default:", isolate(basename(jsonpath()))))}
-          else if (isolate(jsonfile()) == "custom" & isolate(edit()) == FALSE){
+          else if (isolate(jsonfiletype()) == "custom" & isolate(edit()) == FALSE){
             return(paste("Custom:", isolate(basename(customjsonname()))))}
           else {return("Interactive")}
         )

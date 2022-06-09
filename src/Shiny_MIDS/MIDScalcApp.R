@@ -1,3 +1,4 @@
+#Load libraries and source files
 library(shiny)
 library(shinyBS)
 library(ggplot2)
@@ -15,6 +16,7 @@ options(shiny.maxRequestSize = 5000*1024^2)
 ui <- 
   tagList(
   useShinyjs(),
+  #change style of modals to fix scroll bar behavior and backdrop of nested of modals
   tags$style(
     HTML("
         .modal {
@@ -149,10 +151,9 @@ server <- function(input, output, session) {
 
 # Calculate and show results ----------------------------------------------
 
- ResultsServer("start", session, reactive(input$gbiffile$datapath), reactive(input$gbiffile$name), 
-                reactive(input$editschema), jsonpath, reactive(input$customjsonfile$name), jsonschemafinal,
+ ResultsServer("start", session, reactive(input$gbiffile), reactive(input$editschema), 
+                jsonpath, reactive(input$customjsonfile$name), jsonschemafinal,
                 reactive(input$jsonfile), reactive(input$tabs), disableviewschema, disablestart)
-  
  
 }
 # Run the app ----
