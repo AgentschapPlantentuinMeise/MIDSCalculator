@@ -148,6 +148,9 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     #initialize trigger to keep track of changes to elements and/or mappings
     trigger <- reactiveValues(count=0)
     
+    #update trigger when sorting is changed
+    observeEvent(input$sorted, {trigger$count <- trigger$count + 1})
+    
     ##create observers for MIDS elements added by user
     #get new elements added by user
     newElements <- reactiveValues()
@@ -229,25 +232,32 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
           for (k in seq_along(mappings)){
             htmlprops <- list(htmlprops,htmltools::tags$li(mappings[[k]]))
           }
-          labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname,
-                  actionButton(ns(paste0("edit", elementname)), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"),
-                  actionButton(ns(paste0("removeElement", elementname)), icon("trash"), style = "padding:2px; font-size:90%; border-style: none"), 
-                  htmlprops))
+          #it should not be possible to remove the last element from a level
+          if (length(critlists()[[i]]) > 1){
+            labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname,
+                    actionButton(ns(paste0("edit", elementname)), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"),
+                    actionButton(ns(paste0("removeElement", elementname)), icon("trash"), style = "padding:2px; font-size:90%; border-style: none"), 
+                    htmlprops))
+          } else {
+            labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname,
+                    actionButton(ns(paste0("edit", elementname)), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"),
+                    htmlprops))
+          }
         }
         if (midslevel != "unused elements"){
           v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
-                              options = sortable_options(group = "midsElements"),
+                              options = sortable_options(group = "midsElements", onSort = sortable_js_capture_input(input_id = ns("sorted"))),
                               class = c("default-sortable", "custom-sortable"))
         } else {
           v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
-                              options = sortable_options(group = "midsElements"),
+                              options = sortable_options(group = "midsElements", onSort = sortable_js_capture_input(input_id = ns("sorted"))),
                               class = c("default-sortable", "custom-sortable", "unused"))
         }
         }
       }
       return(v)
       })
-        
+
       output$crit <- renderUI({
         critranklists()[seq(1, length(critranklists()), 2)]
         })
