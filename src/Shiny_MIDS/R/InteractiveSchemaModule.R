@@ -89,6 +89,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
     
+    
     #enable/ disable view action button
     observe(
       if (disable() == TRUE){
@@ -144,14 +145,15 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     return(v)
     })
     
-    #initialize trigger to keep track of changes to elements, mappings
+    #initialize trigger to keep track of changes to elements and/or mappings
     trigger <- reactiveValues(count=0)
     
     ##create observers for MIDS elements added by user
-    #create observer for editing mappings of MIDS elements specified by user
+    #get new elements added by user
     newElements <- reactiveValues()
     observeEvent(input$addElement, {
       newElements$el <- c(newElements$el, input$newElement)
+      #create observer for editing mappings of MIDS elements specified by user
       observeEvent(input[[paste0("addMapping", input$newElement)]], {
         newMappings[[input$newElement]] <- paste(input[[paste0("newMapping", input$newElement)]], collapse = "&")
         trigger$count <- trigger$count + 1
@@ -165,8 +167,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
         trigger$count <- trigger$count + 1
       })
     })
-   
-
+    
     ##create list of elements and mapping based on input and added elements
     addedcritlists <- eventReactive(trigger$count, {
       x <- list()
@@ -188,8 +189,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
           #check if there are mappings to be removed
           if (!is.null(removeMappings[[element]])){
             mappings <- mappings[!mappings %in% removeMappings[[element]]]
-            # #remove mappings when used
-            # removeMappings[[element]] <- NULL
+            #remove mappings when used
+            removeMappings[[element]] <- NULL
           }
           x[[midslevel]][[element]] <- mappings
           #if element in newElements, remove it
@@ -216,79 +217,82 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     ## create ranklists
     critranklists <- reactive({v <- list()
     for (i in 1:length(critlists())){
-      midslevel <- names(critlists()[i])
-      labels <- list()
-      #loop over MIDS elements
-      for (j in 1:length(critlists()[[i]])){
-        elementname <- names(critlists()[[i]][j])
-        mappings <- critlists()[[i]][[j]]
-        #loop over mappings
-        htmlprops <- list()
-        for (k in seq_along(mappings)){
-          htmlprops <- list(htmlprops,htmltools::tags$li(mappings[[k]]))
-        }
-        labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname,
-                                                                actionButton(ns(paste0("edit", elementname)), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"),
-                                                                actionButton(ns(paste0("removeElement", elementname)), icon("trash"), style = "padding:2px; font-size:90%; border-style: none"), 
-                                                                htmlprops))
-      }
-      if (midslevel != "unused elements"){
-        v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
-                            options = sortable_options(group = "midsElements"),
-                            class = c("default-sortable", "custom-sortable"))
-      } else {
-        v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
-                            options = sortable_options(group = "midsElements"),
-                            class = c("default-sortable", "custom-sortable", "unused"))
-      }
-    }
-    return(v)
-    })
-
-    output$crit <- renderUI({
-      critranklists()[seq(1, length(critranklists()), 2)]
-      })
-    output$crit2 <- renderUI({
-      critranklists()[seq(2, length(critranklists()), 2)]
-    })
-    
-    #create "edit mappings" modal
-    observe({
-      for (i in 1:length(critlists())){
-        local({
+      if (!is_empty(critlists()[[i]])){
+        midslevel <- names(critlists()[i])
+        labels <- list()
         #loop over MIDS elements
         for (j in 1:length(critlists()[[i]])){
-          local({
           elementname <- names(critlists()[[i]][j])
           mappings <- critlists()[[i]][[j]]
-          onclick(paste0("edit", elementname), showModal(modalDialog(
-            title = "Edit mappings",
-            uiOutput(ns(paste0("editmappings", elementname))),
-            easyClose = TRUE,
-            footer = NULL
-          )))
-          output[[paste0("editmappings", elementname)]] <- renderUI({
-            x <- list()
-            x <- list(x, lapply(mappings, FUN = function(mapping) list(
-              mapping, actionButton(ns(paste0("remove", elementname, mapping)),
-                                              icon("trash"),
-                                              style = "padding:5px; font-size:70%; border-style: none"),
-                                              br()))
-            )
-            x <- list(fluidRow(
-              column(6, h4(paste0(elementname, ":")), x),
-              column(6,
-                     selectizeInput(ns(paste0("newMapping", elementname)),
-                                    label = "Enter a new mapping",
-                                    choices = readLines("www/DWCAcolumnnames.txt"),
-                                    multiple = TRUE),
-                     helpText("Select multiple properties at once if they must all be present (&)"),
-                     actionButton(ns(paste0("addMapping", elementname)), "Add")
-              )))
-            return(x)
-          })
-          
-          })
+          #loop over mappings
+          htmlprops <- list()
+          for (k in seq_along(mappings)){
+            htmlprops <- list(htmlprops,htmltools::tags$li(mappings[[k]]))
+          }
+          labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname,
+                  actionButton(ns(paste0("edit", elementname)), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"),
+                  actionButton(ns(paste0("removeElement", elementname)), icon("trash"), style = "padding:2px; font-size:90%; border-style: none"), 
+                  htmlprops))
+        }
+        if (midslevel != "unused elements"){
+          v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
+                              options = sortable_options(group = "midsElements"),
+                              class = c("default-sortable", "custom-sortable"))
+        } else {
+          v[[i]] <- rank_list(toupper(midslevel), labels, ns(midslevel),
+                              options = sortable_options(group = "midsElements"),
+                              class = c("default-sortable", "custom-sortable", "unused"))
+        }
+        }
+      }
+      return(v)
+      })
+        
+      output$crit <- renderUI({
+        critranklists()[seq(1, length(critranklists()), 2)]
+        })
+      output$crit2 <- renderUI({
+        critranklists()[seq(2, length(critranklists()), 2)]
+      })
+      
+      #create "edit mappings" modal
+      observe({
+        for (i in 1:length(critlists())){
+          local({
+        if (!is_empty(critlists()[[i]])){
+          #loop over MIDS elements
+          for (j in 1:length(critlists()[[i]])){
+            local({
+            elementname <- names(critlists()[[i]][j])
+            mappings <- critlists()[[i]][[j]]
+            onclick(paste0("edit", elementname), showModal(modalDialog(
+              title = "Edit mappings",
+              uiOutput(ns(paste0("editmappings", elementname))),
+              easyClose = TRUE,
+              footer = NULL
+            )))
+            output[[paste0("editmappings", elementname)]] <- renderUI({
+              x <- list()
+              x <- list(x, lapply(mappings, FUN = function(mapping) list(
+                mapping, actionButton(ns(paste0("remove", elementname, mapping)),
+                                                icon("trash"),
+                                                style = "padding:5px; font-size:70%; border-style: none"),
+                                                br()))
+              )
+              x <- list(fluidRow(
+                column(6, h4(paste0(elementname, ":")), x),
+                column(6,
+                       selectizeInput(ns(paste0("newMapping", elementname)),
+                                      label = "Enter a new mapping",
+                                      choices = readLines("www/DWCAcolumnnames.txt"),
+                                      multiple = TRUE),
+                       helpText("Select multiple properties at once if they must all be present (&)"),
+                       actionButton(ns(paste0("addMapping", elementname)), "Add")
+                )))
+              return(x)
+            })
+            })
+          }
         }
         })
       }
@@ -336,21 +340,23 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     observe(
       for (i in 1:length(critlists())){
         local({
-          #loop over MIDS elements
-          for (j in 1:length(critlists()[[i]])){
-            local({
-              elementname <- names(critlists()[[i]][j])
-              mappings <- critlists()[[i]][[j]]
-              for (mapping1 in mappings){
-                local({
-                  mapping <- mapping1
-                  observeEvent(input[[paste0("remove", elementname, mapping)]], {
-                    removeMappings[[elementname]] <- mapping
-                    trigger$count <- trigger$count + 1
+          if (!is_empty(critlists()[[i]])){
+            #loop over MIDS elements
+            for (j in 1:length(critlists()[[i]])){
+              local({
+                elementname <- names(critlists()[[i]][j])
+                mappings <- critlists()[[i]][[j]]
+                for (mapping1 in mappings){
+                  local({
+                    mapping <- mapping1
+                    observeEvent(input[[paste0("remove", elementname, mapping)]], {
+                      removeMappings[[elementname]] <- mapping
+                      trigger$count <- trigger$count + 1
+                    })
                   })
-                })
-              }
-            })
+                }
+              })
+            }
           }
         })
       })
