@@ -151,31 +151,27 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     #update trigger when sorting is changed
     observeEvent(input$sorted, {trigger$count <- trigger$count + 1})
     
-    ##create observers for MIDS elements added by user
     #get new elements added by user
-    newElements <- reactiveValues()
+    UnusedElements <- reactiveValues()
+    allAddedElements <- reactiveValues()
     observeEvent(input$addElement, {
-      newElements$el <- c(newElements$el, input$newElement)
-      #create observer for editing mappings of MIDS elements specified by user
-      observeEvent(input[[paste0("addMapping", input$newElement)]], {
-        newMappings[[input$newElement]] <- paste(input[[paste0("newMapping", input$newElement)]], collapse = "&")
-        trigger$count <- trigger$count + 1
-      })
-    })
-    #create observer for removing elements of MIDS elements specified by user
-    observeEvent(input$addElement, {
+      UnusedElements$el <- c(UnusedElements$el, input$newElement)
+      allAddedElements$el <- c(allAddedElements$el, input$newElement)
       trigger$count <- trigger$count + 1
-      observeEvent(input[[paste0("removeElement", input$newElement)]], {
-        removeElements(input$newElement)
-        trigger$count <- trigger$count + 1
-      })
     })
     
     ##create list of elements and mapping based on input and added elements
+    ranklevels <- reactive({
+      if (is_empty(reactiveValuesToList(input)[["unused elements"]])){
+        return(c("mids0", "mids1", "mids2", "mids3"))
+      } else {
+        return(c("mids0", "mids1", "mids2", "mids3", "unused elements"))
+      }
+    })
     addedcritlists <- eventReactive(trigger$count, {
       x <- list()
-      for (i in 1:length(jsonschema())){
-        midslevel <- names(jsonschema()[i])
+      for (i in 1:length(ranklevels())){
+        midslevel <- ranklevels()[i]
         #get MIDS elements for a given mids level
         elements <- reactiveValuesToList(input)[[midslevel]]
         for (j in 1:length(elements)){
@@ -196,15 +192,15 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
             removeMappings[[element]] <- NULL
           }
           x[[midslevel]][[element]] <- mappings
-          #if element in newElements, remove it
-          if (element %in% newElements$el){
-            newElements$el <- newElements$el[!newElements$el %in% element]}
+          #if element in UnusedElements, remove it
+          if (element %in% UnusedElements$el){
+            UnusedElements$el <- UnusedElements$el[!UnusedElements$el %in% element]}
         }
         #remove elements
         x[[midslevel]][[removeElements()]] <- NULL
       }
       #add newly added elements
-      for (newEl in newElements$el){
+      for (newEl in UnusedElements$el){
         x[["unused elements"]][[newEl]] <- ""
       }
       return(x)
@@ -232,8 +228,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
           for (k in seq_along(mappings)){
             htmlprops <- list(htmlprops,htmltools::tags$li(mappings[[k]]))
           }
-          #it should not be possible to remove the last element from a level
-          if (length(critlists()[[i]]) > 1){
+          #it should not be possible to remove the last element from a MIDS level
+          if (length(critlists()[[i]]) > 1 | midslevel == "unused elements"){
             labels[[j]] <- htmltools::tags$div(id=elementname, list(elementname,
                     actionButton(ns(paste0("edit", elementname)), icon("pencil-alt"), style = "padding:2px; font-size:90%; border-style: none"),
                     actionButton(ns(paste0("removeElement", elementname)), icon("trash"), style = "padding:2px; font-size:90%; border-style: none"), 
@@ -308,7 +304,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       }
     })
   
-    #create observers for adding mappings of initial elements, and get new mappings  
+    #create observers for adding mappings of initial elements, and get new mappings
     newMappings <- reactiveValues()
     observe(
         for (i in 1:length(initialcritlists())){
@@ -325,25 +321,38 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
           }
           })
         })
-    
-    #create observers for removing initial elements, and get elements to be removed 
+
+    #create observers for adding mappings of added elements, and get new mappings
+    observe(
+      for (i in 1:length(allAddedElements$el)){
+        local({
+          elementname <- allAddedElements$el[[i]]
+          observeEvent(input[[paste0("addMapping", elementname)]], {
+            newMappings[[elementname]] <- paste(input[[paste0("newMapping", elementname)]], collapse = "&")
+            trigger$count <- trigger$count + 1
+          })
+        })
+    })
+
+    #create observers for removing elements, and get elements to be removed 
     removeElements <- reactiveVal("nothing")
     observe(
-      for (i in 1:length(initialcritlists())){
+      for (i in 1:length(critlists())){
         local({
-          #loop over MIDS elements
-          for (j in 1:length(initialcritlists()[[i]])){
-            local({
-              elementname <- names(initialcritlists()[[i]][j])
-              observeEvent(input[[paste0("removeElement", elementname)]], {
-                removeElements(elementname)
-                trigger$count <- trigger$count + 1
+          if (!is_empty(critlists()[[i]])){
+            #loop over MIDS elements
+            for (j in 1:length(critlists()[[i]])){
+              local({
+                elementname <- names(critlists()[[i]][j])
+                observeEvent(input[[paste0("removeElement", elementname)]], {
+                  removeElements(elementname)
+                  trigger$count <- trigger$count + 1
+                })
               })
-            })
+            }
           }
         })
-      }
-    )
+      })
     
     #create observers for removing mappings, and get mappings to be removed 
     removeMappings <- reactiveValues()
