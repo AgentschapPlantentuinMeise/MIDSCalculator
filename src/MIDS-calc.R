@@ -24,7 +24,7 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   }
   
   #add other needed/interesting properties
-  list_props <- c(list_props, "datasetKey", "countryCode", "class", "order", "family", "subfamily", "genus")
+  list_props <- c(list_props, "datasetKey", "countryCode", "kingdom", "phylum", "class", "order", "family", "subfamily", "genus")
   
   # import from zipped DWC archive
   # and set unknown or missing values that apply to all to NA
