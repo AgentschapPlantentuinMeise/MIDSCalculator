@@ -118,19 +118,22 @@ server <- function(input, output, session) {
   
   #read json schema from file
   jsonschemafile <- reactive({ 
-    read_json_mids_criteria(file = jsonpath(), outtype = "criteria")
+    read_json_mids_criteria(schema = jsonpath(), outtype = "criteria")
   })
   
   #read json UoM from file
   jsonUoMfile <- reactive({ 
-    read_json_unknownOrMissing(file = jsonpath())
+    read_json_unknownOrMissing(schema = jsonpath())
   })
   
   #get final MIDS implementation schema (either from file or from interactive editing)
   jsonschemafinal <- reactive({ 
     if (input$editschema == TRUE){
       # get interactive schema
-      return(interactiveschema$jsonlist())
+      return(c(list("criteria" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "criteria", type = "interactive")), 
+               list("UoM" = read_json_unknownOrMissing(schema = interactiveschema$interactivejson(), type = "interactive")), 
+               list("properties" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "properties", type = "interactive"))
+              ))
     } else {
       #get schema from file
       #get filename
@@ -141,7 +144,7 @@ server <- function(input, output, session) {
       }
       #return schema
       return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
-        list("properties" = read_json_mids_criteria(file = jsonpath(), out = "properties")),
+        list("properties" = read_json_mids_criteria(schema = jsonpath(), out = "properties")),
         list("filename"= filename)))
     }
   })

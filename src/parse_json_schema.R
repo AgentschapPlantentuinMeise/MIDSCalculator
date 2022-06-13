@@ -1,11 +1,15 @@
 library(jsonlite)
 
-read_json_unknownOrMissing <- function(file = "data/schemas/secondschema_conditions_same_level.json") {
+read_json_unknownOrMissing <- function(schema = "data/schemas/secondschema_conditions_same_level.json", type = "file") {
 
 
   # Read schema -------------------------------------------------------------
   
-  schema <- read_json(file)
+  if (type == "file"){
+    schema <- read_json(schema)
+  } else if (type == "interactive") {
+    schema <- fromJSON(schema)
+  }
   
   
   # Create list of unknownOrMissing values ----------------------------------
@@ -34,13 +38,17 @@ read_json_unknownOrMissing <- function(file = "data/schemas/secondschema_conditi
   return(list_UoM)
 }
   
-read_json_mids_criteria <- function(file = "data/schemas/secondschema_conditions_same_level.json",
-                                    outtype = "criteria") {
+read_json_mids_criteria <- function(schema = "data/schemas/secondschema_conditions_same_level.json",
+                                    outtype = "criteria", type = "file") {
   
   
   # Read schema -------------------------------------------------------------
   
-  schema <- read_json(file)
+  if (type == "file"){
+    schema <- read_json(schema)
+  } else if (type == "interactive") {
+    schema <- fromJSON(schema)
+  }
   
   # Construct criteria for mids levels --------------------------------------
   
