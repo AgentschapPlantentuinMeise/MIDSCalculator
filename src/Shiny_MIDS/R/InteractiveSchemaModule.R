@@ -27,6 +27,7 @@ InteractiveSchemaUI <- function(id) {
     
     #Interactive editing of MIDS implementation in modal window
     bsModal(ns("interactivemodal"), "Edit MIDS implementation interactively", ns("interactiveschema"), 
+      downloadButton(ns("download"), "Download edited schema"),
       tabsetPanel(type = "tabs",
         tabPanel("Criteria",
            fluidRow(
@@ -69,8 +70,8 @@ InteractiveSchemaUI <- function(id) {
                    uiOutput(ns("UoM2"))
                  ),
                  fluidPage(fluidRow(
-                   column(6, uiOutput(ns("UoMnewprop"))),
-                   column(6, textInput(ns("UoMnewvalue"), "Enter a new value",
+                   column(6, uiOutput(ns("newPropUoM"))),
+                   column(6, textInput(ns("newValueUoM"), "Enter a new value",
                                        value = "Enter text..."))
                  )),
                  fluidPage(fluidRow(
@@ -391,11 +392,37 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
         for (j in 1:length(elements)){
           #get mappings for each element
           valuesplit <- strsplit(elements[[j]], split = "\\\n")
-          element <- valuesplit[[1]][1]
+          element <- trimws(valuesplit[[1]][1], "r")
           mappings <- valuesplit[[1]][-1]
           #don't use elements that have no mappings
           if (!is_empty(mappings)){
-            x[[midslevels[i]]][[element]] <- mappings
+            if (any(grepl("&", mappings, fixed = TRUE))){
+              #deal with &
+              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- strsplit(mappings[grepl("&", mappings, fixed = TRUE)], "&")[[1]]
+              x[[midslevels[i]]][[element]][["subcondition1"]][["operator"]] <- "AND"
+              #separate those without &, if there are any
+              if (any(!grepl("&", mappings, fixed = TRUE))){
+                x[[midslevels[i]]][[element]][["subcondition2"]][["property"]] <- mappings[!grepl("&", mappings, fixed = TRUE)]
+                x[[midslevels[i]]][[element]][["subcondition2"]][["operator"]] <- "OR"
+              }
+            } else if (any(grepl("!", mappings, fixed = TRUE))){
+              #deal with !
+              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- gsub("!", "", mappings[grepl("!", mappings, fixed = TRUE)])
+              x[[midslevels[i]]][[element]][["subcondition1"]][["operator"]] <- "NOT"
+              #separate those without !, if there are any
+              if (any(!grepl("!", mappings, fixed = TRUE))){
+                x[[midslevels[i]]][[element]][["subcondition2"]][["property"]] <- mappings[!grepl("!", mappings, fixed = TRUE)]
+                x[[midslevels[i]]][[element]][["subcondition2"]][["operator"]] <- "OR"
+              }
+            } else if (length(mappings) > 1) {
+              #no & or !
+              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- mappings
+              x[[midslevels[i]]][[element]][["subcondition1"]][["operator"]] <- "OR"
+            } else {
+            #no & or ! and only one property
+              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- mappings
+            }
+            
           }
         }
       }
@@ -463,7 +490,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     #only update choices when navigating to this tab
     mcprops <- eventReactive(input$tabs == "2. Unknown or Missing",
                              {usedproperties()})
-    output$UoMnewprop <- renderUI({selectInput(ns("UoMnewprop"), label = "Enter a new property",
+    output$newPropUoM <- renderUI({selectInput(ns("newPropUoM"), label = "Enter a new property",
                                                choices = sort(mcprops()))})
     
     ## get UoM values and properties from existing JSON schema
@@ -477,14 +504,14 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     ## add UoM properties specified by user
     #get new UoM property from text input field
-    newprop <- eventReactive(input$addUoMprop, {input$UoMnewprop})
+    newprop <- eventReactive(input$addUoMprop, {input$newPropUoM})
     ## also get previously submitted properties
     newprops <- reactiveValues(prev_bins = NULL)
     observeEvent(input$addUoMprop, {
-      newprops$prev_bins <- c(newprops$prev_bins, input$UoMnewprop)
+      newprops$prev_bins <- c(newprops$prev_bins, input$newPropUoM)
     })
     #add rank list for each submitted property
-    UoMnewprop <- reactive({v <- list()
+    newPropUoM <- reactive({v <- list()
     for (i in 1:length(req(newprops$prev_bins))){
       #get value inside property
       value <- input[[paste0("UoM", newprops$prev_bins[i])]]
@@ -497,7 +524,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     ## add UoM values specified by user (and keep existing values)
     existing <- eventReactive(input$addUoM, {input$UoMunused}) 
-    new <- eventReactive(input$addUoM, {input$UoMnewvalue})
+    new <- eventReactive(input$addUoM, {input$newValueUoM})
     UoMunused <- reactive({rank_list("Unused values", c(existing(), new()), ns("UoMunused"), options = sortable_options(group = "midsUoM"),
                                            class = c("default-sortable", "custom-sortable", "unused")) })
     
@@ -505,8 +532,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     UoMranklists <- reactive({
       if (input$addUoMprop == 0 & input$addUoM == 0){return(UoMinitial())}
       else if (input$addUoMprop == 0) {return( c(UoMinitial(), UoMunused()))}
-      else if (input$addUoM == 0) {return( c(UoMinitial(), UoMnewprop()))}
-      else {return( c(UoMinitial(), UoMnewprop(), UoMunused()))}
+      else if (input$addUoM == 0) {return( c(UoMinitial(), newPropUoM()))}
+      else {return( c(UoMinitial(), newPropUoM(), UoMunused()))}
     })
     
     #render ranklists
@@ -526,7 +553,18 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
       #don't include empty properties
       if (rlang::is_empty(value[[1]])){next}
-      x[[properties[j]]] <- value[[1]]
+      if (properties[j] != "all"){
+        x[["unknownOrMissing"]][[properties[j]]][["value"]] <- value[[1]]
+        x[["unknownOrMissing"]][[properties[j]]][["midsAchieved"]] <- FALSE
+        x[["unknownOrMissing"]][[properties[j]]][["property"]] <- properties[j]
+      } else {
+        all_props <- unlist(reactiveValuesToList(input)[paste0("UoM", "all")])
+        for (n_prop in seq_along(all_props)){
+          x[["unknownOrMissing"]][[paste0("all", n_prop)]][["value"]] <- all_props[[n_prop]]
+          x[["unknownOrMissing"]][[paste0("all", n_prop)]][["midsAchieved"]] <- FALSE
+        }
+      }
+      
     }
     return(x)
     })
@@ -541,6 +579,22 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       list[["properties"]] <- usedproperties()
       return(list)
     })
+    
+    #convert to json
+    schematojson <- reactive(toJSON(c(
+      critinputs(),
+      UoMinputs()
+      )))
+    
+    #download json
+    output$download <- 
+      downloadHandler(
+        filename = function() {
+          "MIDS_schema.json"
+        },
+        content = function(file) {
+          write(schematojson(), file)
+        })
     
     #check if the edit actionbutton was clicked
     visited <- reactiveVal(FALSE)
