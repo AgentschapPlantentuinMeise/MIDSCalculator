@@ -19,8 +19,14 @@ ui <-
   #change style of modals to fix scroll bar behavior and backdrop of nested of modals
   tags$style(
     HTML("
+        body {
+          padding-right:0px !important;
+        }
         .modal {
-          overflow:auto
+          overflow:auto;
+        }
+        .modal-open {
+          overflow:auto;
         }
         .modal-backdrop {
           visibility: hidden !important;
