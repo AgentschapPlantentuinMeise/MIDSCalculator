@@ -76,10 +76,9 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   
   # Add modified metadata to the dataset ------------------------------------
   
-  gbif_dataset_mids <- left_join(gbif_dataset, pubdate, by = "datasetKey")
-  gbif_dataset <- NULL
-    
   if ("modified" %in% names(gbif_dataset)){
+    gbif_dataset_mids <- left_join(gbif_dataset, pubdate, by = "datasetKey")
+    gbif_dataset <- NULL
     gbif_dataset_mids %<>%
       mutate(modified = case_when( 
         is.na(modified) ~ pubdate,
@@ -87,6 +86,10 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
     
     #don't need pubdate column anymore
     gbif_dataset_mids$pubdate <- NULL
+  }
+  else {
+    gbif_dataset_mids <- gbif_dataset
+    gbif_dataset <- NULL
   }
     
   # Define criteria ---------------------------------------------------------
