@@ -44,9 +44,11 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   # Get metadata (from zipped DWC archive) ------------------------------------------------------------
   
   #which datasets have records that don't have the modified property
-  keys <- filter(gbif_dataset, is.na(modified)) %>% .$datasetKey %>% unique()
+  if ("modified" %in% names(gbif_dataset)){
+    keys <- filter(gbif_dataset, is.na(modified)) %>% .$datasetKey %>% unique()
+  } 
   #get paths for those datasets
-  if (!is_empty(keys)){
+  if (exists("keys") && !is_empty(keys)){
     filenames <- paste0("dataset/", keys, ".xml")}
   
   #read xml files to get publication date out of metadata
@@ -76,15 +78,17 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   
   gbif_dataset_mids <- left_join(gbif_dataset, pubdate, by = "datasetKey")
   gbif_dataset <- NULL
-  
-  gbif_dataset_mids %<>%
-    mutate(modified = case_when( 
-      is.na(modified) ~ pubdate,
-      TRUE ~ as.character(modified)))
-  
-  #don't need pubdate column anymore
-  gbif_dataset_mids$pubdate <- NULL
-  
+    
+  if ("modified" %in% names(gbif_dataset)){
+    gbif_dataset_mids %<>%
+      mutate(modified = case_when( 
+        is.na(modified) ~ pubdate,
+        TRUE ~ as.character(modified)))
+    
+    #don't need pubdate column anymore
+    gbif_dataset_mids$pubdate <- NULL
+  }
+    
   # Define criteria ---------------------------------------------------------
   
   # Get list of criteria
