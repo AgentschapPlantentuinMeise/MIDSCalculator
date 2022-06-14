@@ -126,34 +126,32 @@ server <- function(input, output, session) {
     read_json_unknownOrMissing(schema = jsonpath())
   })
   
-  #get final MIDS implementation schema (either from file or from interactive editing)
-  jsonschemafinal <- reactive({ 
+
+# Get final MIDS implementation schema (either from file or from or from interactive editing) --------
+
+  jsonschema <- reactiveValues()
+  observe({ 
     if (input$editschema == TRUE){
       # get interactive schema
-      return(c(list("criteria" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "criteria", type = "interactive")), 
-               list("UoM" = read_json_unknownOrMissing(schema = interactiveschema$interactivejson(), type = "interactive")), 
-               list("properties" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "properties", type = "interactive"))
-              ))
+      jsonschema$schema <- interactiveschema$interactivejson()
+      jsonschema$type <- "interactive"
     } else {
       #get schema from file
+      jsonschema$schema <- jsonpath()
+      jsonschema$type <- "file"
       #get filename
       if (input$jsonfiletype == "custom"){
-        filename <- paste("Custom:", input$customjsonfile$name)
+        jsonschema$filename <- paste("Custom:", input$customjsonfile$name)
       } else {
-        filename <- paste("Default:", basename(jsonpath()))
+        jsonschema$filename <- paste("Default:", basename(jsonpath()))
       }
-      #return schema
-      return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
-        list("properties" = read_json_mids_criteria(schema = jsonpath(), out = "properties")),
-        list("filename"= filename)))
     }
   })
-  
   
 # Show current MIDS implementation ----------------------------------------
   
   #view MIDS implementation in modal window
-  ViewImplementationServer("viewcurrentschema", jsonschemafinal, disableviewschema)
+  ViewImplementationServer("viewcurrentschema", reactive(jsonschema), disableviewschema)
     
 
 # Edit MIDS implementation interactively ----------------------------------
@@ -164,7 +162,7 @@ server <- function(input, output, session) {
 
 # Calculate and show results ----------------------------------------------
 
-  ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
+  ResultsServer("start", session, reactive(input$gbiffile), reactive(jsonschema), 
                 reactive(input$tabs), disablestart)
  
 }

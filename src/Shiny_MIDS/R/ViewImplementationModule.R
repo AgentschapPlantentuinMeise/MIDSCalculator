@@ -27,8 +27,6 @@ ViewImplementationUI <- function(id) {
           background-color: rgb(40, 116, 166, 0.2); 
           font-size: 18px; 
           color: #1A5276;
-          # border: 1px solid;
-          # border-color: #1A5276;
           box-shadow: none;
          }",
          paste0('.', ns('grid')), "{
@@ -47,9 +45,14 @@ ViewImplementationServer <- function(id, schema, disable) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
+    #get criteria
+    criteria <- reactive({
+    read_json_mids_criteria(schema()$schema, "criteria", schema()$type)
+    })
+    
     #show criteria
     output$json <- renderPrint(
-      for (n_level in seq_along(schema()$criteria)){
+      for (n_level in seq_along(criteria())){
         if (n_level == 1){
           #print title
           print(HTML(paste0("<div class=", ns('title'), "> MIDS criteria </div><br>")))
@@ -69,10 +72,10 @@ ViewImplementationServer <- function(id, schema, disable) {
                           grid-column: ", column, "; grid-row:", row, "'>")))
         #MIDS levels
         print(HTML("<div class=", ns('midslevel')))
-        print(h3(gsub("mids", "Level ", names(schema()$criteria)[[n_level]])))
+        print(h3(gsub("mids", "Level ", names(criteria())[[n_level]])))
         print(HTML("</div>"))
         #MIDS elements
-        mids_el <- schema()$criteria[[n_level]]
+        mids_el <- criteria()[[n_level]]
         for(n_element in seq_along(mids_el)){
           print(HTML("<div class=", ns('midselement'))) 
           print(h4(names(mids_el)[[n_element]]))
@@ -94,16 +97,20 @@ ViewImplementationServer <- function(id, schema, disable) {
           }
         }
         print(HTML("</div>"))
-        if (n_level == length(schema()$criteria))
+        if (n_level == length(criteria()))
         {print(HTML("</div>"))}
       }
     )
+    #get unknown or missing
+    UoM <- reactive({
+      read_json_unknownOrMissing(schema()$schema, schema()$type)
+    })
     
     #show unknown or missing
     output$jsonUoM <- renderPrint(
-      for (n_prop in seq_along(schema()$UoM))
-      {prop <- names(schema()$UoM)[[n_prop]]
-      values <- schema()$UoM[[n_prop]]
+      for (n_prop in seq_along(UoM()))
+      {prop <- names(UoM())[[n_prop]]
+      values <- UoM()[[n_prop]]
       if (n_prop == 1)
       {#print title
         print(HTML(paste0("<div class=", ns('title'), "> Unknown or missing values </div><br>")))
@@ -128,7 +135,7 @@ ViewImplementationServer <- function(id, schema, disable) {
         print(div(value))
       }
       print(HTML("</div>"))
-      if (n_prop == length(schema()$UoM))
+      if (n_prop == length(UoM()))
       {print(HTML("</div>"))}
       }
     )
@@ -139,9 +146,19 @@ ViewImplementationServer <- function(id, schema, disable) {
              htmlOutput(ns("json")),
              htmlOutput(ns("jsonUoM")),
              easyClose = TRUE,
-             footer = NULL
+             footer = downloadButton(ns("download"), "Download schema"),
            ))}, 
         ignoreInit = TRUE)
+    
+    #download json
+    output$download <- 
+      downloadHandler(
+        filename = function() {
+          "MIDS_schema.json"
+        },
+        content = function(file) {
+          write(schema()$schema, file)
+        })
     
     #enable/ disable view action button
     observe(
@@ -154,3 +171,4 @@ ViewImplementationServer <- function(id, schema, disable) {
     
   })
 }
+
