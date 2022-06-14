@@ -18,12 +18,12 @@ read_json_unknownOrMissing <- function(schema = "data/schemas/secondschema_condi
   #Loop trough the values
   n_values <- length(schema$unknownOrMissing)
   for (l in 1:n_values) {
-    value = schema$unknownOrMissing[[l]]$value
+    value = schema$unknownOrMissing[[l]]$value[[1]]
     #only take into account values which do not count for mids
     if (schema$unknownOrMissing[[l]]$midsAchieved == FALSE) {
       #check if there is a property, otherwise it relates to all properties
       if ("property" %in% names(schema$unknownOrMissing[[l]])){
-        prop <- schema$unknownOrMissing[[l]]$property
+        prop <- schema$unknownOrMissing[[l]]$property[[1]]
       } else {
         prop <- "all"
       }
@@ -31,7 +31,7 @@ read_json_unknownOrMissing <- function(schema = "data/schemas/secondschema_condi
       if (prop %in% names(list_UoM)){
         list_UoM[[prop]] <- append(list_UoM[[prop]], value)
       } else {
-        list_UoM[prop] <- as.list(value)
+        list_UoM[[prop]] <- value
         }
     }
   }
