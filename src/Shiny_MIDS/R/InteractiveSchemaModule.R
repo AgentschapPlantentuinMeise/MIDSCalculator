@@ -511,36 +511,67 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       UoMranklists()[seq(2, length(UoMranklists()), 2)]
     })
     
-    ## combine all UoM inputs
-    UoMinputs <- reactive({x <- list()
-    #get names of original properties from schema and of user specified properties
-    properties <- c(names(jsonUoM()), newprops$prev_bins)
-    #get values for each property
-    for (j in 1:length(properties)){
-      value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
-      #don't include empty properties
-      if (rlang::is_empty(value[[1]])){next}
-      if (properties[j] != "all"){
-        x[["unknownOrMissing"]][[properties[j]]][["value"]] <- value[[1]]
-        x[["unknownOrMissing"]][[properties[j]]][["midsAchieved"]] <- FALSE
-        x[["unknownOrMissing"]][[properties[j]]][["property"]] <- properties[j]
-      } else {
-        all_props <- unlist(reactiveValuesToList(input)[paste0("UoM", "all")])
-        for (n_prop in seq_along(all_props)){
-          x[["unknownOrMissing"]][[paste0("all", n_prop)]][["value"]] <- all_props[[n_prop]]
-          x[["unknownOrMissing"]][[paste0("all", n_prop)]][["midsAchieved"]] <- FALSE
+    ## combine all UoM inputs from interatice schema
+    UoMinputs <- reactive({
+      x <- list()
+      #get names of original properties from schema and of user specified properties
+      properties <- c(names(jsonUoM()), newprops$prev_bins)
+      #get values for each property
+      for (j in 1:length(properties)){
+        value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
+        #don't include empty properties
+        if (rlang::is_empty(value[[1]])){next}
+        if (properties[j] != "all"){
+          x[["unknownOrMissing"]][[properties[j]]][["value"]] <- value[[1]]
+          x[["unknownOrMissing"]][[properties[j]]][["midsAchieved"]] <- FALSE
+          x[["unknownOrMissing"]][[properties[j]]][["property"]] <- properties[j]
+        } else {
+          all_props <- unlist(reactiveValuesToList(input)[paste0("UoM", "all")])
+          for (n_prop in seq_along(all_props)){
+            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["value"]] <- all_props[[n_prop]]
+            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["midsAchieved"]] <- FALSE
+          }
         }
       }
-      
-    }
     return(x)
     })
-
+    
+    #get UoM from file as well
+    UoMfile <- reactive({
+      x <- list()
+      for (j in 1:length(jsonUoM())){
+        value <-  jsonUoM()[[j]]
+        name <- names(jsonUoM()[j])
+        #don't include empty properties
+        if (rlang::is_empty(value[[1]])){next}
+        if (name != "all"){
+          x[["unknownOrMissing"]][[name]][["value"]] <- value[[1]]
+          x[["unknownOrMissing"]][[name]][["midsAchieved"]] <- FALSE
+          x[["unknownOrMissing"]][[name]][["property"]] <- name
+        } else {
+          all_props <- unlist(value)
+          for (n_prop in seq_along(all_props)){
+            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["value"]] <- all_props[[n_prop]]
+            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["midsAchieved"]] <- FALSE
+          }
+        }
+      }
+      return(x)
+    })
+   
+    #combine sections
+    schema <- reactive({
+      #if UoM section wasn't visited, fill this with the UoM from file
+      if (is_empty(UoMinputs())){
+        schema <- c(critinputs(), UoMfile())
+      } else {
+        schema <- c(critinputs(), UoMinputs())
+      }
+      return(schema)
+    })
+    
     #convert to json
-    schematojson <- reactive(toJSON(c(
-      critinputs(),
-      UoMinputs()
-      )))
+    schematojson <- reactive(toJSON(schema()))
     
     #download json
     output$download <- 
