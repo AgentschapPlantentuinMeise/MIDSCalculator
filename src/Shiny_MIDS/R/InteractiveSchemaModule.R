@@ -478,35 +478,31 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     #get new elements added by user
     newProps <- reactiveValues()
-    allAddedProps <- reactiveValues()
     observeEvent(input$addUoMprop, {
       newProps$prop <- c(newProps$prop, input$newPropUoM)
-      allAddedProps$prop <- c(allAddedProps$prop, input$newPropUoM)
       triggerUoM$count <- triggerUoM$count + 1
     })
     
     #get new values added by user
     newValues <- reactiveValues()
-    allAddedValues <- reactiveValues()
     observeEvent(input$addUoM, {
       newValues$value <- input$newValueUoM
-      allAddedValues$value <- c(allAddedValues$value, input$newValueUoM)
       triggerUoM$count <- triggerUoM$count + 1
     })
   
     ##create list of elements and mapping based on input and added elements
-    ranklevels <- reactive({
-      if (is_empty(allAddedProps$prop)){
+    UoMranklevels <- reactive({
+      if (is_empty(newProps$prop)){
         return(names(jsonUoM()))
       } else {
-        return(c(names(jsonUoM()), allAddedProps$prop))
+        return(c(names(jsonUoM()), newProps$prop))
       }
     })
     
     addedUoMlists <- eventReactive(triggerUoM$count, {
       x <- list()
-      for (i in 1:length(ranklevels())){
-        property <- ranklevels()[i]
+      for (i in 1:length(UoMranklevels())){
+        property <- UoMranklevels()[i]
         #get values for a given property
         values <- reactiveValuesToList(input)[[property]]
         x[[property]] <- values
@@ -539,7 +535,6 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     for (i in 1:length(UoMlists())){
       if (!is_empty(UoMlists()[[i]])){
         property <- names(UoMlists()[i])
-        labels <- list()
         values <- UoMlists()[[i]]
         if (property != "unused values"){
           rankclass <- c("default-sortable", "custom-sortable")
@@ -549,10 +544,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
         if ("No values added yet" %in% values & length(values) > 1){
           values <- values[!values == "No values added yet"]
         }
-        for (j in seq_along(values)){
-          labels[[j]] <- values[[j]]
-        }
-        v[[i]] <- rank_list(toupper(property), labels, ns(property),
+        v[[i]] <- rank_list(toupper(property), values, ns(property),
                               options = sortable_options(group = "UoM", onSort = sortable_js_capture_input(input_id = ns("sortedUoM"))), 
                               class = rankclass)
       }
@@ -572,7 +564,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     UoMinputs <- reactive({
       x <- list()
       #get names of original properties from schema and of user specified properties
-      properties <- c(names(jsonUoM()), allAddedProps$prop)
+      properties <- c(names(jsonUoM()), newProps$prop)
       #get values for each property
       for (j in 1:length(properties)){
         value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
