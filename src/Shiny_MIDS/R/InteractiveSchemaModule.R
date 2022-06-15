@@ -29,6 +29,7 @@ InteractiveSchemaUI <- function(id) {
     bsModal(ns("interactivemodal"), "Edit MIDS implementation interactively", ns("interactiveschema"), 
       downloadButton(ns("download"), "Download edited schema"),
       tabsetPanel(type = "tabs",
+        id = ns("tabs"),
         tabPanel("Criteria",
            fluidRow(
              column(
@@ -456,7 +457,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     ##update property selection
     #only update choices when navigating to this tab
-    mcprops <- eventReactive(input$tabs == "2. Unknown or Missing",
+    mcprops <- eventReactive(input$tabs == "Unknown or Missing",
                              {usedproperties()})
     output$newPropUoM <- renderUI({selectInput(ns("newPropUoM"), label = "Enter a new property",
                                                choices = sort(mcprops()))})
