@@ -8,6 +8,16 @@ Minimum Information about a Digital Specimen (MIDS) is a data standard which aim
 
 In this internship, a Shiny app is constructed which allows users to calculate MIDS scores for each record in a submitted dataset. We focus on the commonly used Darwin Core Archive as a data standard for the sourced data. As the MIDS standard is agnostic to the data model of the sourced data, the app includes a JSON schema mapping the sourced data to the different MIDS properties. This schema is editable through the app’s interface and may facilitate testing variations in the implementation of MIDS itself, aiding further development of the standard. 
 
+## About the App
+### Submit data
+
+On this page a (zipped) GBIF annotated Darwin Core Archive can be uploaded. In addition, the MIDS implementation can be specified and viewed. To specify the MIDS implementation you can either choose the default schema (included in the app) or upload your own file. It is also possible to choose to edit this schema interactively. The interactive editing opens in a pop-up window, where in a first tab, MIDS elements can be added, removed, or moved to another MIDS level. In addition, mappings can be removed or added by clicking the “edit” icon of a MIDS element. In a second tab, the Unknown or Missing section of the schema can be edited, i.e. new properties and new values can be added. This interactively edited schema can be saved to file (JSON). The schema (be it default, custom or interactive) can be viewed by clicking “Show MIDS implementation”, which opens a human-friendly visualization of the MIDS schema, so that it is not necessary to read the JSON file to be able to understand the specifics of the MIDS schema used. Once a dataset and a MIDS implementation have been chosen, calculations can be started by clicking “Start MIDS score calculations”.	
+
+### Results
+
+The results of each analysis are visualized on a new page, where it is possible to explore summaries of the results of both MIDS levels and MIDS elements, either as plots or as tables. It is also possible to explore the complete records table with the MIDS results for each record, and to download it as a csv file. In addition, the data can be filtered to see how MIDS results change when filtering on properties such as country code /taxonomic group/ collection date. The filename of the dataset is shown, as well as the used MIDS implementation, to make the provenance of the calculations clear.
+
+
 ## Code
 Code can be found in the /src folder.
 
