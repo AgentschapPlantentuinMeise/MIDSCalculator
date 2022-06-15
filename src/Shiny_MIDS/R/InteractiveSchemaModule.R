@@ -570,8 +570,14 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       return(schema)
     })
     
-    #convert to json
-    schematojson <- reactive(toJSON(schema()))
+    #convert to json and add info for json file
+    schematojson <- reactive({
+      x <- list()
+      x[["schemaname"]] <- "MIDS calculator interactive"
+      x[["date"]] <- Sys.time()
+      x[["schemaType"]] <- "MIDScalculator"
+      return(toJSON(c(x, schema())))
+    })
     
     #download json
     output$download <- 
