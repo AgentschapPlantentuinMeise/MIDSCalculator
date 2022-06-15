@@ -27,8 +27,6 @@ ViewImplementationUI <- function(id) {
           background-color: rgb(40, 116, 166, 0.2); 
           font-size: 18px; 
           color: #1A5276;
-          # border: 1px solid;
-          # border-color: #1A5276;
           box-shadow: none;
          }",
          paste0('.', ns('grid')), "{
