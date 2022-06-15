@@ -6,7 +6,7 @@ ResultsUI <- function(id) {
   )
 }
 
-ResultsServer <- function(id, parent.session, gbiffile, jsonschema,  
+ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
                           tab, disablestart) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
@@ -26,7 +26,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     #calculate mids levels and criteria
     gbif_dataset_mids <- eventReactive(input$start, {
       withProgress(message = 'Calculating MIDS scores', value = 0, {
-        calculate_mids(gbiffile = gbiffile()$datapath, jsonschema()$schema, jsontype = jsonschema()$type)
+        calculate_mids(gbiffile = gbiffile()$datapath, jsontype = "list", jsonlist = jsonschema())
       })
     })
     
@@ -41,7 +41,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     #save all MIDS implementations
     allschemas <- reactiveValues(prev_bins = NULL)
     observeEvent(input$start, {
-      allschemas$prev_bins[[paste0("res", input$start)]] <- jsonschema()
+      allschemas$prev_bins[[paste0("res", input$start)]] <- jsonschema()[1:2]
     })
     
     #save names of datasets
@@ -285,11 +285,8 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     observe(
       output[[paste0("Used_MIDS_implementation", input$start)]] <-
         renderText(
-          if (req(allschemas$prev_bins[[paste0("res",input$start)]]$type) != "interactive"){
-            return(
-              isolate(allschemas$prev_bins[[paste0("res", input$start)]]$filename)
-              )
-            }
+          if (!is.null(isolate(jsonschema()$filename))){
+            return(isolate(jsonschema()$filename))}
           else {return("Interactive")}
         )
     )
