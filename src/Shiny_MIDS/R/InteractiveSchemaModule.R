@@ -453,6 +453,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     # Edit Unknown or Missing section -----------------------------------------
     
+    
     ##update property selection
     #only update choices when navigating to this tab
     mcprops <- eventReactive(input$tabs == "2. Unknown or Missing",
@@ -461,46 +462,102 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
                                                choices = sort(mcprops()))})
     
     ## get UoM values and properties from existing JSON schema
-    UoMinitial <- reactive({v <- list()
+    initialUoMlists <- reactive({v <- list()
     for (i in 1:length(jsonUoM())){
-      v[[i]] <- rank_list(names(jsonUoM()[i]), jsonUoM()[[i]], ns(paste0("UoM", names(jsonUoM()[i]))), options = sortable_options(group = "midsUoM"),
-                          class = c("default-sortable", "custom-sortable"))
+      property <- names(jsonUoM()[i])
+      v[[property]] <- jsonUoM()[[i]]
     }
     return(v)
     })
     
-    ## add UoM properties specified by user
-    #get new UoM property from text input field
-    newprop <- eventReactive(input$addUoMprop, {input$newPropUoM})
-    ## also get previously submitted properties
-    newprops <- reactiveValues(prev_bins = NULL)
+    #initialize trigger to keep track of changes to elements and/or mappings
+    triggerUoM <- reactiveValues(count=0)
+    
+    #update trigger when sorting is changed
+    observeEvent(input$sortedUoM, {triggerUoM$count <- triggerUoM$count + 1})
+    
+    #get new elements added by user
+    newProps <- reactiveValues()
+    allAddedProps <- reactiveValues()
     observeEvent(input$addUoMprop, {
-      newprops$prev_bins <- c(newprops$prev_bins, input$newPropUoM)
+      newProps$prop <- c(newProps$prop, input$newPropUoM)
+      allAddedProps$prop <- c(allAddedProps$prop, input$newPropUoM)
+      triggerUoM$count <- triggerUoM$count + 1
     })
-    #add rank list for each submitted property
-    newPropUoM <- reactive({v <- list()
-    for (i in 1:length(req(newprops$prev_bins))){
-      #get value inside property
-      value <- input[[paste0("UoM", newprops$prev_bins[i])]]
-      #add rank list for each property
-      v[[i]] <- rank_list(newprops$prev_bins[i], value, ns(paste0("UoM", newprops$prev_bins[i])), options = sortable_options(group = "midsUoM"),
-                          class = c("default-sortable", "custom-sortable"))
+    
+    #get new values added by user
+    newValues <- reactiveValues()
+    allAddedValues <- reactiveValues()
+    observeEvent(input$addUoM, {
+      newValues$value <- input$newValueUoM
+      allAddedValues$value <- c(allAddedValues$value, input$newValueUoM)
+      triggerUoM$count <- triggerUoM$count + 1
+    })
+  
+    ##create list of elements and mapping based on input and added elements
+    ranklevels <- reactive({
+      if (is_empty(allAddedProps$prop)){
+        return(names(jsonUoM()))
+      } else {
+        return(c(names(jsonUoM()), allAddedProps$prop))
+      }
+    })
+    
+    addedUoMlists <- eventReactive(triggerUoM$count, {
+      x <- list()
+      for (i in 1:length(ranklevels())){
+        property <- ranklevels()[i]
+        #get values for a given property
+        values <- reactiveValuesToList(input)[[property]]
+        x[[property]] <- values
+      }
+      #add newly added properties
+      for (newprop in newProps$prop){
+        if (!is.null(reactiveValuesToList(input)[[newprop]])){
+          x[[newprop]] <- reactiveValuesToList(input)[[newprop]]
+        } else {
+          x[[newprop]] <- "No values added yet"
+        }
+      }
+      #check if there are new values to be added
+      if (!is.null(newValues$value) | !is.null(reactiveValuesToList(input)[["unused values"]])){
+        x[["unused values"]] <- c(reactiveValuesToList(input)[["unused values"]], newValues$value)
+        newValues$value <- NULL
+      }
+      return(x)
+    })
+    
+    ##use initial when nothing has been added yet, otherwise use added
+    UoMlists <- reactive({
+      if(triggerUoM$count == 0){
+        return(initialUoMlists())}
+      else {return(addedUoMlists())}
+    })
+    
+    ## create ranklists
+    UoMranklists <- reactive({v <- list()
+    for (i in 1:length(UoMlists())){
+      if (!is_empty(UoMlists()[[i]])){
+        property <- names(UoMlists()[i])
+        labels <- list()
+        values <- UoMlists()[[i]]
+        if (property != "unused values"){
+          rankclass <- c("default-sortable", "custom-sortable")
+        } else {
+          rankclass <- c("default-sortable", "custom-sortable", "unused")
+        }
+        if ("No values added yet" %in% values & length(values) > 1){
+          values <- values[!values == "No values added yet"]
+        }
+        for (j in seq_along(values)){
+          labels[[j]] <- values[[j]]
+        }
+        v[[i]] <- rank_list(toupper(property), labels, ns(property),
+                              options = sortable_options(group = "UoM", onSort = sortable_js_capture_input(input_id = ns("sortedUoM"))), 
+                              class = rankclass)
+      }
     }
     return(v)
-    })
-    
-    ## add UoM values specified by user (and keep existing values)
-    existing <- eventReactive(input$addUoM, {input$UoMunused}) 
-    new <- eventReactive(input$addUoM, {input$newValueUoM})
-    UoMunused <- reactive({rank_list("Unused values", c(existing(), new()), ns("UoMunused"), options = sortable_options(group = "midsUoM"),
-                                           class = c("default-sortable", "custom-sortable", "unused")) })
-    
-    #combine all ranklists
-    UoMranklists <- reactive({
-      if (input$addUoMprop == 0 & input$addUoM == 0){return(UoMinitial())}
-      else if (input$addUoMprop == 0) {return( c(UoMinitial(), UoMunused()))}
-      else if (input$addUoM == 0) {return( c(UoMinitial(), newPropUoM()))}
-      else {return( c(UoMinitial(), newPropUoM(), UoMunused()))}
     })
     
     #render ranklists
@@ -515,12 +572,12 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     UoMinputs <- reactive({
       x <- list()
       #get names of original properties from schema and of user specified properties
-      properties <- c(names(jsonUoM()), newprops$prev_bins)
+      properties <- c(names(jsonUoM()), allAddedProps$prop)
       #get values for each property
       for (j in 1:length(properties)){
         value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
         #don't include empty properties
-        if (rlang::is_empty(value[[1]])){next}
+        if (rlang::is_empty(value[[1]]) | value == "No values added yet"){next}
         if (properties[j] != "all"){
           x[["unknownOrMissing"]][[properties[j]]][["value"]] <- value[[1]]
           x[["unknownOrMissing"]][[properties[j]]][["midsAchieved"]] <- FALSE
