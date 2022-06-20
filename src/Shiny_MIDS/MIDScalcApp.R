@@ -42,7 +42,8 @@ ui <-
              tags$span("Calculate MIDS scores",
                        actionButton("info",
                           icon("info"),
-                          style = "padding:5px; font-size:70%; border-style: none")), 
+                          style = "padding:0px 5px 15px 5px; font-size:65%; border-style: none"
+                          )), 
              ),
    id = "tabs",
    tabPanel("Submit data",
