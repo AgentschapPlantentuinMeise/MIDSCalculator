@@ -91,7 +91,6 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
     
-    
     #enable/ disable view action button
     observe(
       if (disable() == TRUE){
@@ -568,21 +567,18 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       properties <- c(names(jsonUoM()), newProps$prop)
       #get values for each property
       for (j in 1:length(properties)){
-        value <-  reactiveValuesToList(input)[paste0("UoM", properties[j])]
-        #don't include empty properties
-        if (rlang::is_empty(value[[1]]) | value == "No values added yet"){next}
-        if (properties[j] != "all"){
-          x[["unknownOrMissing"]][[properties[j]]][["value"]] <- value[[1]]
-          x[["unknownOrMissing"]][[properties[j]]][["midsAchieved"]] <- FALSE
-          x[["unknownOrMissing"]][[properties[j]]][["property"]] <- properties[j]
-        } else {
-          all_props <- unlist(reactiveValuesToList(input)[paste0("UoM", "all")])
-          for (n_prop in seq_along(all_props)){
-            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["value"]] <- all_props[[n_prop]]
-            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["midsAchieved"]] <- FALSE
+        all_values <- unlist(reactiveValuesToList(input)[properties[j]])
+        for (n_value in seq_along(all_values)){
+          if (all_values[[n_value]] == "No values added yet"){next}
+          if (properties[j] != "all"){
+            appendlist <- list(list("value" = all_values[[n_value]], "property" = properties[j], "midsAchieved" = FALSE))
+          } else {
+            appendlist <- list(list("value" = all_values[[n_value]], "midsAchieved" = FALSE))
           }
+          x <- append(x, appendlist)
         }
       }
+    x <- list("unknownOrMissing" = x)
     return(x)
     })
     
@@ -590,19 +586,15 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     UoMfile <- reactive({
       x <- list()
       for (j in 1:length(jsonUoM())){
-        value <-  jsonUoM()[[j]]
+        all_values <- unlist(jsonUoM()[[j]])
         name <- names(jsonUoM()[j])
-        #don't include empty properties
-        if (rlang::is_empty(value[[1]])){next}
-        if (name != "all"){
-          x <- append(x, list(list("value" = value[[1]], "property" = name, "midsAchieved" = FALSE)))
-        } else {
-          all_props <- unlist(value)
-          for (n_prop in seq_along(all_props)){
-            x <- append(x, list(list("value" = all_props[[n_prop]], "midsAchieved" = FALSE)))
+        for (n_value in seq_along(all_values)){
+          if (name != "all"){
+            x <- append(x, list(list("value" = all_values[[n_value]], "property" = name, "midsAchieved" = FALSE)))
+          } else {
+            x <- append(x, list(list("value" = all_values[[n_value]], "midsAchieved" = FALSE)))
           }
         }
-        
       }
       x <- list("unknownOrMissing" = x)
       return(x)
@@ -611,7 +603,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     #combine sections
     schema <- reactive({
       #if UoM section wasn't visited, fill this with the UoM from file
-      if (is_empty(UoMinputs())){
+      if (is_empty(UoMinputs()[["unknownOrMissing"]])){
         schema <- c(UoMfile(), critinputs())
       } else {
         schema <- c(UoMinputs(), critinputs())
