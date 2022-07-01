@@ -399,29 +399,29 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
           if (!is_empty(mappings)){
             if (any(grepl("&", mappings, fixed = TRUE))){
               #deal with &
-              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- strsplit(mappings[grepl("&", mappings, fixed = TRUE)], "&")[[1]]
-              x[[midslevels[i]]][[element]][["subcondition1"]][["operator"]] <- "AND"
+              x[[midslevels[i]]][[element]][[1]][["property"]] <- strsplit(mappings[grepl("&", mappings, fixed = TRUE)], "&")[[1]]
+              x[[midslevels[i]]][[element]][[1]][["operator"]] <- "AND"
               #separate those without &, if there are any
               if (any(!grepl("&", mappings, fixed = TRUE))){
-                x[[midslevels[i]]][[element]][["subcondition2"]][["property"]] <- mappings[!grepl("&", mappings, fixed = TRUE)]
-                x[[midslevels[i]]][[element]][["subcondition2"]][["operator"]] <- "OR"
+                appendlist <- list(list("property" = mappings[!grepl("&", mappings, fixed = TRUE)], "operator" = "OR"))
+                x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
               }
             } else if (any(grepl("!", mappings, fixed = TRUE))){
               #deal with !
-              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- gsub("!", "", mappings[grepl("!", mappings, fixed = TRUE)])
-              x[[midslevels[i]]][[element]][["subcondition1"]][["operator"]] <- "NOT"
+              x[[midslevels[i]]][[element]][[1]][["property"]] <- gsub("!", "", mappings[grepl("!", mappings, fixed = TRUE)])
+              x[[midslevels[i]]][[element]][[1]][["operator"]] <- "NOT"
               #separate those without !, if there are any
               if (any(!grepl("!", mappings, fixed = TRUE))){
-                x[[midslevels[i]]][[element]][["subcondition2"]][["property"]] <- mappings[!grepl("!", mappings, fixed = TRUE)]
-                x[[midslevels[i]]][[element]][["subcondition2"]][["operator"]] <- "OR"
+                appendlist <- list(list("property" = mappings[!grepl("!", mappings, fixed = TRUE)], "operator" = "OR"))
+                x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
               }
             } else if (length(mappings) > 1) {
               #no & or !
-              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- mappings
-              x[[midslevels[i]]][[element]][["subcondition1"]][["operator"]] <- "OR"
+              x[[midslevels[i]]][[element]][[1]][["property"]] <- mappings
+              x[[midslevels[i]]][[element]][[1]][["operator"]] <- "OR"
             } else {
             #no & or ! and only one property
-              x[[midslevels[i]]][[element]][["subcondition1"]][["property"]] <- mappings
+              x[[midslevels[i]]][[element]][[1]][["property"]] <- mappings
             }
             
           }
@@ -545,7 +545,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
         if ("No values added yet" %in% values & length(values) > 1){
           values <- values[!values == "No values added yet"]
         }
-        v[[i]] <- rank_list(toupper(property), values, ns(property),
+        v[[i]] <- rank_list(property, values, ns(property),
                               options = sortable_options(group = "UoM", onSort = sortable_js_capture_input(input_id = ns("sortedUoM"))), 
                               class = rankclass)
       }
@@ -561,7 +561,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       UoMranklists()[seq(2, length(UoMranklists()), 2)]
     })
     
-    ## combine all UoM inputs from interatice schema
+    ## combine all UoM inputs from interactive schema
     UoMinputs <- reactive({
       x <- list()
       #get names of original properties from schema and of user specified properties
@@ -595,17 +595,16 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
         #don't include empty properties
         if (rlang::is_empty(value[[1]])){next}
         if (name != "all"){
-          x[["unknownOrMissing"]][[name]][["value"]] <- value[[1]]
-          x[["unknownOrMissing"]][[name]][["midsAchieved"]] <- FALSE
-          x[["unknownOrMissing"]][[name]][["property"]] <- name
+          x <- append(x, list(list("value" = value[[1]], "property" = name, "midsAchieved" = FALSE)))
         } else {
           all_props <- unlist(value)
           for (n_prop in seq_along(all_props)){
-            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["value"]] <- all_props[[n_prop]]
-            x[["unknownOrMissing"]][[paste0("all", n_prop)]][["midsAchieved"]] <- FALSE
+            x <- append(x, list(list("value" = all_props[[n_prop]], "midsAchieved" = FALSE)))
           }
         }
+        
       }
+      x <- list("unknownOrMissing" = x)
       return(x)
     })
    
@@ -613,9 +612,9 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     schema <- reactive({
       #if UoM section wasn't visited, fill this with the UoM from file
       if (is_empty(UoMinputs())){
-        schema <- c(critinputs(), UoMfile())
+        schema <- c(UoMfile(), critinputs())
       } else {
-        schema <- c(critinputs(), UoMinputs())
+        schema <- c(UoMinputs(), critinputs())
       }
       return(schema)
     })
@@ -626,7 +625,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
       x[["schemaname"]] <- "MIDS calculator interactive"
       x[["date"]] <- Sys.time()
       x[["schemaType"]] <- "MIDScalculator"
-      return(toJSON(c(x, schema())))
+      return(toJSON(c(x, schema()), auto_unbox = TRUE))
     })
     
     #download json
@@ -636,7 +635,7 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
           "MIDS_schema.json"
         },
         content = function(file) {
-          write(schematojson(), file)
+          write(prettify(schematojson()), file)
         })
     
     #check if the edit actionbutton was clicked
