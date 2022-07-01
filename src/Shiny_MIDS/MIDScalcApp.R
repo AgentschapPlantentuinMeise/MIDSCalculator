@@ -104,12 +104,19 @@ server <- function(input, output, session) {
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
   })
   
-  #disable start when there is no input file, when interactive is chosen but not visited, or when custom upload is chosen but empty
+  #check if file is uploading
+  hold <- reactiveVal(FALSE)
+  onclick("gbiffile", {hold(TRUE)})
+  observeEvent(input$gbiffile, {hold(FALSE)})
+  
+  #disable start when there is no input file, when interactive is chosen but not visited, 
+  #or when custom upload is chosen but empty, or when file is uploading
   disablestart <- reactiveVal(FALSE)
   observe({
     if (is.null(input$gbiffile) |
         (input$editschema == TRUE && interactiveschema$visited() == FALSE) |
-        (input$jsonfiletype == "custom" & is.null(input$customjsonfile))){
+        (input$jsonfiletype == "custom" & is.null(input$customjsonfile)) |
+        hold() == TRUE){
       disablestart(TRUE)} else {disablestart(FALSE)}
   })
     
@@ -128,8 +135,7 @@ server <- function(input, output, session) {
         input$editschema == FALSE){
       disableinteractive(TRUE)} else {disableinteractive(FALSE)}
   })
-
-
+  
 # Initialize MIDS implementation ------------------------------------------
 
   #get path to json schema
@@ -150,7 +156,9 @@ server <- function(input, output, session) {
     read_json_unknownOrMissing(schema = jsonpath())
   })
   
-  #get final MIDS implementation schema (either from file or from interactive editing)
+
+# Get final MIDS implementation schema (either from file or from interactive editing) --------
+
   jsonschemafinal <- reactive({ 
     if (input$editschema == TRUE){
       # get interactive schema
