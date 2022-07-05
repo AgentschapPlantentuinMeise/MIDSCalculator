@@ -1,6 +1,6 @@
 library(dplyr)
 library(data.table)
-library(purrr)
+#library(purrr)
 library(magrittr)
 
 calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NULL) {
@@ -24,7 +24,14 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   }
   
   #add other needed/interesting properties
-  list_props <- unique(c(list_props, "datasetKey", "countryCode", "kingdom", "phylum", "class", "order", "family", "subfamily", "genus"))
+  list_props <- unique(c(list_props,
+                         "datasetKey",
+                         "countryCode",
+                         "kingdom",
+                         "phylum", "class",
+                         "order", "family",
+                         "subfamily",
+                         "genus"))
   
   # import from zipped DWC archive
   # and set unknown or missing values that apply to all to NA

@@ -1,4 +1,5 @@
 InteractiveSchemaUI <- function(id) {
+  require(purrr)
   ns <- NS(id)
   
   tagList(

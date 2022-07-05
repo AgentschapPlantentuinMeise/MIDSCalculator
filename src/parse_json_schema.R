@@ -1,6 +1,8 @@
 library(jsonlite)
 
-read_json_unknownOrMissing <- function(schema = "data/schemas/secondschema_conditions_same_level.json", type = "file") {
+default_schema = "data/schemas/fourthschema.json"
+
+read_json_unknownOrMissing <- function(schema = default_schema, type = "file") {
 
 
   # Read schema -------------------------------------------------------------
@@ -38,7 +40,7 @@ read_json_unknownOrMissing <- function(schema = "data/schemas/secondschema_condi
   return(list_UoM)
 }
   
-read_json_mids_criteria <- function(schema = "data/schemas/secondschema_conditions_same_level.json",
+read_json_mids_criteria <- function(schema = default_schema,
                                     outtype = "criteria", type = "file") {
   
   

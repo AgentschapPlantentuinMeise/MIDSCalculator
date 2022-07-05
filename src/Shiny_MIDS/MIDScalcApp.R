@@ -76,6 +76,13 @@ ui <-
 
 # Define server logic ----
 server <- function(input, output, session) {
+  if (!interactive()) {
+    session$onSessionEnded(function() {
+      stopApp()
+      q("no")
+    })
+  }
+  
   
 
 # Show information about the app ------------------------------------------
@@ -141,7 +148,7 @@ server <- function(input, output, session) {
   #get path to json schema
   jsonpath <- reactive({
     if (input$jsonfiletype == "default" | is.null(input$customjsonfile$datapath)){
-      return("../../data/schemas/secondschema_conditions_same_level.json")}
+      return(paste0("../../",default_schema))}
     if (input$jsonfiletype == "custom"){
       return(input$customjsonfile$datapath)}
   })
