@@ -1,4 +1,5 @@
 InteractiveSchemaUI <- function(id) {
+  require(purrr)
   ns <- NS(id)
   
   tagList(
@@ -635,7 +636,6 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     observe(
     if (input$interactiveschema > 0){visited(TRUE)}
     )
-    
     return(list(interactivejson = reactive({schematojson()}), visited = reactive({visited()})))
     
    
