@@ -73,7 +73,7 @@ bin
 nativefier-app
 RInno_installer
 utils
-www/default.ico
+www/*
 .Rhistory
 default.ico
 infoafter.txt
