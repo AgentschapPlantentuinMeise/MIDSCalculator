@@ -111,14 +111,16 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     #create summary of MIDS criteria
     midscrit <- reactive({
       cbind.data.frame(
-        names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE]),
+        gsub("mids[0-3]", "", 
+             names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE])),
+        substr(names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE]), 5, 5),
         gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%
           map(~{sum(.x, na.rm = TRUE)}) %>% 
           as.numeric() , 
         gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%  
           map(~{round((sum(.x, na.rm = TRUE) / nrow(gbif_dataset_mids_filtered()))*100)}) %>%
           as.numeric())  %>% 
-        set_colnames(c("MIDS_elements", "Number_of_records","Percentage")) 
+        set_colnames(c("MIDS_elements", "MIDS_level", "Number_of_records","Percentage")) 
     })
     
 # Set up plots ------------------------------------------------------------
@@ -142,7 +144,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
         geom_text(data = subset(midssum(), Percentage >= 5), 
                   aes(y = Percentage , label = Percentage),
                   vjust = 1.25, colour = "white") +
-        geom_text(data = subset(midssum(), Percentage < 5), 
+        geom_text(data = subset(midssum(), Percentage < 5 & Percentage != 0), 
                   aes(y = Percentage , label = Percentage),
                   vjust = -0.5, colour = "black") +
         labs(x = "MIDS level", y = "Percentage of records at specified MIDS level") +
@@ -155,16 +157,17 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     
     #plot mids criteria
     midscritsplot<-reactive({
-      ggplot(midscrit(), aes(x= MIDS_elements, y=Percentage, fill = factor(substr(MIDS_elements, 5, 5)))) + 
+      ggplot(midscrit(), aes(x= MIDS_elements, y=Percentage, fill = MIDS_level)) + 
         geom_bar(stat = "identity") + 
+        scale_x_discrete(limits=midscrit()$MIDS_elements) +
+        scale_y_continuous(expand=c(0,0)) +
         custom_colors2 +
         coord_flip() + 
         geom_text(data = subset(midscrit(), Percentage >= 5), 
                   aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
-        geom_text(data = subset(midscrit(), Percentage < 5), 
+        geom_text(data = subset(midscrit(), Percentage < 5 & Percentage != 0), 
                   aes(y = Percentage, label = Percentage), hjust = -0.5, colour = "black") +
         labs(x = "MIDS elements", y = "Percentage of records that meet the element") +
-        scale_x_discrete(labels = substr(midscrit()$MIDS_elements, 6, max(nchar(midscrit()$MIDS_elements)))) +
         ggtitle("MIDS elements") +
         theme(plot.title = element_text(hjust = 0.5, size = 25) , 
               plot.margin = margin(1, 1, 2, 2, "cm"),
@@ -205,7 +208,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
             tabsetPanel(type = "tabs",
              tabPanel("Plots",
                       plotOutput(ns(paste0("midsplot_prev", input$start))),
-                      plotOutput(ns(paste0("midscritsplot", input$start)))),
+                      plotOutput(ns(paste0("midscritsplot", input$start)), height="auto")),
              tabPanel("Summary tables", 
                       DT::dataTableOutput(ns(paste0("summary", input$start))), 
                       br(),
@@ -241,12 +244,12 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
 
     #render plots
     output[[paste0("midsplot_prev", input$start)]] <- renderPlot(midsplot())
-    output[[paste0("midscritsplot", input$start)]] <- renderPlot(midscritsplot())
+    output[[paste0("midscritsplot", input$start)]] <- renderPlot(midscritsplot(), height = function(){max(c(nrow(midscrit())*40,400))})
     #render summaries
     output[[paste0("summary", input$start)]] <- 
       DT::renderDataTable(midssum(), rownames = FALSE, options = list(dom = 't'))
     output[[paste0("summarycrit", input$start)]] <- 
-      DT::renderDataTable(midscrit(), rownames = FALSE, options = list(dom = 't'))
+      DT::renderDataTable(midscrit(), rownames = FALSE, options = list(dom = 't', paging = FALSE))
     #render table
     output[[paste0("table", input$start)]] <- 
       DT::renderDataTable(gbif_dataset_mids_filtered())
