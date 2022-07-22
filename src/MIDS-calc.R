@@ -48,56 +48,56 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
     }
   }
   
-  # Get metadata (from zipped DWC archive) ------------------------------------------------------------
-  
-  #which datasets have records that don't have the modified property
-  if ("modified" %in% names(gbif_dataset)){
-    keys <- filter(gbif_dataset, is.na(modified)) %>% .$datasetKey %>% unique()
-  } 
-  #get paths for those datasets
-  if (exists("keys") && !is_empty(keys)){
-    filenames <- paste0("dataset/", keys, ".xml")}
-  
-  #read xml files to get publication date out of metadata
-  pubdate <- data.table(datasetKey=character(), pubdate=character())
-  if(exists("filenames")){
-    for (file in filenames){
-      filename <- tools::file_path_sans_ext(basename(file))
-      #extract pubdate, if it is not found it returns an emtpy list
-      trydate <- XML::xmlRoot(XML::xmlParse(
-        xml2::read_xml(unzip(gbiffile, file, exdir = tempfile()), 
-                       encoding = "UTF-8"))) %>%
-        XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
-      #if there is a date, add it to the list
-      if(length(trydate) != 0){
-        date <- 
-          trydate %>%
-          .[[1]] %>% 
-          XML::xmlValue() %>% 
-          trimws()
-      
-      } else {date <- NA}
-      pubdate <- rbind(pubdate, list(filename, date))
-    }
-  }
-  
-  # Add modified metadata to the dataset ------------------------------------
-  
-  if ("modified" %in% names(gbif_dataset)){
-    gbif_dataset_mids <- left_join(gbif_dataset, pubdate, by = "datasetKey")
-    gbif_dataset <- NULL
-    gbif_dataset_mids %<>%
-      mutate(modified = case_when( 
-        is.na(modified) ~ pubdate,
-        TRUE ~ as.character(modified)))
-    
-    #don't need pubdate column anymore
-    gbif_dataset_mids$pubdate <- NULL
-  }
-  else {
+  # # Get metadata (from zipped DWC archive) ------------------------------------------------------------
+  # 
+  # #which datasets have records that don't have the modified property
+  # if ("modified" %in% names(gbif_dataset)){
+  #   keys <- filter(gbif_dataset, is.na(modified)) %>% .$datasetKey %>% unique()
+  # } 
+  # #get paths for those datasets
+  # if (exists("keys") && !is_empty(keys)){
+  #   filenames <- paste0("dataset/", keys, ".xml")}
+  # 
+  # #read xml files to get publication date out of metadata
+  # pubdate <- data.table(datasetKey=character(), pubdate=character())
+  # if(exists("filenames")){
+  #   for (file in filenames){
+  #     filename <- tools::file_path_sans_ext(basename(file))
+  #     #extract pubdate, if it is not found it returns an emtpy list
+  #     trydate <- XML::xmlRoot(XML::xmlParse(
+  #       xml2::read_xml(unzip(gbiffile, file, exdir = tempfile()), 
+  #                      encoding = "UTF-8"))) %>%
+  #       XML::xmlElementsByTagName("pubDate", recursive = TRUE) 
+  #     #if there is a date, add it to the list
+  #     if(length(trydate) != 0){
+  #       date <- 
+  #         trydate %>%
+  #         .[[1]] %>% 
+  #         XML::xmlValue() %>% 
+  #         trimws()
+  #     
+  #     } else {date <- NA}
+  #     pubdate <- rbind(pubdate, list(filename, date))
+  #   }
+  # }
+  # 
+  # # Add modified metadata to the dataset ------------------------------------
+  # 
+  # if ("modified" %in% names(gbif_dataset)){
+  #   gbif_dataset_mids <- left_join(gbif_dataset, pubdate, by = "datasetKey")
+  #   gbif_dataset <- NULL
+  #   gbif_dataset_mids %<>%
+  #     mutate(modified = case_when( 
+  #       is.na(modified) ~ pubdate,
+  #       TRUE ~ as.character(modified)))
+  #   
+  #   #don't need pubdate column anymore
+  #   gbif_dataset_mids$pubdate <- NULL
+  # }
+  # else {
     gbif_dataset_mids <- gbif_dataset
     gbif_dataset <- NULL
-  }
+  # }
     
   # Define criteria ---------------------------------------------------------
   
