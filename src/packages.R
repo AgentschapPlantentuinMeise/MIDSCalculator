@@ -8,8 +8,8 @@ packages <- c("shiny",
               "data.table",
               "purrr",
               "magrittr",
-              "jsonlite",
-              "RColorBrewer")
+              "jsonlite")#,
+              #"RColorBrewer")
 
 pkgLoad <- function() {
   

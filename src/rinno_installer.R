@@ -1,6 +1,6 @@
 library(RInno)
 
-source("packages.R")
+source("src/packages.R")
 
 trace(RInno::code_section,edit=T) #replace 1-3 with 1-4
 trace(get_R,edit=T) #replace 1-3 with 1-4
@@ -17,17 +17,19 @@ create_config(app_name = name,
 start_iss(app_name = name) %>%
   
   # C-like directives
-  directives_section(app_version = "0.2",
+  directives_section(include_R = T,
+                     app_version = "0.3",
                      publisher   = "Meise Botanic Garden", 
                      main_url    = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator") %>%
   
   # Setup Section
   setup_section(app_dir = getwd(),
-                setup_icon  = "src/Shiny_MIDS/www/icon.ico",
+                setup_icon  = "src/Shiny_MIDS/www/icon2.ico",
                 dir_out = "RInno_installer",
                 pub_url     = "https://www.plantentuinmeise.be", 
                 sup_url     = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator/issues",
-                upd_url     = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator") %>%
+                upd_url     = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator",
+                privilege = "lowest") %>%
   
   # Languages Section
   languages_section() %>%
@@ -44,9 +46,11 @@ start_iss(app_name = name) %>%
                                         " datasets of natural history specimens. Currently, only Darwin Core",
                                         " Archives as produced by GBIF are supported."),
                 app_dir = getwd(),
-                app_icon       = "src/Shiny_MIDS/www/icon.ico",
+                app_icon       = "src/Shiny_MIDS/www/icon2.ico",
                 prog_menu_icon = T,
                 desktop_icon   = T) %>%
+  gsub("commonprograms","autoprograms",.) %>%
+  gsub("commondesktop","autodesktop",.) %>%
   
   # Execution & Pascal code to check registry during installation
   # If the user has R, don't give them an extra copy
