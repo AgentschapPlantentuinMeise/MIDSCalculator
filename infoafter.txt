@@ -1,0 +1,1 @@
+You have now succesfully installed the MIDSCalculator app. Running the executable file should launch the app in your Chrome browser. If you encounter any problems, you can find support at https://github.com/AgentschapPlantentuinMeise/MIDSCalculator/issues .

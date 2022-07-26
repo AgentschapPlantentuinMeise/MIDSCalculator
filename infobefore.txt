@@ -1,0 +1,5 @@
+This setup wizard will install an Rshiny app called MIDSCalculator intended for use on your local computer. The app facilitates calculating levels of the Minimum Information about a Digital Specimen standard (https://github.com/tdwg/mids) based on Occurrence datasets formatted according to the Darwin Core Archive standard.
+
+This app requires R4.2.0. to work. If this is not already installed on your local system, the installer will install it as well. 
+
+If an older version of R is installed, this app will install the newer version. Please note that this may modify the version of R third party applications such as Rstudio point to, including any packages installed.

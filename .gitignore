@@ -76,8 +76,8 @@ utils
 www/*
 .Rhistory
 default.ico
-infoafter.txt
-infobefore.txt
+#infoafter.txt
+#infobefore.txt
 LICENSE
 MIDSCalculator.bat
 MIDSCalculator.iss
