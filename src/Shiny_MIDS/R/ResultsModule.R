@@ -9,6 +9,7 @@ ResultsUI <- function(id) {
 ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
                           tab, disablestart) {
   moduleServer(id, function(input, output, module.session) {
+    require(RColorBrewer)
     ns <- module.session$ns
     
 
@@ -125,21 +126,21 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     
 # Set up plots ------------------------------------------------------------
     
-    # #define custom color scales
-    # #MIDS levels
-    # myColors <- brewer.pal(6, "Blues")[2:6]
-    # names(myColors) <- c("-1", "0", "1", "2", "3")
-    # custom_colors <- scale_fill_manual(name = "MIDS level", values = myColors)
-    # #MIDS criteria
-    # myColors2 <-  myColors[2:5]
-    # names(myColors2) <- c("0", "1", "2", "3")
-    # custom_colors2 <- scale_fill_manual(name = "MIDS level", values = myColors2)
+    #define custom color scales
+    #MIDS levels
+    myColors <- brewer.pal(6, "Blues")[2:6]
+    names(myColors) <- c("-1", "0", "1", "2", "3")
+    custom_colors <- scale_fill_manual(name = "MIDS level", values = myColors)
+    #MIDS criteria
+    myColors2 <-  myColors[2:5]
+    names(myColors2) <- c("0", "1", "2", "3")
+    custom_colors2 <- scale_fill_manual(name = "MIDS level", values = myColors2)
     
     #plot mids levels
     midsplot<-reactive({
       ggplot(midssum(), aes(x=MIDS_level, y=Percentage, fill = factor(MIDS_level))) + 
         geom_bar(stat = "identity") +
-        # custom_colors +
+        custom_colors +
         coord_cartesian(xlim = c(-1.5, 3.5)) +
         geom_text(data = subset(midssum(), Percentage >= 5), 
                   aes(y = Percentage , label = Percentage),
@@ -161,7 +162,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
         geom_bar(stat = "identity") + 
         scale_x_discrete(limits=midscrit()$MIDS_elements) +
         scale_y_continuous(expand=c(0,0)) +
-        # custom_colors2 +
+        custom_colors2 +
         coord_flip() + 
         geom_text(data = subset(midscrit(), Percentage >= 5), 
                   aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +

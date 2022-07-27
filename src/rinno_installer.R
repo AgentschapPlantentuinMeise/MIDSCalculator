@@ -29,7 +29,9 @@ start_iss(app_name = name) %>%
                 pub_url     = "https://www.plantentuinmeise.be", 
                 sup_url     = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator/issues",
                 upd_url     = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator",
-                privilege = "lowest") %>%
+                privilege = "lowest",
+                info_before = "infobefore.txt",
+                info_after = "infoafter.txt") %>%
   
   # Languages Section
   languages_section() %>%
