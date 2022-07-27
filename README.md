@@ -1,6 +1,8 @@
-# MIDS-Lynn
+# MIDSCalculator
 
-Repository for code written during the internship of Lynn Delgat
+Repository for the MIDSCalculator app, written mostly by @LynnDelgat during an internship at Meise Botanic Garden.
+
+The latest self-contained windows installer (generated using Inno Setup) can be found here: https://drive.google.com/drive/folders/1ioRhHIvdYI88yoPTsYLG_k5-8n-05CiP
 
 ## Towards the MIDS data standard: developing a Shiny app to calculate digitization levels of natural history specimens
 
@@ -51,34 +53,10 @@ MIDScalcApp.R
 
 ## Data
 ### Datasets
-occurrence.txt
-* GBIF Occurrence Download https://doi.org/10.15468/dl.vguer4
-* Meise Botanic Garden Herbarium (BR) + Malvaceae
-* Used for initial testing
-
-test_dataset.txt
-* Artificial dataset to test MIDS calculations
+* GBIF Occurrence Download [10.15468/dl.e8jnan](http://doi.org/10.15468/dl.e8jnan) can be found as a zip file in the data folder for quick testing.
 
 ### Schemas
-firstschema.json
-* First draft (07/21)
- 
-secondschema.json
-* Second draft (02/22)
-  * informationWithheld currently not used
-  * unknownOrMissing only values for which midsAchieved is False
-  * don't specify midsAchieved for MIDS conditions
-  * some properties updated
-
-secondschema_conditions_same_level.json
-* Second draft (02/22) with some small changes:
-  * Placed all conditions on the same nesting level
-  * Removed verbatimCoordinates
-  * Apply "Unknown" in unknownOrMissing to all
-  * Added empty string to unknownOrMissing
-
-## Reports
-Testing_datasets.Rmd shows the results of the MIDS calculator script on several datasets.
+* [fourthschema.json](https://github.com/AgentschapPlantentuinMeise/MIDSCalculator/blob/main/data/schemas/fourthschema.json): This schema is based on the most recent MIDS specification for levels 0 and 1. As levels 2 and 3 are still under discussion, the Schema offers a basic interpretation of several potential properties.
 
 ## Session info
 Code was run with the following packages and versions:
@@ -117,4 +95,8 @@ loaded via a namespace (and not attached):
 [51] xml2_1.3.3        assertthat_0.2.1  rmarkdown_2.11    R6_2.5.1          compiler_4.0.3   
 ```
 
-
+## Installer creation using RInno
+* Follow instructions on https://github.com/ficonsulting/RInno
+    * If Windows version not supported (64bit), install with installr following instructions here https://github.com/ficonsulting/RInno/issues/118#issuecomment-460094226
+* To create the installer, run rinno_installer.R.
+    * For R versions > 3, you have to edit two functions following https://github.com/ficonsulting/RInno/issues/152#issuecomment-681009752 or install the fork from github: brandonerose/RInno
