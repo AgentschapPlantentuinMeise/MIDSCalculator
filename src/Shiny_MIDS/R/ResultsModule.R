@@ -209,7 +209,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
             tabsetPanel(type = "tabs",
              tabPanel("Plots",
                       plotOutput(ns(paste0("midsplot_prev", input$start))),
-                      plotOutput(ns(paste0("midscritsplot", input$start)), height="auto")),
+                      plotOutput(ns(paste0("midscritsplot", input$start)), click = ns(paste0("midscritsplot_click", input$start)), height="auto")),
              tabPanel("Summary tables", 
                       DT::dataTableOutput(ns(paste0("summary", input$start))), 
                       br(),
@@ -275,6 +275,100 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
         })
     
     })
+
+
+# Show details of a specific MIDS element ---------------------------------
+
+    observeEvent(input[[paste0("midscritsplot_click", resulttabnr())]], {
+      groupId <- round(input[[paste0("midscritsplot_click", resulttabnr())]]$y)
+      groupName <- input[[paste0("midscritsplot_click", resulttabnr())]]$domain$discrete_limits$y[[groupId]]
+      showModal(modalDialog(
+        title = paste0(groupName, " details"),
+        tabsetPanel(type = "tabs",
+          tabPanel("Plot",
+            plotOutput(ns("detail")),
+            plotOutput(ns("detail2"))),
+          tabPanel("Summary table",
+            DT::dataTableOutput(ns("detailTable")),
+            DT::dataTableOutput(ns("detailTable2")))),
+        easyClose = TRUE,
+        footer = NULL
+      ))
+      crit <- find_name(jsonschema(), groupName)
+      crit_props <- strsplit(substr(crit, 2, nchar(crit)-1), "\\|")
+      plot <- c()
+      plot2 <- c()
+      for (i in 1:length(crit_props[[1]])){
+         mapname <- gsub("\\(|\\)|\\!|is.na", "", crit_props[[1]][[i]])
+         temp <- gbif_dataset_mids_filtered() %>%
+          summarise(test = !!rlang::parse_expr(crit_props[[1]][[i]])) %>%
+           filter(test == TRUE) %>% 
+            summarise(Mappings = mapname, "Number_of_records" = n(),
+                      Percentage = round(n()/nrow(gbif_dataset_mids_filtered())*100))
+         plot <- rbind(plot, temp)
+         #if there are mappings composed of multiple properties, show more detail
+         if (grepl( "\\&", crit_props[[1]][[i]]) == TRUE){
+           splitprop <- stringr::str_split(crit_props[[1]][[i]], "\\&")[[1]]
+           for (j in seq_along(splitprop)){
+             propname2 <- gsub("\\(|\\)|\\!|is.na", "", splitprop[[j]])
+             temp2 <- gbif_dataset_mids_filtered() %>%
+               summarise(test = !!rlang::parse_expr(splitprop[[j]])) %>%
+               filter(test == TRUE) %>%
+               summarise(Properties = propname2, "Number_of_records" = n(),
+                         Percentage = round(n()/nrow(gbif_dataset_mids_filtered())*100))
+             plot2 <- rbind(plot2, temp2)
+            }
+         }
+      }
+      output$detail <- renderPlot({
+        ggplot(plot, aes(x= Mappings, y=Percentage)) + 
+          geom_bar(stat = "identity") +
+          scale_y_continuous(expand=c(0,0)) +
+          coord_flip() + 
+          geom_text(data = subset(plot, Percentage >= 5),
+                    aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
+          geom_text(data = subset(plot, Percentage < 5 & Percentage != 0),
+                    aes(y = Percentage, label = Percentage), hjust = -0.5, colour = "black") +
+          theme(plot.title = element_text(hjust = 0.5, size = 25) ,
+                plot.margin = margin(1, 1, 2, 2, "cm"),
+                axis.title = element_text(size = 15),
+                axis.text = element_text(size = 15))
+      })
+      output$detail2 <- renderPlot({
+        if (!is_empty(plot2)){
+          ggplot(plot2, aes(x=Properties, y=Percentage)) +
+            geom_bar(stat = "identity") +
+            scale_y_continuous(expand=c(0,0)) +
+            coord_flip() +
+            geom_text(data = subset(plot2, Percentage >= 5),
+                      aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
+            geom_text(data = subset(plot2, Percentage < 5 & Percentage != 0),
+                      aes(y = Percentage, label = Percentage), hjust = -0.5, colour = "black") +
+            theme(plot.title = element_text(hjust = 0.5, size = 25) ,
+                  plot.margin = margin(1, 1, 2, 2, "cm"),
+                  axis.title = element_text(size = 15),
+                  axis.text = element_text(size = 15))
+        }
+      })
+      output$detailTable <- 
+        DT::renderDataTable(plot, rownames = FALSE, options = list(dom = 't', paging = FALSE))
+      output$detailTable2 <- 
+        DT::renderDataTable(plot2, rownames = FALSE, options = list(dom = 't', paging = FALSE))
+    })
+    
+    #function to find name in nested list
+    find_name <- function(haystack, needle) {
+      if (hasName(haystack, needle)) {
+        haystack[[needle]]
+      } else if (is.list(haystack)) {
+        for (obj in haystack) {
+          ret <- Recall(obj, needle)
+          if (!is.null(ret)) return(ret)
+        }
+      } else {
+        NULL
+      }
+    }
     
 
 # Information on dataset and MIDS implementation used ---------------------
