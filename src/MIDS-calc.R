@@ -39,6 +39,10 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
                         encoding = "UTF-8", na.strings = list_UoM$all, 
                         select = list_props)
   
+  #add missing columns with all values as NA
+  missing <- list_props[!list_props %in% colnames(gbif_dataset)]
+  gbif_dataset[, missing] <- NA
+  
   # change unknown or missing values for specific columns to NA
   for (i in 1:length(list_UoM)){
     colname <- names(list_UoM[i])
@@ -134,5 +138,5 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
       apply(gbif_dataset_mids[ , grep("mids0", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 0,
       TRUE ~ -1
     ))
-  return(gbif_dataset_mids)
+  return(list(results = gbif_dataset_mids, missing = missing))
 }

@@ -31,12 +31,27 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
       })
     })
     
+
+# Give warning when there were missing columns ----------------------------
+
+    observe({
+      if (length(gbif_dataset_mids()$missing) > 0){
+        showModal(modalDialog(
+          title = "Warning",
+          HTML(paste0("The following columns were not found in the dataset: ", 
+                      paste(gbif_dataset_mids()$missing, collapse= ", "), br(), 
+                      "These columns are regarded as NA for all records.")
+          )
+        ))
+      }
+    })
+    
 # Allow multiple results tabs --------------------------------------------
     
     #save all MIDS calculations
     allmidscalc <- reactiveValues(prev_bins = NULL)
     observeEvent(input$start, {
-      allmidscalc$prev_bins[[paste0("res", input$start)]] <- gbif_dataset_mids()
+      allmidscalc$prev_bins[[paste0("res", input$start)]] <- gbif_dataset_mids()$results
     })
     
     #save all MIDS implementations
@@ -67,13 +82,13 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
                         selected = "None")
       #update country filter with countries from the dataset
       updateSelectInput(parent.session, ns(paste0("country", input$start)), label = "Filter on countrycode",
-                        choices = sort(unique(gbif_dataset_mids()$countryCode)))
+                        choices = sort(unique(gbif_dataset_mids()$results$countryCode)))
       #update date filter with dates from the dataset
       updateSliderInput(parent.session, ns(paste0("date", input$start)), label = "Filter on collection date",
-                        min = min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
-                        max = max(gbif_dataset_mids()$eventDate, na.rm = TRUE),
-                        value = c(min(gbif_dataset_mids()$eventDate, na.rm = TRUE),
-                                  max(gbif_dataset_mids()$eventDate, na.rm = TRUE)),
+                        min = min(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
+                        max = max(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
+                        value = c(min(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
+                                  max(gbif_dataset_mids()$results$eventDate, na.rm = TRUE)),
                         timeFormat = "%m/%d/%Y")
     })
     
