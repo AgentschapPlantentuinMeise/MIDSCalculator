@@ -106,6 +106,27 @@ server <- function(input, output, session) {
     ))
   })
   
+
+# Check dataset file ------------------------------------------------------
+
+  disablesInvalidFile <- reactiveVal(FALSE)
+  observeEvent(input$gbiffile, {
+    if(tools::file_ext(input$gbiffile$datapath) != "zip") {
+      showModal(modalDialog(
+        title = "Invalid input",
+        "File must be a zip file"
+      ))
+      disablesInvalidFile(TRUE)
+    } else if (!"occurrence.txt" %in% unzip(zipfile = input$gbiffile$datapath, list = TRUE)$Name) {
+      showModal(modalDialog(
+        title = "Invalid input",
+        "Zip file must contain occurence.txt file"
+      ))  
+      disablesInvalidFile(TRUE)
+    } else {disablesInvalidFile(FALSE)}
+  })
+  
+  
 # Enable / disable action buttons -----------------------------------------
 
   #hide schema upload when schema is default
@@ -121,12 +142,14 @@ server <- function(input, output, session) {
   
   #disable start when there is no input file, when interactive is chosen but not visited, 
   #or when custom upload is chosen but empty, or when file is uploading
+  #or when invalid dataset file is uploaded
   disablestart <- reactiveVal(FALSE)
   observe({
     if (is.null(input$gbiffile) |
         (input$editschema == TRUE && interactiveschema$visited() == FALSE) |
         (input$jsonfiletype == "custom" & is.null(input$customjsonfile)) |
-        hold() == TRUE){
+        hold() == TRUE|
+        disablesInvalidFile() == TRUE){
       disablestart(TRUE)} else {disablestart(FALSE)}
   })
     
