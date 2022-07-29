@@ -397,33 +397,28 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
           mappings <- valuesplit[[1]][-1]
           #don't use elements that have no mappings
           if (!is_empty(mappings)){
-            if (any(grepl("&", mappings, fixed = TRUE))){
-              #deal with &
-              x[[midslevels[i]]][[element]][[1]][["property"]] <- strsplit(mappings[grepl("&", mappings, fixed = TRUE)], "&")[[1]]
-              x[[midslevels[i]]][[element]][[1]][["operator"]] <- "AND"
-              #separate those without &, if there are any
-              if (any(!grepl("&", mappings, fixed = TRUE))){
-                appendlist <- list(list("property" = mappings[!grepl("&", mappings, fixed = TRUE)], "operator" = "OR"))
-                x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
-              }
-            } else if (any(grepl("!", mappings, fixed = TRUE))){
-              #deal with !
-              x[[midslevels[i]]][[element]][[1]][["property"]] <- gsub("!", "", mappings[grepl("!", mappings, fixed = TRUE)])
-              x[[midslevels[i]]][[element]][[1]][["operator"]] <- "NOT"
-              #separate those without !, if there are any
-              if (any(!grepl("!", mappings, fixed = TRUE))){
-                appendlist <- list(list("property" = mappings[!grepl("!", mappings, fixed = TRUE)], "operator" = "OR"))
-                x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
-              }
-            } else if (length(mappings) > 1) {
-              #no & or !
-              x[[midslevels[i]]][[element]][[1]][["property"]] <- mappings
-              x[[midslevels[i]]][[element]][[1]][["operator"]] <- "OR"
-            } else {
-            #no & or ! and only one property
-              x[[midslevels[i]]][[element]][[1]][["property"]] <- mappings
+            #deal with mappings containing &
+            andMappings <- mappings[grepl("&", mappings, fixed = TRUE)]
+            for (n_and in seq_along(andMappings)){
+              appendlist <- list(list("property" = strsplit(andMappings[[n_and]], "&")[[1]], "operator" = "AND"))
+              x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
             }
-            
+            #deal with mappings containing !
+            notMappings <- mappings[grepl("!", mappings, fixed = TRUE)]
+            for (n_not in seq_along(notMappings)){
+              appendlist <- list(list("property" = gsub("!", "", notMappings[[n_not]], fixed = TRUE), "operator" = "NOT"))
+              x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
+            }
+            #deal with mappings without & or !
+            if (length(mappings[!grepl("\\&|\\!", mappings)]) > 1) {
+            #multiple properties -> OR operator
+              appendlist <- list(list("property" = mappings[!grepl("\\&|\\!", mappings)], "operator" = "OR"))
+              x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
+            } else if ((length(mappings[!grepl("\\&|\\!", mappings)]) == 1)) {
+            #only 1 property -> no operator
+              appendlist <- list(list("property" = mappings[!grepl("\\&|\\!", mappings)]))
+              x[[midslevels[i]]][[element]] <- append(x[[midslevels[i]]][[element]], appendlist)
+            }
           }
         }
       }
@@ -636,8 +631,8 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     observe(
     if (input$interactiveschema > 0){visited(TRUE)}
     )
-    return(list(interactivejson = reactive({schematojson()}), visited = reactive({visited()})))
     
+    return(list(interactivejson = reactive({schematojson()}), visited = reactive({visited()})))
    
   })
 }
