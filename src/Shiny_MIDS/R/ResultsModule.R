@@ -101,7 +101,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     #Don't show filters if the needed values are not in the dataset
     observeEvent(resulttabnr(),{
       if (all(is.na(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$eventDate))
-          | class(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$eventDate) == "character"){
+          || class(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$eventDate) == "character"){
         shinyjs::hide(paste0("date", resulttabnr()))
       } else {
         shinyjs::show(paste0("date", resulttabnr()))
@@ -365,33 +365,39 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
          }
       }
       output$detail <- renderPlot({
-        ggplot(plot, aes(x= Mappings, y=Percentage)) + 
-          geom_bar(stat = "identity") +
+        ggplot(plot, aes(x= gsub("&", "&\n", Mappings), y=Percentage)) + 
+          geom_bar(stat = "identity", fill = "cadetblue") +
           scale_y_continuous(expand=c(0,0)) +
           coord_flip() + 
+          ggtitle("Mappings") +
+          ylab("Percentage present") +
           geom_text(data = subset(plot, Percentage >= 5),
                     aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
           geom_text(data = subset(plot, Percentage < 5 & Percentage != 0),
                     aes(y = Percentage, label = Percentage), hjust = -0.5, colour = "black") +
-          theme(plot.title = element_text(hjust = 0.5, size = 25) ,
+          theme(plot.title = element_text(hjust = 0.5, size = 20) ,
                 plot.margin = margin(1, 1, 2, 2, "cm"),
                 axis.title = element_text(size = 15),
-                axis.text = element_text(size = 15))
+                axis.text = element_text(size = 15),
+                axis.title.y = element_blank())
       })
       output$detail2 <- renderPlot({
         if (!is_empty(plot2)){
           ggplot(plot2, aes(x=Properties, y=Percentage)) +
-            geom_bar(stat = "identity") +
+            geom_bar(stat = "identity", fill = "cadetblue") +
             scale_y_continuous(expand=c(0,0)) +
             coord_flip() +
+            ggtitle("Separate properties") +
+            ylab("Percentage present") +
             geom_text(data = subset(plot2, Percentage >= 5),
                       aes(y = Percentage, label = Percentage), hjust = 1.25, colour = "white") +
             geom_text(data = subset(plot2, Percentage < 5 & Percentage != 0),
                       aes(y = Percentage, label = Percentage), hjust = -0.5, colour = "black") +
-            theme(plot.title = element_text(hjust = 0.5, size = 25) ,
+            theme(plot.title = element_text(hjust = 0.5, size = 20) ,
                   plot.margin = margin(1, 1, 2, 2, "cm"),
                   axis.title = element_text(size = 15),
-                  axis.text = element_text(size = 15))
+                  axis.text = element_text(size = 15),
+                  axis.title.y = element_blank())
         }
       })
       output$detailTable <- 
