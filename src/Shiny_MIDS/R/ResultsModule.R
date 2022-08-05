@@ -87,7 +87,8 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
       updateSelectInput(parent.session, ns(paste0("country", input$start)), label = "Filter on countrycode",
                         choices = sort(unique(gbif_dataset_mids()$results$countryCode)))
       #update date filter with dates from the dataset
-      if (!all(is.na(gbif_dataset_mids()$results$eventDate))){
+      if (!all(is.na(gbif_dataset_mids()$results$eventDate)) &&
+          ! class(gbif_dataset_mids()$results$eventDate) == "character"){
         updateSliderInput(parent.session, ns(paste0("date", input$start)), label = "Filter on collection date",
                         min = min(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
                         max = max(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
@@ -99,7 +100,8 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     
     #Don't show filters if the needed values are not in the dataset
     observeEvent(resulttabnr(),{
-      if (all(is.na(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$eventDate))){
+      if (all(is.na(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$eventDate))
+          | class(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$eventDate) == "character"){
         shinyjs::hide(paste0("date", resulttabnr()))
       } else {
         shinyjs::show(paste0("date", resulttabnr()))
