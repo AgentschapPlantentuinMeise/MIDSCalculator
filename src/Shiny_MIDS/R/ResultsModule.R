@@ -24,11 +24,22 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     
 # Calculations ------------------------------------------------------------
     
+    #start spinner when calculations start
+    observeEvent(input$start, {
+      shinybusy::show_modal_spinner(
+        spin = "fading-circle",
+        color = "cadetblue",
+        text = "Calculating MIDS results")
+    })
+    
     #calculate mids levels and criteria
     gbif_dataset_mids <- eventReactive(input$start, {
-      withProgress(message = 'Calculating MIDS scores', value = 0, {
-        calculate_mids(gbiffile = gbiffile()$datapath, jsontype = "list", jsonlist = jsonschema())
-      })
+      calculate_mids(gbiffile = gbiffile()$datapath, jsontype = "list", jsonlist = jsonschema())
+    })
+    
+    #remove spinner when calculations are finished
+    observeEvent(gbif_dataset_mids(), {
+      shinybusy::remove_modal_spinner()
     })
     
 
