@@ -77,20 +77,46 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     
     #Initialize filters when new analysis is started
     observeEvent(input$start, {
-      #reset rank filter when new dataset is provided
+      #update rank filter to ranks that are in dataset + reset rank filter when new dataset is provided
+      ranks <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Subfamily", "Genus")
+      ranksInDataset <- ranks[tolower(ranks) %in% colnames(gbif_dataset_mids()$results)]
       updateSelectInput(parent.session, ns(paste0("rank", input$start)),
-                        selected = "None")
+                        selected = "None",
+                        choices = c("None", ranksInDataset))
       #update country filter with countries from the dataset
       updateSelectInput(parent.session, ns(paste0("country", input$start)), label = "Filter on countrycode",
                         choices = sort(unique(gbif_dataset_mids()$results$countryCode)))
       #update date filter with dates from the dataset
-      updateSliderInput(parent.session, ns(paste0("date", input$start)), label = "Filter on collection date",
+      if (!all(is.na(gbif_dataset_mids()$results$eventDate))){
+        updateSliderInput(parent.session, ns(paste0("date", input$start)), label = "Filter on collection date",
                         min = min(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
                         max = max(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
                         value = c(min(gbif_dataset_mids()$results$eventDate, na.rm = TRUE),
                                   max(gbif_dataset_mids()$results$eventDate, na.rm = TRUE)),
                         timeFormat = "%m/%d/%Y")
+      } 
     })
+    
+    #Don't show filters if the needed values are not in the dataset
+    observeEvent(resulttabnr(),{
+      if (all(is.na(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$eventDate))){
+        shinyjs::hide(paste0("date", resulttabnr()))
+      } else {
+        shinyjs::show(paste0("date", resulttabnr()))
+      }
+      if (all(is.na(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]$countryCode))){
+        shinyjs::hide(paste0("country", resulttabnr()))
+      } else {
+        shinyjs::show(paste0("country", resulttabnr()))
+      }
+      ranks <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Subfamily", "Genus")
+      if (is_empty(ranks[tolower(ranks) %in% colnames(allmidscalc$prev_bins[[paste0("res", resulttabnr())]])])){
+        shinyjs::hide(paste0("rank", resulttabnr()))
+      } else {
+        shinyjs::show(paste0("rank", resulttabnr()))
+      }
+    })
+    
     
     #update taxonomy filter when a taxonomic rank is chosen
     observeEvent(input[[paste0("rank", resulttabnr())]], {
@@ -204,7 +230,8 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
          sidebarLayout(
            sidebarPanel(
              helpText("Filter to view MIDS scores for part of the dataset"),
-             sliderInput(ns(paste0("date", input$start)), 
+             #shinyjs::hidden(
+               sliderInput(ns(paste0("date", input$start)),
                          label = "Filter on collection date:",
                          min = 0, max = 100, value = c(0, 100)),
              selectizeInput(ns(paste0("country", input$start)), 
@@ -213,7 +240,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
                             multiple = TRUE),
              selectInput(ns(paste0("rank", input$start)), 
                          label = "Filter on the following taxonomic rank",
-                         choices = c("None", "Kingdom", "Phylum", "Class", "Order", "Family", "Subfamily", "Genus")),
+                         choices = c("None")),
              selectizeInput(ns(paste0("taxonomy", input$start)), 
                             label = "Filter on taxonomy", 
                             choices = "Select a rank first",

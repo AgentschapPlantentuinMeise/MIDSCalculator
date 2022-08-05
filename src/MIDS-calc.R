@@ -24,8 +24,7 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   }
   
   #add other needed/interesting properties
-  list_props <- unique(c(list_props,
-                         "datasetKey",
+  list_extra_props <- unique(c("datasetKey",
                          "countryCode",
                          "kingdom",
                          "phylum", "class",
@@ -38,15 +37,15 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   if(tools::file_ext(gbiffile) == "zip") {
   gbif_dataset <- fread(unzip(gbiffile, "occurrence.txt"), 
                         encoding = "UTF-8", na.strings = list_UoM$all, 
-                        select = list_props)
+                        select = c(list_props, list_extra_props))
   } else if (tools::file_ext(gbiffile) == "txt" | tools::file_ext(gbiffile) == "csv") {
     gbif_dataset <- fread(gbiffile, 
           encoding = "UTF-8", na.strings = list_UoM$all, 
-          select = list_props)
+          select = c(list_props, list_extra_props))
   }
   
   #add missing columns with all values as NA
-  missing <- list_props[!list_props %in% colnames(gbif_dataset)]
+  missing <- c(list_props)[!c(list_props) %in% colnames(gbif_dataset)]
   gbif_dataset[, missing] <- NA
   
   # change unknown or missing values for specific columns to NA
