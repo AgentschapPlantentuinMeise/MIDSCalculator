@@ -35,9 +35,15 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   
   # import from zipped DWC archive
   # and set unknown or missing values that apply to all to NA
+  if(tools::file_ext(gbiffile) == "zip") {
   gbif_dataset <- fread(unzip(gbiffile, "occurrence.txt"), 
                         encoding = "UTF-8", na.strings = list_UoM$all, 
                         select = list_props)
+  } else if (tools::file_ext(gbiffile) == "txt" | tools::file_ext(gbiffile) == "csv") {
+    gbif_dataset <- fread(gbiffile, 
+          encoding = "UTF-8", na.strings = list_UoM$all, 
+          select = list_props)
+  }
   
   #add missing columns with all values as NA
   missing <- list_props[!list_props %in% colnames(gbif_dataset)]

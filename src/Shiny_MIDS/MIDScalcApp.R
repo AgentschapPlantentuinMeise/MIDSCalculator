@@ -111,17 +111,17 @@ server <- function(input, output, session) {
 
   disablesInvalidFile <- reactiveVal(FALSE)
   observeEvent(input$gbiffile, {
-    if(tools::file_ext(input$gbiffile$datapath) != "zip") {
+    if(!tools::file_ext(input$gbiffile$datapath) %in% c("zip", "txt", "csv")) {
       showModal(modalDialog(
         title = "Invalid input",
-        "File must be a zip file"
+        "File must be a zip, txt or csv file"
       ))
       disablesInvalidFile(TRUE)
-    } else if (!"occurrence.txt" %in% unzip(zipfile = input$gbiffile$datapath, list = TRUE)$Name) {
+    } else if (tools::file_ext(input$gbiffile$datapath) == "zip" && !"occurrence.txt" %in% unzip(zipfile = input$gbiffile$datapath, list = TRUE)$Name) {
       showModal(modalDialog(
         title = "Invalid input",
         "Zip file must contain occurence.txt file"
-      ))  
+      ))
       disablesInvalidFile(TRUE)
     } else {disablesInvalidFile(FALSE)}
   })
