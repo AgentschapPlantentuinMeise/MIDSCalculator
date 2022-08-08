@@ -174,7 +174,7 @@ server <- function(input, output, session) {
   #get path to json schema
   jsonpath <- reactive({
     if (input$jsonfiletype == "default" | is.null(input$customjsonfile$datapath)){
-      return(paste0("../../",default_schema))}
+      return(default_schema)}
     if (input$jsonfiletype == "custom"){
       return(input$customjsonfile$datapath)}
   })
