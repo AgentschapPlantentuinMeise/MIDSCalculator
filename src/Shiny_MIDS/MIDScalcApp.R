@@ -9,6 +9,7 @@ library(ggplot2)
 library(DT)
 library(shinyjs)
 library(sortable)
+library(shinybusy)
 source(file = "../parse_json_schema.R")
 source(file = "../MIDS-calc.R")
 

@@ -9,7 +9,8 @@ packages <- c("shiny",
               "purrr",
               "magrittr",
               "jsonlite",
-              "RColorBrewer")
+              "RColorBrewer",
+              "shinybusy")
 
 pkgLoad <- function() {
   
