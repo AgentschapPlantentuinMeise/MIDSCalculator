@@ -205,7 +205,7 @@ server <- function(input, output, session) {
       if (input$jsonfiletype == "custom"){
         filename <- paste("Custom:", input$customjsonfile$name)
       } else {
-        filename <- paste("Default:", basename(jsonpath()))
+        filename <- paste("Default:", paste0(read_json(jsonpath())$schemaName, " v", read_json(jsonpath())$schemaVersion))
       }
       #return schema
       return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
