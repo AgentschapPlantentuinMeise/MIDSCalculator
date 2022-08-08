@@ -1,5 +1,6 @@
 {
-    "schemaname": "MIDS calculator interactive",
+    "schemaName": "MIDS calculator DwC-GBIF",
+    "schemaVersion" : "0.4",
     "date": "2022-07-04 14:53:01",
     "schemaType": "MIDScalculator",
     "unknownOrMissing": [
