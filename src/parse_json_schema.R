@@ -1,6 +1,6 @@
 library(jsonlite)
 
-default_schema = "https://raw.githubusercontent.com/AgentschapPlantentuinMeise/MIDSCalculator/main/data/schemas/DwC-GBIF_schema.json"
+default_schema = "data/schemas/DwC-GBIF_schema.json"
 
 read_json_unknownOrMissing <- function(schema = default_schema, type = "file") {
 

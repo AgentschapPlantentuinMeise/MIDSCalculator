@@ -38,6 +38,11 @@ ui <-
         .modal.in {
             background-color: rgba(0,0,0,0.5);
         }
+        .header {
+            background-color: #2874A6; color: white; 
+            font-size: 20px; text-align: center; padding: 10px;
+            box-shadow: 0px 2.5px 5px 0px rgba(0, 0, 0, 0.5);
+        }
      ")
   ),
   navbarPage(
@@ -51,27 +56,24 @@ ui <-
              ),
    id = "tabs",
    tabPanel("Submit data",
-            div(
             br(), br(),
-            fluidRow(column(width = 6, offset = 3,
-            wellPanel(
-            h4("Submit dataset"),
-            fileInput("gbiffile", "Upload zipped GBIF annotated archive (max 5 GB)",
+            fluidRow(column(width = 4, offset = 4,
+            div("Submit dataset", class = "header"),
+            wellPanel(fileInput("gbiffile", NULL,
                       accept = ".zip")))),
-            br(), 
-            fluidRow(column(width = 6, offset = 3,
+            div(
+            fluidRow(column(width = 4, offset = 4,
+            div(div("Specify MIDS implementation", div(ViewImplementationUI("viewcurrentschema"), style = "display: inline-block")), class = "header"), 
             wellPanel(
-            h4("Specify MIDS implementation"), br(),
-            radioButtons("jsonfiletype", label = NULL, 
+            radioButtons("jsonfiletype", label = "Select file", 
                          choiceNames = list("Use default", 
-                                            "Upload custom"),
+                                            "Upload file"),
                          choiceValues = list("default", "custom")),
             fileInput("customjsonfile", label = NULL, accept = ".json"),
+            hr(style = "border-top: 1px solid #2874A6;"),
             checkboxInput("editschema", "Edit interactively", value = FALSE),
-            fluidRow(
-            column(5, InteractiveSchemaUI("interactive")),
-            column(7, ViewImplementationUI("viewcurrentschema"))
-            )))),
+            InteractiveSchemaUI("interactive"),
+            ))),
             br(),br(),
             ResultsUI("start"),
             align="center")
@@ -175,11 +177,20 @@ server <- function(input, output, session) {
   #get path to json schema
   jsonpath <- reactive({
     if (input$jsonfiletype == "default" | is.null(input$customjsonfile$datapath)){
-      return(default_schema)}
+      return(paste0("../../", default_schema))}
     if (input$jsonfiletype == "custom"){
       return(input$customjsonfile$datapath)}
   })
   
+  #update MIDS implementation radiobuttons to show schema info
+  observe(
+  updateRadioButtons(session, "jsonfiletype", 
+                     choiceNames = list(paste("Use default:", paste0(read_json(jsonpath())$schemaName, " v", read_json(jsonpath())$schemaVersion)),
+                                        "Upload file"),
+                     choiceValues = list("default", "custom"),
+                     selected = input$jsonfiletype)
+  )
+
   #read json schema from file
   jsonschemafile <- reactive({ 
     read_json_mids_criteria(schema = jsonpath(), outtype = "criteria")

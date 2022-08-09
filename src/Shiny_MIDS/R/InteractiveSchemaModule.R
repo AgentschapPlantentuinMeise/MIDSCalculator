@@ -18,7 +18,7 @@ InteractiveSchemaUI <- function(id) {
          display: grid; grid-template-columns: 50% 50%; gap: 20px; padding: 20px;
        }",
        paste0('#', ns("interactivemodal")),".modal-dialog{
-         width: 90%;
+         width: 800px;
        }
        .rank-list-container.custom-sortable.unused {
          background-color: LightSlateGrey
@@ -95,9 +95,9 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     #enable/ disable view action button
     observe(
       if (disable() == TRUE){
-        shinyjs::disable("interactiveschema")
+        shinyjs::hide("interactiveschema")
       } else {
-        shinyjs::enable("interactiveschema")
+        shinyjs::show("interactiveschema")
       })
     
     #show information on MIDS criteria

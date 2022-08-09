@@ -4,7 +4,7 @@ ViewImplementationUI <- function(id) {
   tagList(
     tabPanel(
       id,
-      actionButton(ns("view"), "Show MIDS implementation"),
+      actionButton(ns("view"), icon("eye")),
       #css
       tags$style(
         HTML(

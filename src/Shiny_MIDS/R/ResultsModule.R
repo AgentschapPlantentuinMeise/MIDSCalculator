@@ -278,18 +278,24 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
                       downloadButton(ns(paste0("downloadDataFiltered", input$start)), "Download filtered dataset"))
              ),
              br(),
-             wellPanel(
-               fluidRow(
-                 column(6,
+             fluidRow(
+                 column(5,
                         helpText("Dataset:"),
-                        verbatimTextOutput(ns(paste0("Used_dataset", input$start)))
+                        verbatimTextOutput(ns(paste0("Used_dataset", input$start))),
+                        class = "well"
                  ),
-                 column(6,
+                 column(6, offset = 1,
                         helpText("MIDS implementation:"),
-                        verbatimTextOutput(ns(paste0("Used_MIDS_implementation", input$start))),
-                        ViewImplementationUI(ns(paste0("showschema", input$start)))
-                 )
-               ))
+                        fluidRow(
+                        column(10,
+                        verbatimTextOutput(ns(paste0("Used_MIDS_implementation", input$start)))
+                        ),
+                        column(2,
+                               ViewImplementationUI(ns(paste0("showschema", input$start))))
+                        ),
+                        class = "well"
+                  )
+               )
            )
          )
          )
