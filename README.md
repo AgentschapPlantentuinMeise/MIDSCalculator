@@ -11,7 +11,7 @@ For more details: https://github.com/tdwg/mids
 The MIDSCalculator is a Shiny app which allows users to calculate MIDS scores for each record in a submitted dataset, and explore the results.
 
 * [How to install](/help/howtoinstall.md)
-* [Using the app](/help/howtorun.md)
+* [Using the app](/help/howtouse.md)
 * [Additional info about the code](/help/codeinfo.md)
 * [Create a new installer](/help/rinno_installer.md).
 

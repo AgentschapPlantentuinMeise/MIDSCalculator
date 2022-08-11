@@ -21,21 +21,22 @@ The four levels have their own section each. Each level should have at least one
 
 Within an element, the mappings for this element are listed. Mappings to multiple properties in the data source are possible, and requirements of `OR` or `AND` can be set to specify the logic of the mapping. The operator `NOT` is also supported, but currently not part of the schema (anymore) and it is not implemented in the interface that enables interactive schema editing. Example of a more complex mapping for a Location term (note that this particular mapping is a suggestion, not currently agreed in the latest official MIDS draft):
 
-```"Location": [
-            {
-                "property": [
-                    "decimalLatitude",
-                    "decimalLongitude"
-                ],
-                "operator": "AND"
-            },
-            {
-                "property": [
-                    "locality",
-                    "county",
-                    "verbatimLocality"
-                ],
-                "operator": "OR"
-            }
+```
+"Location": [
+    {
+        "property": [
+            "decimalLatitude",
+            "decimalLongitude"
         ],
+        "operator": "AND"
+    },
+    {
+        "property": [
+            "locality",
+            "county",
+            "verbatimLocality"
+        ],
+        "operator": "OR"
+    }
+]
 ```
