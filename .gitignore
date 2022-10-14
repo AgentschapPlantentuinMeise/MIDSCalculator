@@ -61,8 +61,6 @@ rsconnect/
 ### Data files ###
 
 #ignore zipped data archives
-*.zip
-!data/0196852-210914110416597.zip
 #ignore occurrence file
 occurrence*
 #ignore output file
