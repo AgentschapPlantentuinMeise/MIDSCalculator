@@ -81,20 +81,6 @@
             {
                 "property": "license"
             }
-        ],
-        "Region": [
-            {
-                "property": [
-                    "countryCode",
-                    "higherGeography",
-                    "higherGeographyID",
-                    "continent",
-                    "waterBody",
-                    "islandGroup",
-                    "stateProvince"
-                ],
-                "operator": "OR"
-            }
         ]
     },
     "mids2": {
