@@ -1,0 +1,204 @@
+{
+    "schemaName": "MIDS calculator DwC-GBIF",
+    "schemaVersion" : "0.5",
+    "date": "2022-11-03 14:48:01",
+    "schemaType": "MIDScalculator",
+    "unknownOrMissing": [
+        {
+            "value": "unknown:undigitized",
+            "midsAchieved": false
+        },
+        {
+            "value": "unknown",
+            "midsAchieved": false
+        },
+        {
+            "value": "",
+            "midsAchieved": false
+        },
+        {
+            "value": "Unknown",
+            "midsAchieved": false
+        },
+        {
+            "value": "ZZ",
+            "property": "countryCode",
+            "midsAchieved": false
+        },
+        {
+            "value": "Incertae sedis",
+            "property": "scientificName",
+            "midsAchieved": false
+        }
+    ],
+    "mids0": {
+        "PhysicalSpecimenID": [
+            {
+                "property": [
+                    "catalogNumber",
+                    "materialSampleID",
+                    "otherCatalogNumbers"
+                ],
+                "operator": "OR"
+            }
+        ],
+        "Organization": [
+            {
+                "property": [
+                    "institutionCode",
+                    "institutionID"
+                ],
+                "operator": "OR"
+            }
+        ]
+    },
+    "mids1": {
+        "Modified": [
+            {
+                "property": "modified"
+            }
+        ],
+        "Name": [
+            {
+                "property": [
+                    "scientificName",
+                    "vernacularName"
+                ],
+                "operator": "OR"
+            }
+        ],
+        "SpecimenType": [
+            {
+                "property": "basisOfRecord"
+            }
+        ],
+        "ObjectType": [
+            {
+                "property": "preparations"
+            }
+        ],
+        "License": [
+            {
+                "property": "license"
+            }
+        ],
+        "Region": [
+            {
+                "property": [
+                    "countryCode",
+                    "higherGeography",
+                    "higherGeographyID",
+                    "continent",
+                    "waterBody",
+                    "islandGroup",
+                    "stateProvince"
+                ],
+                "operator": "OR"
+            }
+        ]
+    },
+    "mids2": {
+        "QualitativeLocation": [
+            {
+                "property": [
+                    "locality",
+                    "county",
+                    "municipality",
+                    "verbatimLocality",
+                    "island"
+                ],
+                "operator": "OR"
+            },
+            {
+                "property": [
+                    "verbatimCoordinates",
+                    "verbatimCoordinateSystem",
+                    "verbatimSRS"
+                ],
+                "operator": "AND"
+            },
+            {
+                "property": [
+                    "verbatimLongitude",
+                    "verbatimLatitude",
+                    "verbatimCoordinateSystem",
+                    "verbatimSRS"
+                ],
+                "operator": "AND"
+            }
+        ],
+        "QuantitativeLocation" : [
+            {
+                "property" : "locationID"
+            },
+            {
+                "property": [
+                    "decimalLatitude",
+                    "decimalLongitude",
+                    "geodeticDatum",
+                    "coordinateUncertaintyInMeters",
+                    "coordinatePrecision"
+                ],
+                "operator": "AND"
+            },
+            {
+                "property": [
+                    "footprintWKT",
+                    "footprintSRS"
+                ],
+                "operator": "AND"
+            }
+        ],
+        "CollectingAgent": [
+            {
+                "property": [
+                    "recordedBy",
+                    "recordedByID"
+                ],
+                "operator": "OR"
+            }
+        ],
+        "CollectorNumber": [
+            {
+                "property": [
+                    "fieldNumber",
+                    "recordNumber"
+                ],
+                "operator": "OR"
+            }
+        ],
+        "CollectionDate": [
+            {
+                "property": [
+                    "eventDate",
+                    "year",
+                    "verbatimEventDate"
+                ],
+                "operator": "OR"
+            }
+        ],
+        "AvailableImage": [
+            {
+                "property": "mediaType"
+            }
+        ]
+    },
+    "mids3": {
+        "Determination": [
+            {
+                "property": [
+                    "identificationID",
+                    "identifiedBy",
+                    "identifiedByID"
+                ],
+                "operator": "OR"
+            }
+        ],
+        "Citation": [
+            {
+                "property": "references"
+            }
+        ]
+    }
+}
+
