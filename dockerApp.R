@@ -6,4 +6,4 @@
 
 library(shiny)
 folder_address = paste0(getwd(),"/src/Shiny_MIDS/MIDScalcApp.R")
-runApp(folder_address, launch.browser=F, port=3000)
+runApp(folder_address, launch.browser=F, host='0.0.0.0', port=3000)
