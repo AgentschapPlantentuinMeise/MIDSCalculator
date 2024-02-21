@@ -1,7 +1,7 @@
 {
     "schemaName": "MIDS calculator DwC-GBIF",
-    "schemaVersion" : "0.4",
-    "date": "2022-07-04 14:53:01",
+    "schemaVersion" : "0.6",
+    "date": "2024-02-21 13:58:01",
     "schemaType": "MIDScalculator",
     "unknownOrMissing": [
         {
@@ -19,16 +19,6 @@
         {
             "value": "Unknown",
             "midsAchieved": false
-        },
-        {
-            "value": "ZZ",
-            "property": "countryCode",
-            "midsAchieved": false
-        },
-        {
-            "value": "Incertae sedis",
-            "property": "scientificName",
-            "midsAchieved": false
         }
     ],
     "mids0": {
@@ -37,7 +27,9 @@
                 "property": [
                     "catalogNumber",
                     "materialSampleID",
-                    "otherCatalogNumbers"
+                    "otherCatalogNumbers",
+                    "occurrenceID",
+                    "materialEntityID"
                 ],
                 "operator": "OR"
             }
@@ -46,7 +38,8 @@
             {
                 "property": [
                     "institutionCode",
-                    "institutionID"
+                    "institutionID",
+                    "ownerInstitutionCode"
                 ],
                 "operator": "OR"
             }
@@ -62,7 +55,9 @@
             {
                 "property": [
                     "scientificName",
-                    "vernacularName"
+                    "vernacularName",
+                    "scientificNameID",
+                    "organismName"
                 ],
                 "operator": "OR"
             }
@@ -84,24 +79,50 @@
         ]
     },
     "mids2": {
-        "Location": [
+        "QualitativeLocation": [
+            {
+                "property": [
+                    "locality",
+                    "county",
+                    "municipality",
+                    "verbatimLocality",
+                    "island",
+                    "continent",
+                    "country",
+                    "countryCode",
+                    "islandGroup",
+                    "stateProvince",
+                    "waterBody",
+                    "higherGeography",
+                    "verbatimCoordinates"
+                ],
+                "operator": "OR"
+            },
+            {
+                "property": [
+                    "verbatimLongitude",
+                    "verbatimLatitude"
+                ],
+                "operator": "AND"
+            }
+        ],
+        "QuantitativeLocation" : [
+            {
+                "property" : [
+                    "locationID",
+                    "footprintWKT"
+                ],
+                "operator": "OR"
+            },
             {
                 "property": [
                     "decimalLatitude",
                     "decimalLongitude"
                 ],
                 "operator": "AND"
-            },
-            {
-                "property": [
-                    "locality",
-                    "county",
-                    "verbatimLocality"
-                ],
-                "operator": "OR"
             }
         ],
-        "CollectorName": [
+        "CollectingAgent": [
             {
                 "property": [
                     "recordedBy",
@@ -129,26 +150,57 @@
                 "operator": "OR"
             }
         ],
-        "AvailableImage": [
+        "media": [
             {
-                "property": "mediaType"
+                "property": [ 
+                    "mediaType",
+                    "associatedMedia"
+                ],
+                "operator": "OR"
             }
         ]
     },
     "mids3": {
-        "Determination": [
+        "GeographicalLocalityID" : [
+            {
+                "property" : "locationID"
+            },
             {
                 "property": [
-                    "identificationID",
-                    "identifiedBy",
-                    "identifiedByID"
+                    "decimalLatitude",
+                    "decimalLongitude",
+                    "geodeticDatum",
+                    "coordinateUncertaintyInMeters",
+                    "coordinatePrecision"
                 ],
-                "operator": "OR"
+                "operator": "AND"
+            },
+            {
+                "property": [
+                    "footprintWKT",
+                    "footprintSRS"
+                ],
+                "operator": "AND"
             }
         ],
-        "Citation": [
+        "institutionID": [
             {
-                "property": "references"
+                "property": "institutionID"
+            }
+        ],
+        "CollectorID": [
+            {
+                "property": "recordedByID"
+            }
+        ],
+        "scientificNameID": [
+            {
+                "property": "scientificNameID"
+            }
+        ],
+        "IdentifiedByID": [
+            {
+                "property": "identifiedByID"
             }
         ]
     }
