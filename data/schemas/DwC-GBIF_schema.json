@@ -19,6 +19,11 @@
         {
             "value": "Unknown",
             "midsAchieved": false
+        },
+        {
+            "value": "0",
+            "property": "taxonKey",
+            "midsAchieved": false
         }
     ],
     "mids0": {
@@ -195,7 +200,11 @@
         ],
         "scientificNameID": [
             {
-                "property": "scientificNameID"
+                "property": [
+                    "scientificNameID",
+                    "taxonKey"
+                ],
+                "operator": "OR"
             }
         ],
         "IdentifiedByID": [
@@ -205,4 +214,3 @@
         ]
     }
 }
-
