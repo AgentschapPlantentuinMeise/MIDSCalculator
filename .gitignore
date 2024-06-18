@@ -65,6 +65,7 @@ rsconnect/
 occurrence*
 #ignore output file
 *output*
+data/*.zip
 
 #Rinno
 bin

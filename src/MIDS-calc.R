@@ -36,11 +36,13 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   # and set unknown or missing values that apply to all to NA
   if(tools::file_ext(gbiffile) == "zip") {
   gbif_dataset <- fread(unzip(gbiffile, "occurrence.txt"), 
-                        encoding = "UTF-8", na.strings = list_UoM$all, 
+                        encoding = "UTF-8", na.strings = list_UoM$all, quote="",
+                        colClasses = 'character',
                         select = unique(c(list_props, list_extra_props)))
   } else if (tools::file_ext(gbiffile) == "txt" | tools::file_ext(gbiffile) == "csv") {
     gbif_dataset <- fread(gbiffile, 
-          encoding = "UTF-8", na.strings = list_UoM$all, 
+          encoding = "UTF-8", na.strings = list_UoM$all, quote="",
+          colClasses = 'character',
           select = unique(c(list_props, list_extra_props)))
   }
   
