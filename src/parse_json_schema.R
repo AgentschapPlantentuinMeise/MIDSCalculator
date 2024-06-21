@@ -1,7 +1,5 @@
 library(jsonlite)
 
-default_schema = "data/schemas/DwC-GBIF_schema.json"
-
 read_json_unknownOrMissing <- function(schema = default_schema, type = "file") {
 
 

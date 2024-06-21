@@ -11,7 +11,8 @@ packages <- c("shiny",
               "jsonlite",
               "RColorBrewer",
               "shinybusy",
-              "stringr")
+              "stringr",
+              "ini")
 
 pkgLoad <- function() {
   

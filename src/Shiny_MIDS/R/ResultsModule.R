@@ -7,7 +7,7 @@ ResultsUI <- function(id) {
 }
 
 ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
-                          tab, disablestart) {
+                          tab, disablestart,config) {
   moduleServer(id, function(input, output, module.session) {
     require(RColorBrewer)
     ns <- module.session$ns
@@ -34,7 +34,10 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     
     #calculate mids levels and criteria
     gbif_dataset_mids <- eventReactive(input$start, {
-      calculate_mids(gbiffile = gbiffile()$datapath, jsontype = "list", jsonlist = jsonschema())
+      calculate_mids(gbiffile = gbiffile()$datapath, 
+                     jsontype = "list", 
+                     jsonlist = jsonschema(),
+                     config = config)
     })
     
     #remove spinner when calculations are finished

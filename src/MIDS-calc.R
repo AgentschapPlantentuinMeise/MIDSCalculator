@@ -3,7 +3,7 @@ library(data.table)
 #library(purrr)
 library(magrittr)
 
-calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NULL) {
+calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NULL,config) {
 
   # Get data ----------------------------------------------------------------
   
@@ -35,7 +35,7 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   # import from zipped DWC archive
   # and set unknown or missing values that apply to all to NA
   if(tools::file_ext(gbiffile) == "zip") {
-  gbif_dataset <- fread(unzip(gbiffile, "occurrence.txt"), 
+    gbif_dataset <- fread(unzip(gbiffile, config$app$csv_filename), 
                         encoding = "UTF-8", na.strings = list_UoM$all, quote="",
                         colClasses = 'character',
                         select = unique(c(list_props, list_extra_props)))
@@ -47,6 +47,7 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   }
   
   #add missing columns with all values as NA
+  list_props %<>% unique()
   missing <- c(list_props)[!c(list_props) %in% colnames(gbif_dataset)]
   gbif_dataset[, missing] <- NA
   

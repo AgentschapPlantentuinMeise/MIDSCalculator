@@ -10,11 +10,14 @@ library(DT)
 library(shinyjs)
 library(sortable)
 library(shinybusy)
+library(ini)
+config = read.ini("../../config.ini")
+default_schema = config$app$default_schema
 source(file = "../parse_json_schema.R")
 source(file = "../MIDS-calc.R")
 
 #Increase upload limit to 5GB
-options(shiny.maxRequestSize = 5000*1024^2)
+options(shiny.maxRequestSize = as.numeric(config$app$max_size)*1024^2)
 
 # Define UI ----
 ui <- 
@@ -242,7 +245,7 @@ server <- function(input, output, session) {
 # Calculate and show results ----------------------------------------------
 
   ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
-                reactive(input$tabs), disablestart)
+                reactive(input$tabs), disablestart,config)
  
 }
 # Run the app ----
