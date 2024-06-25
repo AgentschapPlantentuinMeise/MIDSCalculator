@@ -12,7 +12,8 @@ packages <- c("shiny",
               "RColorBrewer",
               "shinybusy",
               "stringr",
-              "ini")
+              "ini",
+              "yaml")
 
 pkgLoad <- function() {
   

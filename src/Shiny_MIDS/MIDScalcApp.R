@@ -188,9 +188,13 @@ server <- function(input, output, session) {
   #update MIDS implementation radiobuttons to show schema info
   observe(
   updateRadioButtons(session, "jsonfiletype", 
-                     choiceNames = list(paste("Use default:", paste0(read_json(jsonpath())$schemaName, " v", read_json(jsonpath())$schemaVersion)),
-                                        "Upload file"),
-                     choiceValues = list("default", "custom"),
+                     choiceNames = list(paste("Use default:", 
+                                              paste0(read_json(jsonpath())$schemaName, 
+                                                     " v", 
+                                                     read_json(jsonpath())$schemaVersion)),
+                                        "Upload file",
+                                        "Use default SSSOM mapping"),
+                     choiceValues = list("default", "custom","sssom"),
                      selected = input$jsonfiletype)
   )
 
@@ -219,8 +223,16 @@ server <- function(input, output, session) {
       #get filename
       if (input$jsonfiletype == "custom"){
         filename <- paste("Custom:", input$customjsonfile$name)
+      } else if (input$jsonfiletype == "sssom") {
+        return(c(list("criteria" = read_json_mids_criteria(outtype = "criteria", type = "sssom",config=config)), 
+                 list("UoM" = read_json_unknownOrMissing(type = "sssom",config=config)), 
+                 list("properties" = read_json_mids_criteria(outtype = "properties", type = "sssom",config=config))
+        ))
       } else {
-        filename <- paste("Default:", paste0(read_json(jsonpath())$schemaName, " v", read_json(jsonpath())$schemaVersion))
+        filename <- paste("Default:", 
+                          paste0(read_json(jsonpath())$schemaName,
+                                 " v",
+                                 read_json(jsonpath())$schemaVersion))
       }
       #return schema
       return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
