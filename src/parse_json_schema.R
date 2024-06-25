@@ -106,6 +106,11 @@ read_json_mids_criteria <- function(schema = default_schema,
 }
 
 parse_sssom <- function(tsv=NULL,yml=NULL,config) {
+  
+  ##read the sssom tsv and yml files provided in config.ini
+  #use function arguments to maybe later include support for 
+  #loading them through the UI
+  
   if (is.null(tsv)) {
     tsv = fread(paste0("../../",config$app$sssom_tsv),
                 encoding="UTF-8",
@@ -117,24 +122,39 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
                     readLines.warn=F)
   }
   
+  #The schema is hardcoded for GBIF-annotated DwC-Archives
+  #so exclude terms from extensions such as GBIF multimedia or Auddubon
   tsv %<>%
     filter(`sssom:object_category`=="dwc:Occurrence")
   
+  #initiate a schema with metadata from the yml file
   newschema = list()
   newschema$schemaName = yml$mapping_set_title
   newschema$schemaVersion = yml$mapping_set_version
   newschema$date = yml$mapping_date
   newschema$schemaType = "SSSOM-converted"
   
+  #unknownOrMissing section based on RegexRemoval
   if (!is.null(tsv$`semapv:RegexRemoval`)) {
+    #split the |-separated values to exclude
+    #data.table syntax
     unknown_or_missing <- tsv[, .(object_id = `sssom:object_id`, 
                                   RegexRemoval = unlist(tstrsplit(`semapv:RegexRemoval`, 
                                                                   "\\|"))), 
                               by = `sssom:object_id`]
+    
+    #list unique values to be excluded
     check_all = count(unknown_or_missing,RegexRemoval) %>%
       filter(!is.na(RegexRemoval))
+    
+    #values to globally be excluded (across all mappings)
     check_all_globals = filter(check_all,n==dim(tsv)[1])
+    
+    #values to exclude only for specific mappings
     check_all_specifics = filter(check_all,n<dim(tsv)[1])
+    
+    #list mappings for which specific values should be excluded
+    #omit the namespace as the schema does not use it
     check_all_specifics %<>%
       left_join(select(unknown_or_missing,
                        RegexRemoval,
@@ -142,11 +162,17 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
                 by=c("RegexRemoval"="RegexRemoval")) %>%
       filter(!duplicated(object_id)) %>%
       mutate(object_id = sub(".*:","",object_id))
+    
+    #inititate unknownOrMissing section
     newschema$unknownOrMissing = list()
+    
+    #add global excluded values
     for (i in 1:dim(check_all_globals)[1]) {
       newschema$unknownOrMissing[[i]] = list(value = check_all_globals$RegexRemoval[i],
                                              midsAchieved = F)
     }
+    
+    #add specific excluded values
     for (j in 1:dim(check_all_specifics)[1]) {
       i = i + 1
       newschema$unknownOrMissing[[i]] = list(value = check_all_specifics$RegexRemoval[j],
@@ -154,25 +180,44 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
                                              property = check_all_specifics$object_id[j])
     }
   }
+  
+  #Add mids levels criteria
   for (i in 0:3) {
+    #initiate mids level
     level = paste0("mids",i)
     newschema[[level]] = list()
+    
+    #all mappings for this mids level
     mids_crits = tsv %>%
       filter(`sssom:subject_category`==level)
+    
+    #unique MIDS elements per level
+    #without namespace
     mids_elements = mids_crits %>%
       filter(!duplicated(`sssom:subject_id`)) %>%
       mutate(subject_id = sub(".*:","",`sssom:subject_id`))
+    
+    #for each element in this level, add mappings
     for (j in 1:dim(mids_elements)[1]) {
+      #initiate element
       newschema[[level]][[mids_elements$subject_id[j]]] = list()
+      
+      #mappings for this element
       mids_crits_element = mids_crits %>%
         filter(`sssom:subject_id` == mids_elements$`sssom:subject_id`[j])
+      
+      #step counter for each set of mappings (with the same operator) per element
       k = 1
+      
+      ##narrowmatch -> OR operator
       narrowmatch = filter(mids_crits_element,
                            `sssom:predicate_id`=="skos:narrowMatch") %>%
         pull(`sssom:object_id`) %>%
         sub(".*:","",.) %>%
         as.list()
       if (length(narrowmatch)>0) {
+        #because of the extension filter previously, some narrowMatches
+        #can now be exactMatch instead
         if (length(narrowmatch) == 1) {
           newschema[[level]][[mids_elements$subject_id[j]]][[k]] = list(
             property = unlist(narrowmatch)
@@ -185,6 +230,8 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
         }
         k = k + 1
       }
+      
+      ##exact matches
       exactmatch = filter(mids_crits_element,
                           `sssom:predicate_id`=="skos:exactMatch") %>%
         pull(`sssom:object_id`) %>%
@@ -195,11 +242,15 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
         )
         k = k + 1
       }
+      
+      #intersectionOf -> AND operator
+      #which ones can be found in object_match_field
       intersectionof = filter(mids_crits_element,
                               `sssom:predicate_id`=="owl:intersectionOf",
                               `sssom:object_match_field`!="")
       if (dim(intersectionof)[1]>0) {
         for (l in 1:dim(intersectionof)[1]) {
+          #note that the spaces + | delimitation is hardcoded here!
           intersects = strsplit(intersectionof$`sssom:object_match_field`[l],
                                 split=" | ",
                                 fixed=T)[[1]] %>%
