@@ -137,8 +137,14 @@ server <- function(input, output, session) {
 
   #hide schema upload when schema is default
   observe({
-    if (input$jsonfiletype == "default"){
+    if (input$jsonfiletype == "default"|input$jsonfiletype == "sssom"){
       shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
+  })
+  
+  #hide edit interactively radiobutton when sssom option is selected
+  observe({
+    if (input$jsonfiletype == "sssom"){
+      shinyjs::hide("editschema")} else {shinyjs::show("editschema")}
   })
   
   #check if file is uploading
@@ -163,7 +169,7 @@ server <- function(input, output, session) {
   disableviewschema <- reactiveVal(FALSE)
   observe({
     if (input$jsonfiletype == "custom" & is.null(input$customjsonfile) | 
-        (input$editschema == TRUE && interactiveschema$visited() == FALSE)) {
+        (input$editschema == TRUE && interactiveschema$visited() == FALSE & input$jsonfiletype != "sssom")) {
       disableviewschema(TRUE)} else {disableviewschema(FALSE)}
   })
   
@@ -171,7 +177,7 @@ server <- function(input, output, session) {
   disableinteractive <- reactiveVal(FALSE)
   observe({
     if ((input$jsonfiletype == "custom" & is.null(input$customjsonfile)) |
-        input$editschema == FALSE){
+        input$editschema == FALSE | input$jsonfiletype == "sssom"){
       disableinteractive(TRUE)} else {disableinteractive(FALSE)}
   })
   
@@ -257,7 +263,7 @@ server <- function(input, output, session) {
 # Calculate and show results ----------------------------------------------
 
   ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
-                reactive(input$tabs), disablestart,config)
+                reactive(input$tabs), disablestart,config,input$jsonfiletype)
  
 }
 # Run the app ----
