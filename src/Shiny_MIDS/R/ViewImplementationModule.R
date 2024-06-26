@@ -119,7 +119,7 @@ ViewImplementationServer <- function(id, schema, disable) {
                         grid-column: ", column, "; grid-row:", row, "'>")))
       #Property
       print(HTML("<div class=", ns('midslevel')))
-      print(h3(stringr::str_to_title(prop)))
+      print(h3(prop))
       print(HTML("</div>"))
       #Unknown or missing values for that property
       for (value in values){

@@ -7,7 +7,7 @@ ResultsUI <- function(id) {
 }
 
 ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
-                          tab, disablestart,config) {
+                          tab, disablestart,config,jsonfiletype) {
   moduleServer(id, function(input, output, module.session) {
     require(RColorBrewer)
     ns <- module.session$ns
@@ -454,8 +454,13 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
       output[[paste0("Used_MIDS_implementation", input$start)]] <-
         renderText(
           if (!is.null(isolate(jsonschema()$filename))){
-            return(isolate(jsonschema()$filename))}
-          else {return("Interactive")}
+            return(isolate(jsonschema()$filename))
+          } else if (jsonfiletype == "sssom") {
+            sssom_name = config$app$sssom_tsv %>%
+              gsub("\\.sssom.*","",.) %>%
+              gsub(".*/","",.)
+            return(sssom_name)
+          } else {return("Interactive")}
         )
     )
 
