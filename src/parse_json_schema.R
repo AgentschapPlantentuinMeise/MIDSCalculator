@@ -80,7 +80,7 @@ read_json_mids_criteria <- function(schema = default_schema,
           #make a list of properties
           list_props <- append(list_props, prop)
           #add the property is not na
-          crits <- paste0(crits, "!is.na(", prop, ")")
+          crits <- paste0(crits, "!is.na(`", prop, "`)")
           #if there is a operator and it is not the last property, then add the matching operator to the string
           #currently does not work if there are subconditions without property! needs to be fixed 
           if (prop_index != length(subcondition$property) & "operator" %in% names(subcondition)){

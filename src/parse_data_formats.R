@@ -80,6 +80,12 @@ read_data_from_dwca_file <- function(filename,
     map(~ .x + 1) %>%
     unlist()
   
+  newnames = core_terms %>%
+    filter((term%in%core_select_props&!is.na(index))|
+             (!is.na(index)&index==id_index)) %>%
+    pull(term) %>%
+    paste0(category,.)
+  
   core_data <- fread(unzip(filename, xml_find_all(meta,paste0(xpath,"/files/location")) %>% xml_text()), 
                      encoding = xml_find_all(meta,xpath) %>% xml_attr("encoding"), 
                      sep = xml_find_all(meta,xpath) %>% xml_attr("fieldsTerminatedBy") %>% gsub("\\\\t","\t",.),
@@ -87,13 +93,13 @@ read_data_from_dwca_file <- function(filename,
                      quote = xml_find_all(meta,xpath) %>% xml_attr("fieldsEnclosedBy"),
                      colClasses = 'character',
                      drop = drop)
-  
+  colnames(core_data) = newnames
   if ("default"%in%colnames(core_terms)) {
     defaults = core_terms %>%
       filter(!is.na(default))
     
     for (i in 1:dim(defaults)[1]) {
-      newname = gsub(".*:","",defaults$term[i])
+      newname = paste0(category,defaults$term[i])
       core_data[[newname]] = defaults$default[i]
     }
   }
@@ -130,15 +136,22 @@ parse_dwc_archive <- function(filename,
   while (len != 0) {
     node = xml_find_all(meta,paste0("(//extension)[",step,"]"))
     len = node %>% xml_length()
-    if (len > 0) {
+    extension_type = node %>% xml_attr("rowType")
+    if (len > 0 && extension_type != "http://rs.tdwg.org/dwc/terms/Occurrence") {
       temp_data = read_data_from_dwca_file(filename = filename,
                                            meta = meta,
                                            namespaces = namespaces,
                                            select_props = select_props,
                                            uom = uom,
-                                           extension = node %>% xml_attr("rowType"))
+                                           extension = extension_type)
       if (!is.null(temp_data)) {
-        data = left_join(data,temp_data,by=c(core_id))
+        extension_id = node %>%
+          xml_find_all("//id") %>%
+          xml_attr("index") %>%
+          as.numeric()
+        extension_id = colnames(temp_data)[extension_id+1]
+        
+        data = left_join(data,temp_data,by=setNames(extension_id,core_id))
       }
     }
     step = step + 1
