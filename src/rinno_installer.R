@@ -48,7 +48,7 @@ start_iss(app_name = name) %>%
   
   # C-like directives
   directives_section(include_R = T,
-                     app_version = "0.6",
+                     app_version = "0.65",
                      publisher = "Meise Botanic Garden", 
                      main_url = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator") %>%
   

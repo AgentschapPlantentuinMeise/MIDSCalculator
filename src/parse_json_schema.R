@@ -124,8 +124,8 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
   
   #The schema is hardcoded for GBIF-annotated DwC-Archives
   #so exclude terms from extensions such as GBIF multimedia or Auddubon
-  tsv %<>%
-    filter(`sssom:object_category`=="dwc:Occurrence")
+  #tsv %<>%
+  #  filter(`sssom:object_category`=="dwc:Occurrence")
   
   #initiate a schema with metadata from the yml file
   newschema = list()
@@ -138,10 +138,11 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
   if (!is.null(tsv$`semapv:RegexRemoval`)) {
     #split the |-separated values to exclude
     #data.table syntax
-    unknown_or_missing <- tsv[, .(object_id = `sssom:object_id`, 
+    unknown_or_missing <- tsv[, .(object_id = `sssom:object_id`,
+                                  object_category = `sssom:object_category`,
                                   RegexRemoval = unlist(tstrsplit(`semapv:RegexRemoval`, 
                                                                   "\\|"))), 
-                              by = `sssom:object_id`]
+                              by = .(`sssom:object_id`,`sssom:object_category`)]
     
     #list unique values to be excluded
     check_all = count(unknown_or_missing,RegexRemoval) %>%
@@ -158,10 +159,13 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
     check_all_specifics %<>%
       left_join(select(unknown_or_missing,
                        RegexRemoval,
-                       object_id),
+                       object_id,
+                       object_category),
                 by=c("RegexRemoval"="RegexRemoval")) %>%
       filter(!duplicated(object_id)) %>%
-      mutate(object_id = sub(".*:","",object_id))
+      mutate(object_id = paste0("[",object_category,"]",object_id)) %>%
+      select(-object_category)
+      #mutate(object_id = sub(".*:","",object_id))
     
     #inititate unknownOrMissing section
     newschema$unknownOrMissing = list()
@@ -212,30 +216,30 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
       ##narrowmatch -> OR operator
       narrowmatch = filter(mids_crits_element,
                            `sssom:predicate_id`=="skos:narrowMatch") %>%
+        mutate(`sssom:object_id` = paste0("[",
+                                          `sssom:object_category`,
+                                          "]",
+                                          `sssom:object_id`)) %>%
         pull(`sssom:object_id`) %>%
-        sub(".*:","",.) %>%
         as.list()
       if (length(narrowmatch)>0) {
         #because of the extension filter previously, some narrowMatches
         #can now be exactMatch instead
-        if (length(narrowmatch) == 1) {
-          newschema[[level]][[mids_elements$subject_id[j]]][[k]] = list(
-            property = unlist(narrowmatch)
-          )
-        } else {
-          newschema[[level]][[mids_elements$subject_id[j]]][[k]] = list(
-            property = narrowmatch,
-            operator = "OR"
-          )
-        }
+        newschema[[level]][[mids_elements$subject_id[j]]][[k]] = list(
+          property = narrowmatch,
+          operator = "OR"
+        )
         k = k + 1
       }
       
       ##exact matches
       exactmatch = filter(mids_crits_element,
                           `sssom:predicate_id`=="skos:exactMatch") %>%
-        pull(`sssom:object_id`) %>%
-        sub(".*:","",.)
+        mutate(`sssom:object_id` = paste0("[",
+                                          `sssom:object_category`,
+                                          "]",
+                                          `sssom:object_id`)) %>%
+        pull(`sssom:object_id`)
       if (length(exactmatch)>0) {
         newschema[[level]][[mids_elements$subject_id[j]]][[k]] = list(
           property = exactmatch
@@ -253,8 +257,17 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
           #note that the spaces + | delimitation is hardcoded here!
           intersects = strsplit(intersectionof$`sssom:object_match_field`[l],
                                 split=" | ",
-                                fixed=T)[[1]] %>%
-            sub(".*:","",.) %>%
+                                fixed=T)[[1]]
+          for (m in 1:length(intersects)) {
+            match_field = mids_crits_element %>%
+              filter(`sssom:object_id`==intersects[m]) %>%
+              slice_head()
+            intersects[m] = paste0("[",
+                                   match_field$`sssom:object_category`,
+                                   "]",
+                                   intersects[m])
+          }
+          intersects %<>%
             as.list()
           newschema[[level]][[mids_elements$subject_id[j]]][[k]] = list(
             property = intersects,
@@ -265,5 +278,6 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
       }
     }
   }
+  #print(newschema)
   return(newschema)
 }

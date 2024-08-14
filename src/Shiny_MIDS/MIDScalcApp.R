@@ -1,19 +1,13 @@
-#check if all packages are installed
+#check if all packages are installed and load libraries
 source("../packages.R")
 pkgLoad()
 
-#Load libraries and source files
-library(shiny)
-library(shinyBS)
-library(ggplot2)
-library(DT)
-library(shinyjs)
-library(sortable)
-library(shinybusy)
-library(ini)
+#Load source files
 config = read.ini("../../config.ini")
+supported_formats = c("dwc-a","simple_dwc","biocase")
 default_schema = config$app$default_schema
 source(file = "../parse_json_schema.R")
+source(file = "../parse_data_formats.R")
 source(file = "../MIDS-calc.R")
 
 #Increase upload limit to 5GB
@@ -75,6 +69,9 @@ ui <-
             fileInput("customjsonfile", label = NULL, accept = ".json"),
             hr(style = "border-top: 1px solid #2874A6;"),
             checkboxInput("editschema", "Edit interactively", value = FALSE),
+            selectInput("format_select", 
+                        label = "Select Data Format:",
+                        choices = supported_formats),
             InteractiveSchemaUI("interactive"),
             ))),
             br(),br(),
@@ -92,7 +89,19 @@ server <- function(input, output, session) {
     })
   }
   
+# Set the default value of data format and update it
   
+  if (!config$app$format%in%supported_formats) {
+    config$app$format=="dwc-a"
+  }
+  
+  updateSelectInput(session, 
+                    "format_select",
+                    selected = config$app$format)
+  
+  observeEvent(input$format_select, {
+    config$app$format <- input$format_select
+  })
 
 # Show information about the app ------------------------------------------
 
