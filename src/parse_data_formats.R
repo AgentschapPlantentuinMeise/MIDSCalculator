@@ -1,34 +1,42 @@
+# Run the correct function depending on data format
 parse_data_file <- function(filename,
                             config,
                             select_props,
                             uom) {
+  # Darwin Core Archive (zipped)
   if (config$app$format == "dwc-a") {
     return(parse_dwc_archive(filename,
                              config,
                              select_props,
                              uom))
   }
+  
+  # Simple Darwin Core csv file
   if (config$app$format == "simple_dwc") {
     return(parse_dwc(filename,
                      select_props,
                      uom))
   }
+  
+  # ABCD zipped XMLs TBD
 }
 
-read_data_from_dwca_file <- function(filename,
-                                     meta,
-                                     namespaces,
-                                     select_props,
-                                     uom,
-                                     extension = NULL) {
+# Function to read parts of a data file of a dwc archive
+read_data_from_dwca_file <- function(filename, #path to the zip file
+                                     meta, #meta.xml already read
+                                     namespaces, #namespaces read from yml
+                                     select_props, #props to import, derived from schema
+                                     uom, #unknown/missing values for all props
+                                     extension = NULL) { #the extension category
+  # xpath to the core or extension node
   if (!is.null(extension)) {
     xpath = paste0("//extension[@rowType='",
                    extension,"']")
-    
   } else {
     xpath = "//core"
   }
   
+  # Retrieve all terms from the node and their attributes
   core_terms = meta %>%
     xml_find_all(paste0(xpath,
                         "/field")) %>%
@@ -36,12 +44,14 @@ read_data_from_dwca_file <- function(filename,
     tibble(t = .) %>%
     unnest_wider(t)
   
+  # Replace the full URI with the short namespace
   for (i in 1:dim(namespaces)[1]) {
     core_terms %<>%
       mutate(term = gsub(namespaces$uri[i],
                          paste0(namespaces$name[i],":"),
                          term,
                          fixed=T))
+    # Replace this too in the extension rowType
     if (!is.null(extension)) {
       extension %<>% gsub(namespaces$uri[i],
                        paste0(namespaces$name[i],":"),
@@ -50,6 +60,7 @@ read_data_from_dwca_file <- function(filename,
     }
   }
   
+  # category namespace and id attribute name
   if (is.null(extension)) {
     category = "[dwc:Occurrence]"
     idname = "/id"
@@ -58,21 +69,27 @@ read_data_from_dwca_file <- function(filename,
     idname = "/coreid"
   }
   
+  # index of the id field, for joining later
   id_index = meta %>%
     xml_find_all(paste0(xpath,idname)) %>%
     xml_attr("index") %>%
     as.numeric()
   
+  # filter the properties of the core or extension
   core_select_props = select_props %>%
     tibble(data = .) %>%
     filter(grepl(category,data,fixed=T)) %>%
     pull(data) %>%
     gsub(category,"",.,fixed=T)
   
+  # return null if no props from the schema are in this core/extension
   if (length(core_select_props) == 0) {
     return(NULL)
   }
   
+  # find col index of all terms in the csv file that are not needed
+  # also include the id field even if it's not mapped in the schema
+  # add 1 as indexing in xml starts at 0, at 1 in R
   drop = core_terms %>%
     filter(!term%in%core_select_props,!is.na(index),index!=id_index) %>%
     pull(index) %>%
@@ -80,12 +97,17 @@ read_data_from_dwca_file <- function(filename,
     map(~ .x + 1) %>%
     unlist()
   
+  # set names to replace the colnames of the csv file
+  # only indexed fields and including the id field
   newnames = core_terms %>%
     filter((term%in%core_select_props&!is.na(index))|
              (!is.na(index)&index==id_index)) %>%
     pull(term) %>%
     paste0(category,.)
   
+  # read the data file from the zipped archive
+  # take parameters from the meta.xml
+  # replace some values with NA based on UoM
   core_data <- fread(unzip(filename, xml_find_all(meta,paste0(xpath,"/files/location")) %>% xml_text()), 
                      encoding = xml_find_all(meta,xpath) %>% xml_attr("encoding"), 
                      sep = xml_find_all(meta,xpath) %>% xml_attr("fieldsTerminatedBy") %>% gsub("\\\\t","\t",.),
@@ -93,7 +115,11 @@ read_data_from_dwca_file <- function(filename,
                      quote = xml_find_all(meta,xpath) %>% xml_attr("fieldsEnclosedBy"),
                      colClasses = 'character',
                      drop = drop)
+  
+  # replace csv file colnames with full namespaces name
   colnames(core_data) = newnames
+  
+  # set default values from the term list, if any
   if ("default"%in%colnames(core_terms)) {
     defaults = core_terms %>%
       filter(!is.na(default))
@@ -103,34 +129,43 @@ read_data_from_dwca_file <- function(filename,
       core_data[[newname]] = defaults$default[i]
     }
   }
+  
   return(core_data)
 }
 
+# function to read an parse a dwc arcive (zipped)
 parse_dwc_archive <- function(filename,
                               config,
                               select_props,
                               uom) {
+  # read the meta.xml and strip the namespace for easier xpath
   meta = read_xml(unzip(filename,"meta.xml"))
   meta %>% xml_ns_strip()
   
+  # load namespaces of dwc, dc, ac... from the sssom yaml curie map
   namespaces = read_yaml(paste0("../../",config$app$sssom_yml),
                          readLines.warn = F) %>%
     pluck("curie_map") %>%
     enframe(name="name",value="uri")
   
+  # read the data from the occurrence core
   data = read_data_from_dwca_file(filename = filename,
                                   meta = meta,
                                   namespaces = namespaces,
                                   select_props = select_props,
                                   uom = uom)
   
+  # define the id on which to join with any extensions
+  # +1 because xml indexing starts at 0, R at 1
   core_id = meta %>%
     xml_find_all("//core/id") %>%
     xml_attr("index") %>%
     as.numeric()
-  
   core_id = colnames(data)[core_id+1]
   
+  # check each extension and try to process it
+  # occurrence extensions to the occurrence core are skipped
+  # if any terms were found in an extension, they're joined into the core tibble
   len = 1
   step = 1
   while (len != 0) {
@@ -169,10 +204,4 @@ parse_dwc <- function(filename,
                         quote="",
                         colClasses = 'character',
                         select = select_props)
-}
-
-strip_termname <- function(str) {
-  str %<>%
-    gsub(".*:","",.)
-  return(str)  
 }
