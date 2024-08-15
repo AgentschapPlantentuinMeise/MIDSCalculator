@@ -19,6 +19,12 @@ parse_data_file <- function(filename,
   }
   
   # ABCD zipped XMLs TBD
+  if (config$app$format == "biocase") {
+    return(parse_biocase_archive(filename,
+                                 config,
+                                 select_props,
+                                 uom))
+  }
 }
 
 # Function to read parts of a data file of a dwc archive
@@ -204,4 +210,84 @@ parse_dwc <- function(filename,
                         quote="",
                         colClasses = 'character',
                         select = select_props)
+}
+
+parse_biocase_archive <- function(filename,
+                                  config,
+                                  select_props,
+                                  uom) {
+  # Read the lookup table from abcd term URI to its xpath
+  xpath_mapper = fread("../../data/formats/abcd_xpaths.csv")
+  
+  # Remove the category namespace for matching on URI with abcd namespace only
+  select_props %<>%
+    gsub(".*]","",.)
+  
+  # List the mappings at the metadata level
+  xpaths_meta = xpath_mapper %>%
+    filter(uri%in%select_props,
+           !grepl("/Units/",xpath,fixed=T)) %>%
+    mutate(xpath = paste0("/",gsub("/","/abcd:",xpath,fixed=T)))
+  
+  # List the mappings at the Unit (specimen) level
+  # Modify the xpath to always include the UnitGUID 
+  #so to keep the connection between the term value and the specimen id
+  xpaths_unit = xpath_mapper %>%
+    filter(uri%in%select_props,
+           grepl("/Units/",xpath,fixed=T),
+           uri!="abcd:UnitGUID") %>%
+    mutate(xpath = paste0("//abcd:DataSets/abcd:DataSet/abcd:Units/abcd:Unit/abcd:UnitGUID|/",
+                          gsub("/","/abcd:",xpath,fixed=T)))
+  
+  # List all xml files in the archive
+  filelist = unzip(filename,list = T)
+  
+  # initiate a list for all results (per file)
+  for (i in 1:dim(filelist)[1]) {
+    # Read the xml file, strip the default namespaces
+    file = read_xml(unzip(filename,files = filelist$Name[i]))
+    file %>% xml_ns_strip()
+    
+    # find all guids of specimens in this file
+    guids = file %>%
+      xml_find_all("//abcd:DataSets/abcd:DataSet/abcd:Units/abcd:Unit/abcd:UnitGUID") %>%
+      xml_text()
+    
+    # set a new tibble to contain all the data
+    newdf = tibble(`abcd:UnitGUID` = guids)
+    print(i)
+    
+    # For each of the xpaths, find the corresponding values (if any)
+    for (k in 1:dim(xpaths_unit)[1]) {
+      val = xml_find_all(file,xpaths_unit$xpath[k])
+      
+      # if there are more results than just the GUIDs, link them to the
+      #right guid and store them in lists to later join in the results tibble
+      if (length(val) > length(guids)) {
+        spec_guids = c()
+        spec_values = c()
+        for (j in 1:length(val)) {
+          if (xml_name(val[[j]]) == "UnitGUID") {
+            currentguid = val[[j]] %>%
+              xml_text()
+          } else if (length(spec_guids) == 0 || 
+                     spec_guids[length(spec_guids)] != currentguid) {
+            spec_guids = c(spec_guids,currentguid)
+            spec_values = c(spec_values,val[[j]] %>% xml_text())
+          }
+        }
+        newdf %<>% left_join(tibble(guid = spec_guids,
+                                    !!xpaths_unit$uri[k] := spec_values),
+                             by=setNames("guid",
+                                         "abcd:UnitGUID"))
+      }
+    }
+    if (!exists("resu")) {
+      resu = newdf
+    } else {
+      resu = resu %>% 
+        bind_rows(newdf)
+    }
+  }
+  return(resu)
 }

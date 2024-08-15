@@ -82,3 +82,5 @@ MIDSCalculator.bat
 MIDSCalculator.iss
 R-*.exe
 setup.ico
+
+*.xml

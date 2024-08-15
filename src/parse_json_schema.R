@@ -177,11 +177,13 @@ parse_sssom <- function(tsv=NULL,yml=NULL,config) {
     }
     
     #add specific excluded values
-    for (j in 1:dim(check_all_specifics)[1]) {
-      i = i + 1
-      newschema$unknownOrMissing[[i]] = list(value = check_all_specifics$RegexRemoval[j],
-                                             midsAchieved = F,
-                                             property = check_all_specifics$object_id[j])
+    if (dim(check_all_specifics)[1] > 0) {
+      for (j in 1:dim(check_all_specifics)[1]) {
+        i = i + 1
+        newschema$unknownOrMissing[[i]] = list(value = check_all_specifics$RegexRemoval[j],
+                                               midsAchieved = F,
+                                               property = check_all_specifics$object_id[j])
+      }
     }
   }
   

@@ -7,7 +7,7 @@ ResultsUI <- function(id) {
 }
 
 ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
-                          tab, disablestart,config,jsonfiletype) {
+                          tab, disablestart,config) {
   moduleServer(id, function(input, output, module.session) {
     require(RColorBrewer)
     ns <- module.session$ns
@@ -467,9 +467,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     #show complete MIDS implementation schema in modal window
     observe(
       ViewImplementationServer(paste0("showschema", resulttabnr()),
-         reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]]),
-         #never disable view button on results tab
-         reactive(FALSE)
+         reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]])
       ))
     
 # Open results tab automatically when calculations are performed ----------

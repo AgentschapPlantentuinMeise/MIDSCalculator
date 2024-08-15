@@ -41,7 +41,7 @@ ViewImplementationUI <- function(id) {
   )
 }
 
-ViewImplementationServer <- function(id, schema, disable) {
+ViewImplementationServer <- function(id, schema) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
@@ -140,15 +140,5 @@ ViewImplementationServer <- function(id, schema, disable) {
              footer = NULL
            ))}, 
         ignoreInit = TRUE)
-    
-    #enable/ disable view action button
-    observe(
-    if (disable() == TRUE){
-    shinyjs::disable("view")
-    } else {
-    shinyjs::enable("view")
-    })
-    
-    
   })
 }

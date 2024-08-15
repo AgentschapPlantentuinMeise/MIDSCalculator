@@ -88,17 +88,9 @@ InteractiveSchemaUI <- function(id) {
   )
 }
 
-InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
+InteractiveSchemaServer <- function(id, jsonschema) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
-    
-    #enable/ disable view action button
-    observe(
-      if (disable() == TRUE){
-        shinyjs::hide("interactiveschema")
-      } else {
-        shinyjs::show("interactiveschema")
-      })
     
     #show information on MIDS criteria
     observeEvent(input$info_criteria,{ 
@@ -130,13 +122,13 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     ## create initial list of elements and mappings from existing MIDS implementation schema
     initialcritlists <- reactive({v <- list()
-    for (i in 1:length(jsonschema())){
-      midslevel <- names(jsonschema()[i])
+    for (i in 1:length(jsonschema()$criteria)){
+      midslevel <- names(jsonschema()$criteria[i])
       #loop over existing MIDS elements
-      for (j in 1:length(jsonschema()[[i]])){
-        midscritname <- names(jsonschema()[[i]][j])
+      for (j in 1:length(jsonschema()$criteria[[i]])){
+        midscritname <- names(jsonschema()$criteria[[i]][j])
         props <- list()
-        subcond <- strsplit(jsonschema()[[i]][[j]], split = "\\|")
+        subcond <- strsplit(jsonschema()$criteria[[i]][[j]], split = "\\|")
         #loop over existing mappings
         for (k in seq_along(subcond)){
           props <- stringr::str_remove_all(subcond[[k]], "!is.na|\\(|\\)|\\ ")
@@ -459,9 +451,9 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     
     ## get UoM values and properties from existing JSON schema
     initialUoMlists <- reactive({v <- list()
-    for (i in 1:length(jsonUoM())){
-      property <- names(jsonUoM()[i])
-      v[[property]] <- jsonUoM()[[i]]
+    for (i in 1:length(jsonschema()$UoM)){
+      property <- names(jsonschema()$UoM[i])
+      v[[property]] <- jsonschema()$UoM[[i]]
     }
     return(v)
     })
@@ -489,9 +481,9 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     ##create list of elements and mapping based on input and added elements
     UoMranklevels <- reactive({
       if (is_empty(newProps$prop)){
-        return(names(jsonUoM()))
+        return(names(jsonschema()$UoM))
       } else {
-        return(c(names(jsonUoM()), newProps$prop))
+        return(c(names(jsonschema()$UoM), newProps$prop))
       }
     })
     
@@ -581,9 +573,9 @@ InteractiveSchemaServer <- function(id, jsonschema, jsonUoM, disable) {
     #get UoM from file as well
     UoMfile <- reactive({
       x <- list()
-      for (j in 1:length(jsonUoM())){
-        all_values <- unlist(jsonUoM()[[j]])
-        name <- names(jsonUoM()[j])
+      for (j in 1:length(jsonschema()$UoM)){
+        all_values <- unlist(jsonschema()$UoM[[j]])
+        name <- names(jsonschema()$UoM[j])
         for (n_value in seq_along(all_values)){
           if (name != "all"){
             x <- append(x, list(list("value" = all_values[[n_value]], "property" = name, "midsAchieved" = FALSE)))

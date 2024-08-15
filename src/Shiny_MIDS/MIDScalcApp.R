@@ -62,11 +62,11 @@ ui <-
             fluidRow(column(width = 4, offset = 4,
             div(div("Specify MIDS implementation", div(ViewImplementationUI("viewcurrentschema"), style = "display: inline-block")), class = "header"), 
             wellPanel(
-            radioButtons("jsonfiletype", label = "Select file", 
-                         choiceNames = list("Use default", 
-                                            "Upload file"),
-                         choiceValues = list("default", "custom")),
-            fileInput("customjsonfile", label = NULL, accept = ".json"),
+            #radioButtons("jsonfiletype", label = "Select file", 
+             #            choiceNames = list("Use default", 
+              #                              "Upload file"),
+               #          choiceValues = list("default", "custom")),
+            #fileInput("customjsonfile", label = NULL, accept = ".json"),
             hr(style = "border-top: 1px solid #2874A6;"),
             checkboxInput("editschema", "Edit interactively", value = FALSE),
             selectInput("format_select", 
@@ -145,16 +145,16 @@ server <- function(input, output, session) {
 # Enable / disable action buttons -----------------------------------------
 
   #hide schema upload when schema is default
-  observe({
-    if (input$jsonfiletype == "default"|input$jsonfiletype == "sssom"){
-      shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
-  })
+  # observe({
+  #   if (input$jsonfiletype == "default"|input$jsonfiletype == "sssom"){
+  #     shinyjs::hide("customjsonfile")} else {shinyjs::show("customjsonfile")}
+  # })
   
   #hide edit interactively radiobutton when sssom option is selected
-  observe({
-    if (input$jsonfiletype == "sssom"){
-      shinyjs::hide("editschema")} else {shinyjs::show("editschema")}
-  })
+  # observe({
+  #   if (input$jsonfiletype == "sssom"){
+  #     shinyjs::hide("editschema")} else {shinyjs::show("editschema")}
+  # })
   
   #check if file is uploading
   hold <- reactiveVal(FALSE)
@@ -168,111 +168,109 @@ server <- function(input, output, session) {
   observe({
     if (is.null(input$gbiffile) |
         (input$editschema == TRUE && interactiveschema$visited() == FALSE) |
-        (input$jsonfiletype == "custom" & is.null(input$customjsonfile)) |
         hold() == TRUE|
         disablesInvalidFile() == TRUE){
       disablestart(TRUE)} else {disablestart(FALSE)}
   })
     
   #disable "View MIDS implementation" when custom upload is chosen but empty, and when edit schema is chosen but not visited
-  disableviewschema <- reactiveVal(FALSE)
-  observe({
-    if (input$jsonfiletype == "custom" & is.null(input$customjsonfile) | 
-        (input$editschema == TRUE && interactiveschema$visited() == FALSE & input$jsonfiletype != "sssom")) {
-      disableviewschema(TRUE)} else {disableviewschema(FALSE)}
-  })
+  # disableviewschema <- reactiveVal(FALSE)
+  # observe({
+  #   if (input$jsonfiletype == "custom" & is.null(input$customjsonfile) | 
+  #       (input$editschema == TRUE && interactiveschema$visited() == FALSE & input$jsonfiletype != "sssom")) {
+  #     disableviewschema(TRUE)} else {disableviewschema(FALSE)}
+  # })
   
   #disable "Edit MIDS implementation" if schema doesn't need to be edited and when custom upload is chosen but empty 
-  disableinteractive <- reactiveVal(FALSE)
-  observe({
-    if ((input$jsonfiletype == "custom" & is.null(input$customjsonfile)) |
-        input$editschema == FALSE | input$jsonfiletype == "sssom"){
-      disableinteractive(TRUE)} else {disableinteractive(FALSE)}
-  })
+  # disableinteractive <- reactiveVal(FALSE)
+  # observe({
+  #   if ((input$jsonfiletype == "custom" & is.null(input$customjsonfile)) |
+  #       input$editschema == FALSE | input$jsonfiletype == "sssom"){
+  #     disableinteractive(TRUE)} else {disableinteractive(FALSE)}
+  # })
   
 # Initialize MIDS implementation ------------------------------------------
 
   #get path to json schema
-  jsonpath <- reactive({
-    if (input$jsonfiletype == "default" | is.null(input$customjsonfile$datapath)){
-      return(paste0("../../", default_schema))}
-    if (input$jsonfiletype == "custom"){
-      return(input$customjsonfile$datapath)}
-  })
+  # jsonpath <- reactive({
+  #   if (input$jsonfiletype == "default" | is.null(input$customjsonfile$datapath)){
+  #     return(paste0("../../", default_schema))}
+  #   if (input$jsonfiletype == "custom"){
+  #     return(input$customjsonfile$datapath)}
+  # })
   
   #update MIDS implementation radiobuttons to show schema info
-  observe(
-  updateRadioButtons(session, "jsonfiletype", 
-                     choiceNames = list(paste("Use default:", 
-                                              paste0(read_json(jsonpath())$schemaName, 
-                                                     " v", 
-                                                     read_json(jsonpath())$schemaVersion)),
-                                        "Upload file",
-                                        "Use default SSSOM mapping"),
-                     choiceValues = list("default", "custom","sssom"),
-                     selected = input$jsonfiletype)
-  )
+  # observe(
+  # updateRadioButtons(session, "jsonfiletype", 
+  #                    choiceNames = list(paste("Use default:", 
+  #                                             paste0(read_json(jsonpath())$schemaName, 
+  #                                                    " v", 
+  #                                                    read_json(jsonpath())$schemaVersion)),
+  #                                       "Upload file",
+  #                                       "Use default SSSOM mapping"),
+  #                    choiceValues = list("default", "custom","sssom"),
+  #                    selected = input$jsonfiletype)
+  # )
 
   #read json schema from file
-  jsonschemafile <- reactive({ 
-    read_json_mids_criteria(schema = jsonpath(), outtype = "criteria")
-  })
-  
-  #read json UoM from file
-  jsonUoMfile <- reactive({ 
-    read_json_unknownOrMissing(schema = jsonpath())
-  })
+  # jsonschemafile <- reactive({ 
+  #   read_json_mids_criteria(schema = jsonpath(), outtype = "criteria")
+  # })
+  # 
+  # #read json UoM from file
+  # jsonUoMfile <- reactive({ 
+  #   read_json_unknownOrMissing(schema = jsonpath())
+  # })
   
 
 # Get final MIDS implementation schema (either from file or from interactive editing) --------
 
   jsonschemafinal <- reactive({ 
-    if (input$editschema == TRUE){
-      # get interactive schema
-      return(c(list("criteria" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "criteria", type = "interactive")), 
-               list("UoM" = read_json_unknownOrMissing(schema = interactiveschema$interactivejson(), type = "interactive")), 
-               list("properties" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "properties", type = "interactive"))
-              ))
-    } else {
-      #get schema from file
-      #get filename
-      if (input$jsonfiletype == "custom"){
-        filename <- paste("Custom:", input$customjsonfile$name)
-      } else if (input$jsonfiletype == "sssom") {
+    # if (input$editschema == TRUE){
+    #   # get interactive schema
+    #   return(c(list("criteria" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "criteria", type = "interactive")), 
+    #            list("UoM" = read_json_unknownOrMissing(schema = interactiveschema$interactivejson(), type = "interactive")), 
+    #            list("properties" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "properties", type = "interactive"))
+    #           ))
+    # } else {
+    #   #get schema from file
+    #   #get filename
+    #   if (input$jsonfiletype == "custom"){
+    #     filename <- paste("Custom:", input$customjsonfile$name)
+    #   } else if (input$jsonfiletype == "sssom") {
         return(c(list("criteria" = read_json_mids_criteria(outtype = "criteria", type = "sssom",config=config)), 
                  list("UoM" = read_json_unknownOrMissing(type = "sssom",config=config)), 
                  list("properties" = read_json_mids_criteria(outtype = "properties", type = "sssom",config=config))
-        ))
-      } else {
-        filename <- paste("Default:", 
-                          paste0(read_json(jsonpath())$schemaName,
-                                 " v",
-                                 read_json(jsonpath())$schemaVersion))
-      }
-      #return schema
-      return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
-        list("properties" = read_json_mids_criteria(schema = jsonpath(), out = "properties")),
-        list("filename"= filename)))
-    }
+         ))
+    #   } else {
+    #     filename <- paste("Default:", 
+    #                       paste0(read_json(jsonpath())$schemaName,
+    #                              " v",
+    #                              read_json(jsonpath())$schemaVersion))
+    #   }
+    #   #return schema
+    #   return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
+    #     list("properties" = read_json_mids_criteria(schema = jsonpath(), out = "properties")),
+    #     list("filename"= filename)))
+    # }
   })
   
   
 # Show current MIDS implementation ----------------------------------------
   
   #view MIDS implementation in modal window
-  ViewImplementationServer("viewcurrentschema", jsonschemafinal, disableviewschema)
+  ViewImplementationServer("viewcurrentschema", jsonschemafinal)
     
 
 # Edit MIDS implementation interactively ----------------------------------
   
-  interactiveschema <- InteractiveSchemaServer("interactive", jsonschemafile, 
-                                               jsonUoMfile, disableinteractive)
+  interactiveschema <- InteractiveSchemaServer("interactive", jsonschemafinal)
   
 
 # Calculate and show results ----------------------------------------------
 
   ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
-                reactive(input$tabs), disablestart,config,input$jsonfiletype)
+                reactive(input$tabs), disablestart,config)
  
 }
 # Run the app ----
