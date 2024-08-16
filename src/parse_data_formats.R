@@ -192,7 +192,9 @@ parse_dwc_archive <- function(filename,
           as.numeric()
         extension_id = colnames(temp_data)[extension_id+1]
         
-        data = left_join(data,temp_data,by=setNames(extension_id,core_id))
+        data = left_join(data,
+                         temp_data,
+                         by=setNames(extension_id,core_id))
       }
     }
     step = step + 1
@@ -240,12 +242,15 @@ parse_biocase_archive <- function(filename,
                           gsub("/","/abcd:",xpath,fixed=T)))
   
   # List all xml files in the archive
-  filelist = unzip(filename,list = T)
+  unzip(filename,exdir = "temp_biocase")
+  filelist = list.files("temp_biocase",
+                        pattern = "*.xml",
+                        full.names = T)
   
   # initiate a list for all results (per file)
-  for (i in 1:dim(filelist)[1]) {
+  for (i in 1:length(filelist)) {
     # Read the xml file, strip the default namespaces
-    file = read_xml(unzip(filename,files = filelist$Name[i]))
+    file = read_xml(filelist[i])
     file %>% xml_ns_strip()
     
     # find all guids of specimens in this file
@@ -262,26 +267,36 @@ parse_biocase_archive <- function(filename,
       val = xml_find_all(file,xpaths_unit$xpath[k])
       
       # if there are more results than just the GUIDs, link them to the
-      #right guid and store them in lists to later join in the results tibble
+      #right guid and store them in pre-allocated lists 
+      # to later join in the results tibble
       if (length(val) > length(guids)) {
-        spec_guids = c()
-        spec_values = c()
+        spec_guids = vector(length = length(val) - length(guids),
+                            mode = "character")
+        spec_values = vector(length = length(val) - length(guids),
+                             mode = "character")
+        step = 1
         for (j in 1:length(val)) {
           if (xml_name(val[[j]]) == "UnitGUID") {
             currentguid = val[[j]] %>%
               xml_text()
-          } else if (length(spec_guids) == 0 || 
-                     spec_guids[length(spec_guids)] != currentguid) {
-            spec_guids = c(spec_guids,currentguid)
-            spec_values = c(spec_values,val[[j]] %>% xml_text())
+          } else if (spec_guids[1] == "" || 
+                     spec_guids[step-1] != currentguid) {
+            spec_guids[step] = currentguid
+            spec_values[step] = val[[j]] %>% xml_text()
+            step = step + 1
           }
         }
+        # remove the unused cells from both vectors
+        one_to_many = spec_guids%in%""
+        spec_guids = spec_guids[!one_to_many]
+        spec_values = spec_values[!one_to_many]
         newdf %<>% left_join(tibble(guid = spec_guids,
                                     !!xpaths_unit$uri[k] := spec_values),
                              by=setNames("guid",
                                          "abcd:UnitGUID"))
       }
     }
+    # Concatenate the result list from each xml file into a single table
     if (!exists("resu")) {
       resu = newdf
     } else {
@@ -289,5 +304,34 @@ parse_biocase_archive <- function(filename,
         bind_rows(newdf)
     }
   }
+  # set metadata level values
+  # based on the last file read
+  # metadata should be identical in each xml file in the archive
+  for (i in 1:dim(xpaths_meta)[1]) {
+    meta_value = xml_find_all(file,xpaths_meta$xpath[i]) %>%
+      xml_text()
+    if (length(meta_value) > 0) {
+      resu %<>%
+        mutate(!!xpaths_meta$uri[i] := meta_value)
+    }
+  }
+  
+  # add object_category to colnames for consistency in use by mids-calc
+  oldcolnames = colnames(resu) %>%
+    tibble(oldnames = .)
+  
+  sssom = fread(paste0("../../",config$app$sssom_tsv))
+  
+  oldcolnames %<>% 
+    left_join(select(sssom,`sssom:object_id`,
+                     `sssom:object_category`),
+              by=setNames("sssom:object_id","oldnames")) %>%
+    mutate(newnames = paste0("[",
+                             `sssom:object_category`,
+                             "]",
+                             oldnames))
+  colnames(resu) = oldcolnames$newnames
+  unlink("temp_biocase",
+         recursive = T)
   return(resu)
 }
