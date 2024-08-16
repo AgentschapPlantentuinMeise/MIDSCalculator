@@ -4,13 +4,31 @@ pkgLoad()
 
 #Load source files
 config = read.ini("../../config.ini")
+
+# Validate vocabulary
 supported_formats = c("dwc-a","simple_dwc","biocase")
-default_schema = config$app$default_schema
+supported_standards = list.dirs("../../data/sssom",
+                                recursive = F,
+                                full.names = F)
+supported_disciplines = c("biology")
+
+if (!config$app$format%in%supported_formats) {
+  config$app$format == "dwc-a"
+}
+
+if (!config$app$format%in%supported_standards) {
+  config$app$format == "dwc"
+}
+
+if (!config$app$format%in%supported_disciplines) {
+  config$app$format == "biology"
+}
+
 source(file = "../parse_json_schema.R")
 source(file = "../parse_data_formats.R")
 source(file = "../MIDS-calc.R")
 
-#Increase upload limit to 5GB
+# Increase upload limit to 5GB
 options(shiny.maxRequestSize = as.numeric(config$app$max_size)*1024^2)
 
 # Define UI ----
@@ -60,7 +78,10 @@ ui <-
                       accept = ".zip")))),
             div(
             fluidRow(column(width = 4, offset = 4,
-            div(div("Specify MIDS implementation", div(ViewImplementationUI("viewcurrentschema"), style = "display: inline-block")), class = "header"), 
+            div(div("Specify MIDS implementation", 
+                    div(ViewImplementationUI("viewcurrentschema"), 
+                        style = "display: inline-block")), 
+                class = "header"), 
             wellPanel(
             #radioButtons("jsonfiletype", label = "Select file", 
              #            choiceNames = list("Use default", 
@@ -68,10 +89,19 @@ ui <-
                #          choiceValues = list("default", "custom")),
             #fileInput("customjsonfile", label = NULL, accept = ".json"),
             hr(style = "border-top: 1px solid #2874A6;"),
-            checkboxInput("editschema", "Edit interactively", value = FALSE),
+            #checkboxInput("editschema", "Edit interactively", value = FALSE),
             selectInput("format_select", 
                         label = "Select Data Format:",
-                        choices = supported_formats),
+                        choices = supported_formats,
+                        selected = config$app$format),
+            selectInput("standard_select", 
+                        label = "Select Standard:",
+                        choices = supported_standards,
+                        selected = config$app$standard),
+            selectInput("discipline_select", 
+                        label = "Select Discipline:",
+                        choices = supported_disciplines,
+                        selected = config$app$discipline),
             InteractiveSchemaUI("interactive"),
             ))),
             br(),br(),
@@ -89,18 +119,25 @@ server <- function(input, output, session) {
     })
   }
   
-# Set the default value of data format and update it
-  
-  if (!config$app$format%in%supported_formats) {
-    config$app$format=="dwc-a"
-  }
-  
-  updateSelectInput(session, 
-                    "format_select",
-                    selected = config$app$format)
+# Define reactive and update format type
+  configR = reactiveVal(config)
   
   observeEvent(input$format_select, {
-    config$app$format <- input$format_select
+    new_config = configR()
+    new_config$app$format <- input$format_select
+    configR(new_config)
+  })
+  
+  observeEvent(input$standard_select, {
+    new_config = configR()
+    new_config$app$standard <- input$standard_select
+    configR(new_config)
+  })
+  
+  observeEvent(input$discipline_select, {
+    new_config = configR()
+    new_config$app$discipline <- input$discipline_select
+    configR(new_config)
   })
 
 # Show information about the app ------------------------------------------
@@ -167,7 +204,6 @@ server <- function(input, output, session) {
   disablestart <- reactiveVal(FALSE)
   observe({
     if (is.null(input$gbiffile) |
-        (input$editschema == TRUE && interactiveschema$visited() == FALSE) |
         hold() == TRUE|
         disablesInvalidFile() == TRUE){
       disablestart(TRUE)} else {disablestart(FALSE)}
@@ -238,9 +274,9 @@ server <- function(input, output, session) {
     #   if (input$jsonfiletype == "custom"){
     #     filename <- paste("Custom:", input$customjsonfile$name)
     #   } else if (input$jsonfiletype == "sssom") {
-        return(c(list("criteria" = read_json_mids_criteria(outtype = "criteria", type = "sssom",config=config)), 
+        return(c(list("criteria" = read_json_mids_criteria(outtype = "criteria", type = "sssom",config=configR())), 
                  list("UoM" = read_json_unknownOrMissing(type = "sssom",config=config)), 
-                 list("properties" = read_json_mids_criteria(outtype = "properties", type = "sssom",config=config))
+                 list("properties" = read_json_mids_criteria(outtype = "properties", type = "sssom",config=configR()))
          ))
     #   } else {
     #     filename <- paste("Default:", 
@@ -270,7 +306,7 @@ server <- function(input, output, session) {
 # Calculate and show results ----------------------------------------------
 
   ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
-                reactive(input$tabs), disablestart,config)
+                reactive(input$tabs), disablestart,configR())
  
 }
 # Run the app ----

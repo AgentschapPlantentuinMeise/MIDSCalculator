@@ -97,7 +97,9 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
   # also include the id field even if it's not mapped in the schema
   # add 1 as indexing in xml starts at 0, at 1 in R
   drop = core_terms %>%
-    filter(!term%in%core_select_props,!is.na(index),index!=id_index) %>%
+    filter(!term%in%core_select_props,
+           !is.na(index),
+           index!=id_index) %>%
     pull(index) %>%
     as.numeric() %>%
     map(~ .x + 1) %>%
@@ -106,19 +108,27 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
   # set names to replace the colnames of the csv file
   # only indexed fields and including the id field
   newnames = core_terms %>%
-    filter((term%in%core_select_props&!is.na(index))|
-             (!is.na(index)&index==id_index)) %>%
+    filter(term%in%core_select_props,
+           !is.na(index)) %>%
     pull(term) %>%
-    paste0(category,.)
+    paste0(category,.) %>%
+    c("id",.)
   
   # read the data file from the zipped archive
   # take parameters from the meta.xml
   # replace some values with NA based on UoM
-  core_data <- fread(unzip(filename, xml_find_all(meta,paste0(xpath,"/files/location")) %>% xml_text()), 
-                     encoding = xml_find_all(meta,xpath) %>% xml_attr("encoding"), 
-                     sep = xml_find_all(meta,xpath) %>% xml_attr("fieldsTerminatedBy") %>% gsub("\\\\t","\t",.),
+  core_data <- fread(unzip(filename, 
+                           xml_find_all(meta,
+                                        paste0(xpath,"/files/location")) %>% 
+                             xml_text()), 
+                     encoding = xml_find_all(meta,xpath) %>% 
+                       xml_attr("encoding"), 
+                     sep = xml_find_all(meta,xpath) %>% 
+                       xml_attr("fieldsTerminatedBy") %>% 
+                       gsub("\\\\t","\t",.),
                      na.strings = uom, 
-                     quote = xml_find_all(meta,xpath) %>% xml_attr("fieldsEnclosedBy"),
+                     quote = xml_find_all(meta,xpath) %>% 
+                       xml_attr("fieldsEnclosedBy"),
                      colClasses = 'character',
                      drop = drop)
   
@@ -149,7 +159,14 @@ parse_dwc_archive <- function(filename,
   meta %>% xml_ns_strip()
   
   # load namespaces of dwc, dc, ac... from the sssom yaml curie map
-  namespaces = read_yaml(paste0("../../",config$app$sssom_yml),
+  ymlpath = list.files(paste0("../../data/sssom/",
+                              config$app$standard,
+                              "/",
+                              config$app$discipline),
+                       pattern = "*.yml",
+                       full.names = T)
+  
+  namespaces = read_yaml(ymlpath,
                          readLines.warn = F) %>%
     pluck("curie_map") %>%
     enframe(name="name",value="uri")
@@ -199,7 +216,7 @@ parse_dwc_archive <- function(filename,
     }
     step = step + 1
   }
-  return(data)
+  return(select(data,-id))
 }
 
 parse_dwc <- function(filename,
@@ -320,7 +337,14 @@ parse_biocase_archive <- function(filename,
   oldcolnames = colnames(resu) %>%
     tibble(oldnames = .)
   
-  sssom = fread(paste0("../../",config$app$sssom_tsv))
+  tsvpath = list.files(paste0("../../data/sssom/",
+                              config$app$standard,
+                              "/",
+                              config$app$discipline),
+                       pattern = "*.tsv",
+                       full.names = T)
+  
+  sssom = fread(tsvpath)
   
   oldcolnames %<>% 
     left_join(select(sssom,`sssom:object_id`,

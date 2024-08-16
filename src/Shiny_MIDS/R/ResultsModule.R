@@ -453,14 +453,12 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     observe(
       output[[paste0("Used_MIDS_implementation", input$start)]] <-
         renderText(
-          if (!is.null(isolate(jsonschema()$filename))){
-            return(isolate(jsonschema()$filename))
-          } else if (jsonfiletype == "sssom") {
-            sssom_name = config$app$sssom_tsv %>%
-              gsub("\\.sssom.*","",.) %>%
-              gsub(".*/","",.)
-            return(sssom_name)
-          } else {return("Interactive")}
+            return(paste0("sssom: ",
+                          config$app$standard,
+                          "[",
+                          config$app$format,
+                          "] - ",
+                          config$app$discipline))
         )
     )
 

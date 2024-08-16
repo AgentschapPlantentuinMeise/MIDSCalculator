@@ -105,22 +105,35 @@ read_json_mids_criteria <- function(schema = default_schema,
   }
 }
 
-parse_sssom <- function(tsv=NULL,yml=NULL,config) {
+parse_sssom <- function(config) {
   
   ##read the sssom tsv and yml files provided in config.ini
   #use function arguments to maybe later include support for 
   #loading them through the UI
   
-  if (is.null(tsv)) {
-    tsv = fread(paste0("../../",config$app$sssom_tsv),
-                encoding="UTF-8",
-                quote="",
-                colClasses='character')
-  }
-  if (is.null(yml)) {
-    yml = read_yaml(paste0("../../",config$app$sssom_yml),
-                    readLines.warn=F)
-  }
+  tsvpath = list.files(paste0("../../data/sssom/",
+                              config$app$standard,
+                              "/",
+                              config$app$discipline),
+                       pattern = "*.tsv",
+                       full.names = T)
+  
+  ymlpath = list.files(paste0("../../data/sssom/",
+                              config$app$standard,
+                              "/",
+                              config$app$discipline),
+                       pattern = "*.yml",
+                       full.names = T)
+  
+  tsv = fread(tsvpath,
+              encoding="UTF-8",
+              quote="",
+              colClasses='character')
+  
+  
+  yml = read_yaml(ymlpath,
+                  readLines.warn=F)
+  
   
   #The schema is hardcoded for GBIF-annotated DwC-Archives
   #so exclude terms from extensions such as GBIF multimedia or Auddubon
