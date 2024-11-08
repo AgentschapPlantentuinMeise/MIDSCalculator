@@ -41,7 +41,7 @@ ViewImplementationUI <- function(id) {
   )
 }
 
-ViewImplementationServer <- function(id, schema) {
+ViewImplementationServer <- function(id,parent.session,schema) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     

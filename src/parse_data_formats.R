@@ -2,7 +2,8 @@
 parse_data_file <- function(filename,
                             config,
                             select_props,
-                            uom) {
+                            uom,
+                            session) {
   # Darwin Core Archive (zipped)
   if (config$app$format == "dwc-a") {
     return(parse_dwc_archive(filename,
@@ -23,7 +24,8 @@ parse_data_file <- function(filename,
     return(parse_biocase_archive(filename,
                                  config,
                                  select_props,
-                                 uom))
+                                 uom,
+                                 session))
   }
 }
 
@@ -117,10 +119,11 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
   # read the data file from the zipped archive
   # take parameters from the meta.xml
   # replace some values with NA based on UoM
+  unzipped_file = xml_find_all(meta,
+                               paste0(xpath,"/files/location")) %>% 
+    xml_text()
   core_data <- fread(unzip(filename, 
-                           xml_find_all(meta,
-                                        paste0(xpath,"/files/location")) %>% 
-                             xml_text()), 
+                           unzipped_file), 
                      encoding = xml_find_all(meta,xpath) %>% 
                        xml_attr("encoding"), 
                      sep = xml_find_all(meta,xpath) %>% 
@@ -131,7 +134,8 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
                        xml_attr("fieldsEnclosedBy"),
                      colClasses = 'character',
                      drop = drop)
-  
+  #delete the unzipped file after reading it
+  file.remove(unzipped_file)
   # replace csv file colnames with full namespaces name
   colnames(core_data) = newnames
   
@@ -157,7 +161,7 @@ parse_dwc_archive <- function(filename,
   # read the meta.xml and strip the namespace for easier xpath
   meta = read_xml(unzip(filename,"meta.xml"))
   meta %>% xml_ns_strip()
-  
+  file.remove("meta.xml")
   # load namespaces of dwc, dc, ac... from the sssom yaml curie map
   ymlpath = list.files(paste0("../../data/sssom/",
                               config$app$standard,
@@ -234,7 +238,8 @@ parse_dwc <- function(filename,
 parse_biocase_archive <- function(filename,
                                   config,
                                   select_props,
-                                  uom) {
+                                  uom,
+                                  session) {
   # Read the lookup table from abcd term URI to its xpath
   xpath_mapper = fread("../../data/formats/abcd_xpaths.csv")
   
@@ -277,7 +282,15 @@ parse_biocase_archive <- function(filename,
     
     # set a new tibble to contain all the data
     newdf = tibble(`abcd:UnitGUID` = guids)
-    print(i)
+    if (exists("session")&!is.null(session)) {
+      update_modal_spinner(
+        paste0("Calculating MIDS results: ",
+               i,
+               " out of ",
+               length(filelist),
+               "."), 
+        session = session)
+    } else {print(i)}
     
     # For each of the xpaths, find the corresponding values (if any)
     for (k in 1:dim(xpaths_unit)[1]) {

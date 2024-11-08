@@ -1,4 +1,7 @@
 library(RInno)
+library(ini)
+
+config = read.ini("config.ini")
 
 source("src/packages.R")
 
@@ -48,7 +51,7 @@ start_iss(app_name = name) %>%
   
   # C-like directives
   directives_section(include_R = T,
-                     app_version = "0.65",
+                     app_version = config$app$version,
                      publisher = "Meise Botanic Garden", 
                      main_url = "https://github.com/AgentschapPlantentuinMeise/MIDSCalculator") %>%
   

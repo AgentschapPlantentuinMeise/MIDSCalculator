@@ -88,10 +88,10 @@ InteractiveSchemaUI <- function(id) {
   )
 }
 
-InteractiveSchemaServer <- function(id, jsonschema) {
+InteractiveSchemaServer <- function(id,parent.session,jsonschema) {
   moduleServer(id, function(input, output, module.session) {
     ns <- module.session$ns
-    
+   # disable("interactiveschema")
     #show information on MIDS criteria
     observeEvent(input$info_criteria,{ 
       #show modal

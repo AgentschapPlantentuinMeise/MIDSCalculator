@@ -6,7 +6,7 @@ pkgLoad()
 config = read.ini("../../config.ini")
 
 # Validate vocabulary
-supported_formats = c("dwc-a","simple_dwc","biocase")
+supported_formats = c("dwc-a","simple_dwc")
 supported_standards = list.dirs("../../data/sssom",
                                 recursive = F,
                                 full.names = F)
@@ -63,7 +63,7 @@ ui <-
   navbarPage(
    title=div(tags$img(style = "margin: 0px 25px 0px 0px", height = 20, 
                       src = "Logo_klein_BotanicGardenMeise_cmyk.png"),
-             tags$span("Calculate MIDS scores",
+             tags$span(paste0("Calculate MIDS scores v",config$app$version),
                        actionButton("info",
                           icon("info"),
                           style = "padding:0px 5px 15px 5px; font-size:65%; border-style: none"
@@ -90,19 +90,19 @@ ui <-
             #fileInput("customjsonfile", label = NULL, accept = ".json"),
             hr(style = "border-top: 1px solid #2874A6;"),
             #checkboxInput("editschema", "Edit interactively", value = FALSE),
-            selectInput("format_select", 
-                        label = "Select Data Format:",
-                        choices = supported_formats,
-                        selected = config$app$format),
-            selectInput("standard_select", 
-                        label = "Select Standard:",
-                        choices = supported_standards,
-                        selected = config$app$standard),
             selectInput("discipline_select", 
                         label = "Select Discipline:",
                         choices = supported_disciplines,
                         selected = config$app$discipline),
-            InteractiveSchemaUI("interactive"),
+            selectInput("standard_select", 
+                        label = "Select Standard:",
+                        choices = supported_standards,
+                        selected = config$app$standard),
+            selectInput("format_select", 
+                        label = "Select Data Format:",
+                        choices = supported_formats,
+                        selected = config$app$format),
+            #InteractiveSchemaUI("interactive"),
             ))),
             br(),br(),
             ResultsUI("start"),
@@ -120,24 +120,22 @@ server <- function(input, output, session) {
   }
   
 # Define reactive and update format type
-  configR = reactiveVal(config)
-  
-  observeEvent(input$format_select, {
-    new_config = configR()
-    new_config$app$format <- input$format_select
-    configR(new_config)
-  })
-  
   observeEvent(input$standard_select, {
-    new_config = configR()
-    new_config$app$standard <- input$standard_select
-    configR(new_config)
+    if (input$standard_select == "dwc") {
+      supported_formats = c("dwc-a", "simple-dwc")
+      updateSelectInput(session,"format_select",choices = supported_formats)
+    } else if (input$standard_select == "abcd") {
+      supported_formats = c("biocase")
+      updateSelectInput(session,"format_select",choices = supported_formats)
+    }
   })
   
-  observeEvent(input$discipline_select, {
-    new_config = configR()
-    new_config$app$discipline <- input$discipline_select
-    configR(new_config)
+  getConfig <- reactive({
+    config_live = list(format = input$format_select,
+                       standard = input$standard_select,
+                       discipline = input$discipline_select,
+                       `dwc-a_verbatim` = config$app$`dwc-a_verbatim`)
+    return(list(app = config_live))
   })
 
 # Show information about the app ------------------------------------------
@@ -261,11 +259,12 @@ server <- function(input, output, session) {
 
 # Get final MIDS implementation schema (either from file or from interactive editing) --------
 
-  jsonschemafinal <- reactive({ 
+  jsonschemafinal <- reactive({
+    config_live = getConfig()
     # if (input$editschema == TRUE){
     #   # get interactive schema
-    #   return(c(list("criteria" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "criteria", type = "interactive")), 
-    #            list("UoM" = read_json_unknownOrMissing(schema = interactiveschema$interactivejson(), type = "interactive")), 
+    #   return(c(list("criteria" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "criteria", type = "interactive")),
+    #            list("UoM" = read_json_unknownOrMissing(schema = interactiveschema$interactivejson(), type = "interactive")),
     #            list("properties" = read_json_mids_criteria(schema = interactiveschema$interactivejson(), outtype = "properties", type = "interactive"))
     #           ))
     # } else {
@@ -274,39 +273,43 @@ server <- function(input, output, session) {
     #   if (input$jsonfiletype == "custom"){
     #     filename <- paste("Custom:", input$customjsonfile$name)
     #   } else if (input$jsonfiletype == "sssom") {
-        return(c(list("criteria" = read_json_mids_criteria(outtype = "criteria", type = "sssom",config=configR())), 
-                 list("UoM" = read_json_unknownOrMissing(type = "sssom",config=config)), 
-                 list("properties" = read_json_mids_criteria(outtype = "properties", type = "sssom",config=configR()))
+        return(c(list("criteria" = read_json_mids_criteria(outtype = "criteria",
+                                                           type = "sssom",
+                                                           config = config_live)),
+                 list("UoM" = read_json_unknownOrMissing(type = "sssom",
+                                                         config = config_live)),
+                 list("properties" = read_json_mids_criteria(outtype = "properties",
+                                                             type = "sssom",
+                                                             config = config_live))
          ))
     #   } else {
-    #     filename <- paste("Default:", 
+    #     filename <- paste("Default:",
     #                       paste0(read_json(jsonpath())$schemaName,
     #                              " v",
     #                              read_json(jsonpath())$schemaVersion))
     #   }
     #   #return schema
-    #   return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()), 
+    #   return(c(list("criteria" = jsonschemafile()), list("UoM" = jsonUoMfile()),
     #     list("properties" = read_json_mids_criteria(schema = jsonpath(), out = "properties")),
     #     list("filename"= filename)))
     # }
   })
   
-  
 # Show current MIDS implementation ----------------------------------------
   
   #view MIDS implementation in modal window
-  ViewImplementationServer("viewcurrentschema", jsonschemafinal)
+  ViewImplementationServer("viewcurrentschema",session,jsonschemafinal)
     
 
 # Edit MIDS implementation interactively ----------------------------------
   
-  interactiveschema <- InteractiveSchemaServer("interactive", jsonschemafinal)
+  #interactiveschema <- InteractiveSchemaServer("interactive",session,jsonschemafinal)
   
 
 # Calculate and show results ----------------------------------------------
 
-  ResultsServer("start", session, reactive(input$gbiffile), jsonschemafinal,
-                reactive(input$tabs), disablestart,configR())
+  ResultsServer("start", session, reactive(input$gbiffile),
+                reactive(input$tabs), disablestart,getConfig(),jsonschemafinal)
  
 }
 # Run the app ----

@@ -6,8 +6,8 @@ ResultsUI <- function(id) {
   )
 }
 
-ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
-                          tab, disablestart,config) {
+ResultsServer <- function(id, parent.session, gbiffile, 
+                          tab, disablestart,config,jsonschema) {
   moduleServer(id, function(input, output, module.session) {
     require(RColorBrewer)
     ns <- module.session$ns
@@ -37,7 +37,8 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
       calculate_mids(gbiffile = gbiffile()$datapath, 
                      jsontype = "list", 
                      jsonlist = jsonschema(),
-                     config = config)
+                     config = config,
+                     session = module.session)
     })
     
     #remove spinner when calculations are finished
@@ -52,9 +53,10 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
       if (length(gbif_dataset_mids()$missing) > 0){
         showModal(modalDialog(
           title = "Warning",
-          HTML(paste0("The following columns were not found in the dataset: ", 
-                      paste(gbif_dataset_mids()$missing, collapse= ", "), br(), 
-                      "These columns are regarded as NA for all records.")
+          HTML(paste0("The following columns were not found in the dataset. ",
+                      "These columns are regarded as NA for all records:",
+                      br(),
+                      paste(gbif_dataset_mids()$missing, collapse= "<br>"))
           )
         ))
       }

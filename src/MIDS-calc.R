@@ -4,7 +4,12 @@ library(data.table)
 library(magrittr)
 library(xml2)
 
-calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NULL,config) {
+calculate_mids <- function(gbiffile, 
+                           jsonfile, 
+                           jsontype = "file", 
+                           jsonlist = NULL,
+                           config,
+                           session = NULL) {
 
   # Get data ----------------------------------------------------------------
   
@@ -42,7 +47,8 @@ calculate_mids <- function(gbiffile, jsonfile, jsontype = "file", jsonlist = NUL
   gbif_dataset = parse_data_file(filename = gbiffile,
                                  config = config,
                                  select_props = select_props,
-                                 uom = list_UoM$all)
+                                 uom = list_UoM$all,
+                                 session = session)
   
   #add missing columns with all values as NA
   list_props %<>% unique()
