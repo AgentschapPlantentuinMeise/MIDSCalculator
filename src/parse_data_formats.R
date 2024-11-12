@@ -107,6 +107,8 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
     map(~ .x + 1) %>%
     unlist()
   
+  if (length(drop) == dim(core_terms)[1]) {return(NULL)}
+  
   # set names to replace the colnames of the csv file
   # only indexed fields and including the id field
   newnames = core_terms %>%
