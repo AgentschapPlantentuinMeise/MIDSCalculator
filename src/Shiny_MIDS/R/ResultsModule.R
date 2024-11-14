@@ -37,7 +37,7 @@ ResultsServer <- function(id, parent.session, gbiffile,
       calculate_mids(gbiffile = gbiffile()$datapath, 
                      jsontype = "list", 
                      jsonlist = jsonschema(),
-                     config = config,
+                     config = parent.session$userData$config,
                      session = module.session)
     })
     

@@ -128,6 +128,12 @@ server <- function(input, output, session) {
       supported_formats = c("biocase")
       updateSelectInput(session,"format_select",choices = supported_formats)
     }
+    
+    #manually update format in config here as updateSelectInput is asynchronous
+    config_live = getConfig()
+    config_live$app$format = supported_formats[1]
+    session$userData$config = config_live
+    #print(session$userData$config)
   })
   
   getConfig <- reactive({
