@@ -34,9 +34,11 @@ ViewImplementationUI <- function(id) {
            grid-template-columns: 50% 50%; 
            gap: 20px; 
            padding: 20px;
-         }
-     ")
-      ),
+         }",
+         paste0('.',"implementation_modal",
+                "{width: 90% !important;",
+                "max-width: 1200px;}")
+      ))
     )
   )
 }
@@ -81,7 +83,7 @@ ViewImplementationServer <- function(id,parent.session,schema) {
             #Split mappings on OR, remove brackets, replace &
             mappings <- stringr::str_split(
               gsub("\\!\\!", "NOT !",
-                gsub("\\(|\\)", "",
+                gsub("\\(|\\)|`", "",
                    gsub("&", "AND", mids_mapping[[n_map]]
                    ))),
               "\\|")
@@ -137,7 +139,8 @@ ViewImplementationServer <- function(id,parent.session,schema) {
              htmlOutput(ns("json")),
              htmlOutput(ns("jsonUoM")),
              easyClose = TRUE,
-             footer = NULL
+             footer = NULL,
+             class = "implementation_modal"
            ))}, 
         ignoreInit = TRUE)
   })
