@@ -203,7 +203,7 @@ parse_sssom <- function(config) {
   #Add mids levels criteria
   for (i in 0:3) {
     #initiate mids level
-    level = paste0("mids",i)
+    level = paste0("mids:MIDS",i)
     newschema[[level]] = list()
     
     #all mappings for this mids level
@@ -271,7 +271,7 @@ parse_sssom <- function(config) {
         for (l in 1:dim(intersectionof)[1]) {
           #note that the spaces + | delimitation is hardcoded here!
           intersects = strsplit(intersectionof$`sssom:object_match_field`[l],
-                                split=" | ",
+                                split="|",
                                 fixed=T)[[1]]
           for (m in 1:length(intersects)) {
             match_field = mids_crits_element %>%

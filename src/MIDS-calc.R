@@ -16,7 +16,7 @@ calculate_mids <- function(gbiffile,
   #get unknown or missing values
   if (jsontype == "file"){
     list_UoM <- read_json_unknownOrMissing(jsonfile)
-  }
+  } 
   else if (jsontype == "list"){
     list_UoM <- jsonlist[["UoM"]]
   }
@@ -24,7 +24,7 @@ calculate_mids <- function(gbiffile,
   #get list of used properties
   if (jsontype == "file"){
     list_props <- read_json_mids_criteria(jsonfile, out = "properties")
-  }
+  } 
   else if (jsontype == "list"){
     list_props <- jsonlist[["properties"]]
   }
@@ -96,10 +96,10 @@ calculate_mids <- function(gbiffile,
   #For each MIDS level, the conditions of that level and of lower levels all need to be true
   gbif_dataset_mids %<>%
     mutate(MIDS_level = case_when(
-      apply(gbif_dataset_mids[ , grep("mids[0-3]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
-      apply(gbif_dataset_mids[ , grep("mids[0-2]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 2,
-      apply(gbif_dataset_mids[ , grep("mids[0-1]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 1,
-      apply(gbif_dataset_mids[ , grep("mids0", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 0,
+      apply(gbif_dataset_mids[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 3,
+      apply(gbif_dataset_mids[ , grep("mids:MIDS[0-2]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 2,
+      apply(gbif_dataset_mids[ , grep("mids:MIDS[0-1]", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 1,
+      apply(gbif_dataset_mids[ , grep("mids:MIDS0", names(gbif_dataset_mids)), with = FALSE], MARGIN = 1, FUN = all) ~ 0,
       TRUE ~ -1
     ))
   return(list(results = gbif_dataset_mids, missing = missing))

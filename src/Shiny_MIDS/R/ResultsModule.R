@@ -171,13 +171,13 @@ ResultsServer <- function(id, parent.session, gbiffile,
     #create summary of MIDS criteria
     midscrit <- reactive({
       cbind.data.frame(
-        gsub("mids[0-3]", "", 
-             names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE])),
-        substr(names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE]), 5, 5),
-        gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%
+        gsub("mids:MIDS[0-3]", "", 
+             names(gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE])),
+        substr(names(gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE]), 10, 10),
+        gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%
           map(~{sum(.x, na.rm = TRUE)}) %>% 
           as.numeric() , 
-        gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%  
+        gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%  
           map(~{round((sum(.x, na.rm = TRUE) / nrow(gbif_dataset_mids_filtered()))*100)}) %>%
           as.numeric())  %>% 
         set_colnames(c("MIDS_elements", "MIDS_level", "Number_of_records","Percentage")) 
@@ -294,9 +294,9 @@ ResultsServer <- function(id, parent.session, gbiffile,
                         fluidRow(
                         column(10,
                         verbatimTextOutput(ns(paste0("Used_MIDS_implementation", input$start)))
-                        ),
-                        column(2,
-                               ViewImplementationUI(ns(paste0("showschema", input$start))))
+                        )#,
+                        #column(2,
+                        #       ViewImplementationUI(ns(paste0("showschema", input$start))))
                         ),
                         class = "well"
                   )
@@ -328,7 +328,7 @@ ResultsServer <- function(id, parent.session, gbiffile,
                  "_MIDS.csv")
         },
         content = function(file) {
-          write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE)
+          write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE,na="")
         })
     output[[paste0("downloadDataFiltered", input$start)]] <- 
       downloadHandler(
@@ -337,7 +337,7 @@ ResultsServer <- function(id, parent.session, gbiffile,
                  "_MIDS_filtered.csv")
         },
         content = function(file) {
-          write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
+          write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE,na="")
         })
     
     })

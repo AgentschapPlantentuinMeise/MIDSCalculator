@@ -290,7 +290,7 @@ parse_biocase_archive <- function(filename,
                i,
                " out of ",
                length(filelist),
-               "."), 
+               " XML files."), 
         session = session)
     } else {print(i)}
     
