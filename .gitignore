@@ -63,6 +63,7 @@ rsconnect/
 #ignore zipped data archives
 #ignore occurrence file
 occurrence*
+multimedia*
 #ignore output file
 *output*
 data/*.zip
@@ -82,3 +83,5 @@ MIDSCalculator.bat
 MIDSCalculator.iss
 R-*.exe
 setup.ico
+
+*.xml

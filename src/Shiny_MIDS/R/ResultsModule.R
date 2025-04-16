@@ -6,8 +6,8 @@ ResultsUI <- function(id) {
   )
 }
 
-ResultsServer <- function(id, parent.session, gbiffile, jsonschema, 
-                          tab, disablestart,config,jsonfiletype) {
+ResultsServer <- function(id, parent.session, gbiffile, 
+                          tab, disablestart,config,jsonschema) {
   moduleServer(id, function(input, output, module.session) {
     require(RColorBrewer)
     ns <- module.session$ns
@@ -37,7 +37,8 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
       calculate_mids(gbiffile = gbiffile()$datapath, 
                      jsontype = "list", 
                      jsonlist = jsonschema(),
-                     config = config)
+                     config = parent.session$userData$config,
+                     session = module.session)
     })
     
     #remove spinner when calculations are finished
@@ -52,9 +53,10 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
       if (length(gbif_dataset_mids()$missing) > 0){
         showModal(modalDialog(
           title = "Warning",
-          HTML(paste0("The following columns were not found in the dataset: ", 
-                      paste(gbif_dataset_mids()$missing, collapse= ", "), br(), 
-                      "These columns are regarded as NA for all records.")
+          HTML(paste0("The following columns were not found in the dataset. ",
+                      "These columns are regarded as NA for all records:",
+                      br(),
+                      paste(gbif_dataset_mids()$missing, collapse= "<br>"))
           )
         ))
       }
@@ -169,13 +171,13 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     #create summary of MIDS criteria
     midscrit <- reactive({
       cbind.data.frame(
-        gsub("mids[0-3]", "", 
-             names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE])),
-        substr(names(gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE]), 5, 5),
-        gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%
+        gsub("mids:MIDS[0-3]", "", 
+             names(gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE])),
+        substr(names(gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE]), 10, 10),
+        gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%
           map(~{sum(.x, na.rm = TRUE)}) %>% 
           as.numeric() , 
-        gbif_dataset_mids_filtered()[ , grep("mids[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%  
+        gbif_dataset_mids_filtered()[ , grep("mids:MIDS[0-3]", names(gbif_dataset_mids_filtered())), with = FALSE] %>%  
           map(~{round((sum(.x, na.rm = TRUE) / nrow(gbif_dataset_mids_filtered()))*100)}) %>%
           as.numeric())  %>% 
         set_colnames(c("MIDS_elements", "MIDS_level", "Number_of_records","Percentage")) 
@@ -292,9 +294,9 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
                         fluidRow(
                         column(10,
                         verbatimTextOutput(ns(paste0("Used_MIDS_implementation", input$start)))
-                        ),
-                        column(2,
-                               ViewImplementationUI(ns(paste0("showschema", input$start))))
+                        )#,
+                        #column(2,
+                        #       ViewImplementationUI(ns(paste0("showschema", input$start))))
                         ),
                         class = "well"
                   )
@@ -326,7 +328,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
                  "_MIDS.csv")
         },
         content = function(file) {
-          write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE)
+          write.csv(req(allmidscalc$prev_bins[[paste0("res", resulttabnr())]]), file, row.names = FALSE,na="")
         })
     output[[paste0("downloadDataFiltered", input$start)]] <- 
       downloadHandler(
@@ -335,7 +337,7 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
                  "_MIDS_filtered.csv")
         },
         content = function(file) {
-          write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE)
+          write.csv(gbif_dataset_mids_filtered(), file, row.names = FALSE,na="")
         })
     
     })
@@ -453,23 +455,19 @@ ResultsServer <- function(id, parent.session, gbiffile, jsonschema,
     observe(
       output[[paste0("Used_MIDS_implementation", input$start)]] <-
         renderText(
-          if (!is.null(isolate(jsonschema()$filename))){
-            return(isolate(jsonschema()$filename))
-          } else if (jsonfiletype == "sssom") {
-            sssom_name = config$app$sssom_tsv %>%
-              gsub("\\.sssom.*","",.) %>%
-              gsub(".*/","",.)
-            return(sssom_name)
-          } else {return("Interactive")}
+            return(paste0("sssom: ",
+                          config$app$standard,
+                          "[",
+                          config$app$format,
+                          "] - ",
+                          config$app$discipline))
         )
     )
 
     #show complete MIDS implementation schema in modal window
     observe(
       ViewImplementationServer(paste0("showschema", resulttabnr()),
-         reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]]),
-         #never disable view button on results tab
-         reactive(FALSE)
+         reactive(allschemas$prev_bins[[paste0("res", resulttabnr())]])
       ))
     
 # Open results tab automatically when calculations are performed ----------

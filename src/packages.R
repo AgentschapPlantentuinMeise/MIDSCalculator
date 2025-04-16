@@ -13,7 +13,10 @@ packages <- c("shiny",
               "shinybusy",
               "stringr",
               "ini",
-              "yaml")
+              "yaml",
+              "xml2",
+              "tidyr",
+              "tibble")
 
 pkgLoad <- function() {
   
