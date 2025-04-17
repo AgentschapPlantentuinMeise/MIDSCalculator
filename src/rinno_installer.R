@@ -46,6 +46,13 @@ create_config(app_name = name,
               pkgs = packages,
               pkgs_path = "bin")
 
+#remove any temporary biocase files that may have been left
+#after an aborted calculation
+if (dir.exists("src/Shiny_MIDS/temp_biocase")) {
+  unlink("src/Shiny_MIDS/temp_biocase",
+         recursive = T)
+}
+
 #create an ISS file that declares how the installer should be built
 start_iss(app_name = name) %>%
   
@@ -98,3 +105,8 @@ start_iss(app_name = name) %>%
 
 #compile the installer based on the ISS file
 compile_iss()
+#include version nr in the installer filename
+file.rename("RInno_installer/setup_MIDSCalculator.exe",
+            paste0("RInno_installer/setup_MIDSCalculator ",
+                   config$app$version,
+                   ".exe"))
