@@ -66,7 +66,6 @@ occurrence*
 multimedia*
 #ignore output file
 *output*
-data/*.zip
 
 #Rinno
 bin
