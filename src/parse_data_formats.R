@@ -110,14 +110,28 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
   if (length(drop) == dim(core_terms)[1]) {return(NULL)}
   
   # set names to replace the colnames of the csv file
-  # only indexed fields and including the id field
+  # only indexed fields (not with default value)
   newnames = core_terms %>%
-    filter(term%in%core_select_props,
-           !is.na(index)) %>%
+    filter(!is.na(index),
+           term%in%core_select_props) %>%
     pull(term) %>%
-    paste0(category,.) %>%
-    c("id",.)
+    paste0(category,.) 
   
+  # add the id as a term for joining if not mapped to a
+  # selected term
+  
+  # first identify the colname of the id (if listed in meta.xml)
+  id_name = core_terms %>%
+    mutate(term = paste0(category,term)) %>%
+    filter(index==id_index) %>%
+    pull(term)
+
+  # add id if not listed in the xml or not a selected property
+  # for the mids calculation
+  if (length(id_name)==0||!id_name%in%newnames) {
+    newnames %<>%
+      c("id",.)
+  }
   # read the data file from the zipped archive
   # take parameters from the meta.xml
   # replace some values with NA based on UoM
@@ -222,7 +236,7 @@ parse_dwc_archive <- function(filename,
     }
     step = step + 1
   }
-  return(select(data,-id))
+  return(select(data,-any_of("id")))
 }
 
 parse_dwc <- function(filename,
