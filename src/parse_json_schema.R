@@ -105,25 +105,38 @@ read_json_mids_criteria <- function(schema = default_schema,
   }
 }
 
-parse_sssom <- function(config) {
+parse_sssom <- function(config,localpath=F) {
   
   ##read the sssom tsv and yml files provided in config.ini
   #use function arguments to maybe later include support for 
   #loading them through the UI
-  
-  tsvpath = list.files(paste0("../../data/sssom/",
-                              config$app$standard,
-                              "/",
-                              config$app$discipline),
-                       pattern = "*.tsv",
-                       full.names = T)
-  
-  ymlpath = list.files(paste0("../../data/sssom/",
-                              config$app$standard,
-                              "/",
-                              config$app$discipline),
-                       pattern = "*.yml",
-                       full.names = T)
+  if (localpath) {
+    tsvpath = list.files(paste0(config$app$standard,
+                                "/",
+                                config$app$discipline),
+                         pattern = "*.tsv",
+                         full.names = T)
+    
+    ymlpath = list.files(paste0(config$app$standard,
+                                "/",
+                                config$app$discipline),
+                         pattern = "*.yml",
+                         full.names = T)
+  } else {
+    tsvpath = list.files(paste0("../../data/sssom/",
+                                config$app$standard,
+                                "/",
+                                config$app$discipline),
+                         pattern = "*.tsv",
+                         full.names = T)
+    
+    ymlpath = list.files(paste0("../../data/sssom/",
+                                config$app$standard,
+                                "/",
+                                config$app$discipline),
+                         pattern = "*.yml",
+                         full.names = T)
+  }
   
   tsv = fread(tsvpath,
               encoding="UTF-8",
