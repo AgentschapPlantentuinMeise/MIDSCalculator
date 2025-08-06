@@ -84,3 +84,6 @@ R-*.exe
 setup.ico
 
 *.xml
+
+#file in which to potentially cache a path to R executable that is not set as a global env variable
+r_path.txt
