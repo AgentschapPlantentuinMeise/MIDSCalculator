@@ -87,3 +87,6 @@ setup.ico
 
 #file in which to potentially cache a path to R executable that is not set as a global env variable
 r_path.txt
+
+#big test file:
+data/0167495-230224095556074.zip

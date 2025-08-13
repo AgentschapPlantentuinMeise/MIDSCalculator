@@ -166,6 +166,16 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
     }
   }
   
+  #collapse multiple values per coreid in extensions
+  if (!is.null(extension)) {
+    core_data %<>%
+      summarise(
+        across(everything(), 
+               ~ { i <- match(TRUE, !is.na(.x), nomatch = NA_integer_); .x[i] }),
+        .by = all_of("id")
+      )
+  }
+  
   return(core_data)
 }
 
