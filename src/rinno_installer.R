@@ -35,7 +35,7 @@ file.remove("default.ico")
 file.remove("setup.ico")
 
 #download R installer if not already present in app's directory
-get_R()
+get_R(R_version = config$app$r_version)
 
 #create a BAT file that will launch the shiny app
 create_bat(app_name = name,
