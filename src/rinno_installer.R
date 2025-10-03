@@ -44,7 +44,8 @@ create_bat(app_name = name,
 #create a config file for the app
 create_config(app_name = name,
               pkgs = packages,
-              pkgs_path = "bin")
+              pkgs_path = "bin",
+              user_browser = "firefox")
 
 #remove any temporary biocase files that may have been left
 #after an aborted calculation
