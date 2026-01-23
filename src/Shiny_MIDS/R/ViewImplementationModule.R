@@ -29,6 +29,26 @@ ViewImplementationUI <- function(id) {
           color: #1A5276;
           box-shadow: none;
          }",
+         paste0('.', ns('midscategory')), "{
+          text-align: left; 
+          font-size: 16px; 
+          color: blue;
+          box-shadow: none;
+         }",
+         paste0('.', ns('operator')), "{
+          text-align: left; 
+          font-size: 16px; 
+          color: darkgreen;
+          font-weight: bold;
+          box-shadow: none;
+         }",
+         paste0('.', ns('midsterm')), "{
+          text-align: left; 
+          font-size: 16px; 
+          color: black;
+          box-shadow: none;
+          font-weight: normal;
+         }",
          paste0('.', ns('grid')), "{
            display: grid; 
            grid-template-columns: 50% 50%; 
@@ -92,7 +112,35 @@ ViewImplementationServer <- function(id,parent.session,schema) {
               "\\|")
             #Print mappings 
              for (map in mappings[[1]]){
-                  print(div(gsub("\\!is.na", "", map)))
+                  map %<>% gsub("\\!is.na", "",.)
+               map_category = map %>%
+                 gsub("\\].*","",.) %>% #presumes same category for all terms
+                 gsub("[","",.,fixed=T)
+               map_term = map %>%
+                 gsub("\\[.*?\\]","",.)
+               map_term = strsplit(map_term,split=" ")[[1]]
+               print(HTML("<div><span class=", 
+                          ns('midscategory'),
+                          ">",
+                          map_category))
+               p_align = F
+               for (term_part in map_term) {
+                 if (term_part == "AND"|term_part=="OR"|term_part=="NOT !") {
+                   print(HTML("</span><span class =",
+                              ns('operator'),
+                              ">",
+                              term_part))
+                   if (p_align) {print(HTML("</p>"))}
+                   print(HTML("<p style=\"margin-left: 40px; line-height: 0.6;\">"))
+                   p_align = T
+                 } else {
+                   print(HTML("</span><span class =",
+                              ns('midsterm'),
+                              ">",
+                              term_part))
+                 }
+               }
+               print(HTML("</span></div>"))
                 }
           }
         }
