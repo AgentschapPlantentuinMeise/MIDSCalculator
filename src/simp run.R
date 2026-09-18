@@ -93,5 +93,8 @@ list_extra_props <- c("[dwc:Occurrence]dwc:datasetKey",
 
 select_props = unique(c(list_props, list_extra_props))
 uom = list_UoM$all
-filename = "../../data/Herbarium Berolinense, Berlin (B).ABCD_2.06.zip"
-filename = "../../../mids/kew/Royal Botanic Gardens, Kew - Fungarium Specimens DwCA.zip"
+config$app$format="dwc-a"
+#filename = "../../data/Herbarium Berolinense, Berlin (B).ABCD_2.06.zip"
+#filename = "../../../mids/kew/Royal Botanic Gardens, Kew - Fungarium Specimens DwCA.zip"
+filename = "../../../../../Downloads/0002274-260916113435855.zip"
+session=NULL

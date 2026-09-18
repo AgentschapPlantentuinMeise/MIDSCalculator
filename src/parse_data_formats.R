@@ -202,6 +202,7 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
   id_index = meta %>%
     xml_find_all(paste0(xpath,idname)) %>%
     xml_attr("index") %>%
+    unique() %>%
     as.numeric()
   
   # filter the properties of the core or extension
@@ -308,6 +309,80 @@ read_data_from_dwca_file <- function(filename, #path to the zip file
   return(core_data)
 }
 
+filter_dwca_meta <- function(meta, is_verbatim = FALSE) {
+  
+  xml_ns_strip(meta)
+  
+  sections <- xml_find_all(meta, "./core | ./extension")
+  
+  get_location <- function(x) {
+    loc <- xml_text(xml_find_first(x, "./files/location"))
+    gsub("\\\\", "/", loc)
+  }
+  
+  locations <- vapply(sections, get_location, character(1))
+  
+  # Verbatim metadata consists of:
+  #   verbatim.txt
+  #   verbatim/<extension files>
+  is_verbatim_section <-
+    locations == "verbatim.txt" |
+    startsWith(locations, "verbatim/")
+  
+  if (!is_verbatim) {
+    
+    # Keep GBIF-interpreted core + extensions;
+    # remove verbatim.txt and verbatim extensions.
+    xml_remove(sections[is_verbatim_section])
+    
+  } else {
+    
+    # Keep only verbatim.txt + verbatim extensions.
+    xml_remove(sections[!is_verbatim_section])
+    
+    # Re-query after modifying the XML tree
+    sections <- xml_find_all(meta, "./core | ./extension")
+    locations <- vapply(sections, get_location, character(1))
+    
+    # verbatim.txt becomes the new core
+    verbatim_core <- sections[locations == "verbatim.txt"]
+    
+    if (length(verbatim_core) != 1) {
+      stop(
+        "Expected exactly one verbatim.txt definition, found ",
+        length(verbatim_core)
+      )
+    }
+    
+    # Promote extension -> core
+    xml_name(verbatim_core) <- "core"
+    
+    # Extensions link to their core using <coreid>.
+    # Once verbatim.txt becomes the core, that field becomes <id>.
+    coreid <- xml_find_first(verbatim_core, "./coreid")
+    
+    if (!inherits(coreid, "xml_missing")) {
+      xml_name(coreid) <- "id"
+    }
+    
+    # meta.xml convention/schema expects the core before extensions.
+    first_extension <- xml_find_first(meta, "./extension")
+    
+    if (!inherits(first_extension, "xml_missing")) {
+      
+      new_core <- xml_add_sibling(
+        first_extension,
+        verbatim_core,
+        .where = "before"
+      )
+      
+      xml_remove(verbatim_core)
+    }
+  }
+  
+  meta
+}
+
 # function to read an parse a dwc arcive (zipped)
 parse_dwc_archive <- function(filename,
                               config,
@@ -323,6 +398,8 @@ parse_dwc_archive <- function(filename,
   # read the meta.xml and strip the namespace for easier xpath
   meta = read_xml(unzip(filename,"meta.xml"))
   meta %>% xml_ns_strip()
+  meta <- filter_dwca_meta(meta, 
+                           as.logical(config$app$`dwc-a_verbatim`))
   file.remove("meta.xml")
   # load namespaces of dwc, dc, ac... from the sssom yaml curie map
   ymlpath = sssom_path("yml",config)
