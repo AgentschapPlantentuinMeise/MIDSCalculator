@@ -16,7 +16,9 @@ packages <- c("shiny",
               "yaml",
               "xml2",
               "tidyr",
-              "tibble")
+              "tibble",
+              "colorspace",
+              "ellipsis")
 
 pkgLoad <- function() {
   

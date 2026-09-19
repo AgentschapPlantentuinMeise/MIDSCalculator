@@ -109,6 +109,10 @@ start_iss(app_name = name) %>%
   writeLines(paste0(name,".iss"))
 
 #compile the installer based on the ISS file
+# note that inno setup needs to be installed for this
+# and using install_inno() does not work anymore
+# download an installer of follow the instructions from:
+# https://jrsoftware.org/isdl.php/Inno-Setup-Downloads
 compile_iss()
 #include version nr in the installer filename
 file.rename("RInno_installer/setup_MIDSCalculator.exe",
